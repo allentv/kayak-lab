@@ -16,27 +16,27 @@
 
 ## 3. Agent Runtime
 
-- [ ] 3.1 Implement agent loop with input processing, model invocation, and tool execution
-- [ ] 3.2 Implement context management with accumulation and windowing
-- [ ] 3.3 Implement tool invocation with typed parameters and results
-- [ ] 3.4 Add tool failure handling and timeout support
-- [ ] 3.5 Implement streaming model response handling
+- [x] 3.1 Implement agent loop with input processing, model invocation, and tool execution
+- [x] 3.2 Implement context management with accumulation and windowing
+- [x] 3.3 Implement tool invocation with typed parameters and results
+- [x] 3.4 Add tool failure handling and timeout support
+- [x] 3.5 Implement streaming model response handling
 
 ## 4. Model Abstraction
 
-- [ ] 4.1 Define provider-agnostic model invocation interface
-- [ ] 4.2 Implement provider configuration and switching
-- [ ] 4.3 Add provider fallback support
-- [ ] 4.4 Implement streaming and non-streaming response handling
+- [x] 4.1 Define provider-agnostic model invocation interface
+- [x] 4.2 Implement provider configuration and switching
+- [x] 4.3 Add provider fallback support
+- [x] 4.4 Implement streaming and non-streaming response handling
 
 ## 5. Capability Layer
 
-- [ ] 5.1 Define Git capability interface (status, changes, commit)
-- [ ] 5.2 Implement Git capability with abstract interface
+- [x] 5.1 Define Git capability interface (status, changes, commit)
+- [x] 5.2 Implement Git capability with abstract interface
 - [ ] 5.3 Define GitHub capability interface (issues, pull requests, repository management)
 - [ ] 5.4 Implement GitHub capability with abstract interface
-- [ ] 5.5 Define Shell capability interface (command execution, working directory, environment)
-- [ ] 5.6 Implement Shell capability with safety constraints
+- [x] 5.5 Define Shell capability interface (command execution, working directory, environment)
+- [x] 5.6 Implement Shell capability with safety constraints
 - [ ] 5.7 Define Kubernetes capability interface (resource management, status, mutations)
 - [ ] 5.8 Implement Kubernetes capability with cluster abstraction
 
@@ -66,7 +66,7 @@
 
 - [x] 9.1 Create integration tests for event stream and session manager
 - [ ] 9.2 Create integration tests for agent runtime and model abstraction
-- [ ] 9.3 Create integration tests for capability layer
+- [x] 9.3 Create integration tests for capability layer
 - [ ] 9.4 Create integration tests for projection protocol and terminal
 - [x] 9.5 Create end-to-end tests for complete interaction flows
 - [ ] 9.6 Add performance benchmarks for critical paths
