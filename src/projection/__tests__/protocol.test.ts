@@ -4,6 +4,7 @@
 
 import { assertEquals, assertExists } from "https://deno.land/std@0.208.0/assert/mod.ts";
 import { EventStream } from "../../core/event-stream.ts";
+import { BaseEvent } from "../../types/events.ts";
 import { ProjectionProtocol } from "../protocol.ts";
 import { EventTypes } from "../../types/events.ts";
 
@@ -22,7 +23,7 @@ Deno.test("ProjectionProtocol - subscribe and receive events", async () => {
   });
 
   // Subscribe to events
-  const receivedEvents: unknown[] = [];
+  const receivedEvents: BaseEvent[] = [];
   const subscription = protocol.subscribe(sessionId, (event) => {
     receivedEvents.push(event);
   });
@@ -48,7 +49,7 @@ Deno.test("ProjectionProtocol - unsubscribe stops delivery", async () => {
   const protocol = new ProjectionProtocol(eventStream);
 
   const sessionId = "test-session";
-  const receivedEvents: unknown[] = [];
+  const receivedEvents: BaseEvent[] = [];
 
   const subscription = protocol.subscribe(sessionId, (event) => {
     receivedEvents.push(event);
@@ -78,7 +79,7 @@ Deno.test("ProjectionProtocol - pause and resume", async () => {
   const protocol = new ProjectionProtocol(eventStream);
 
   const sessionId = "test-session";
-  const receivedEvents: unknown[] = [];
+  const receivedEvents: BaseEvent[] = [];
 
   const subscription = protocol.subscribe(sessionId, (event) => {
     receivedEvents.push(event);
@@ -121,7 +122,7 @@ Deno.test("ProjectionProtocol - event filtering", async () => {
   const protocol = new ProjectionProtocol(eventStream);
 
   const sessionId = "test-session";
-  const receivedEvents: unknown[] = [];
+  const receivedEvents: BaseEvent[] = [];
 
   // Subscribe with filter - only session events
   const subscription = protocol.subscribe(
@@ -255,7 +256,7 @@ Deno.test("ProjectionProtocol - from_sequence filter", async () => {
     });
   }
 
-  const receivedEvents: unknown[] = [];
+  const receivedEvents: BaseEvent[] = [];
 
   // Subscribe starting from sequence 3
   const subscription = protocol.subscribe(

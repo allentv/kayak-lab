@@ -4,7 +4,7 @@
  * Renders events to the terminal with styling and handles user input.
  */
 
-import { BaseEvent, EventType, EventTypes } from "../types/events.ts";
+import { BaseEvent, EventType } from "../types/events.ts";
 import {
   IProjectionProtocol,
   Subscription,
@@ -182,7 +182,6 @@ export class TerminalProjection {
   private options: TerminalProjectionOptions;
   private subscription: Subscription | null = null;
   private inputHandlers: Set<InputHandler> = new Set();
-  private readline: unknown = null;
 
   constructor(
     protocol: IProjectionProtocol,
@@ -286,16 +285,13 @@ export class TerminalProjection {
     // For now, we'll just have a placeholder
     if (typeof Deno !== "undefined") {
       // Deno environment
-      this.readline = null;
     } else if (typeof process !== "undefined") {
       // Node.js environment
-      this.readline = null;
     }
   }
 
   private async teardownInputHandling(): Promise<void> {
     this.inputHandlers.clear();
-    this.readline = null;
   }
 }
 

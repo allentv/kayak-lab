@@ -2,7 +2,7 @@
  * Performance benchmarks for critical paths.
  */
 
-import { assertEquals, assertExists } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assertEquals } from "https://deno.land/std@0.208.0/assert/mod.ts";
 import { EventStream } from "../core/event-stream.ts";
 import { SessionManager } from "../core/session-manager.ts";
 import { ProjectionProtocol } from "../projection/protocol.ts";
@@ -153,10 +153,7 @@ Deno.test("SessionManager - session lifecycle performance", async () => {
   const startTime = performance.now();
 
   for (let i = 0; i < iterations; i++) {
-    const session = await sessionManager.createSession({
-      agent_id: "bench-agent",
-      user_id: "bench-user",
-    });
+    const session = await sessionManager.createSession();
 
     await sessionManager.completeSession(session.id);
   }
@@ -178,7 +175,7 @@ Deno.test("Memory usage - event stream", () => {
   const sessionId = "bench-session";
   const eventCount = 10000;
 
-  const initialMemory = performance.memory?.usedJSHeapSize ?? 0;
+  const initialMemory = (performance as any).memory?.usedJSHeapSize ?? 0;
 
   for (let i = 0; i < eventCount; i++) {
     eventStream.append({
@@ -190,7 +187,7 @@ Deno.test("Memory usage - event stream", () => {
     });
   }
 
-  const finalMemory = performance.memory?.usedJSHeapSize ?? 0;
+  const finalMemory = (performance as any).memory?.usedJSHeapSize ?? 0;
   const memoryIncrease = finalMemory - initialMemory;
   const bytesPerEvent = memoryIncrease / eventCount;
 
@@ -199,8 +196,8 @@ Deno.test("Memory usage - event stream", () => {
   console.log(`  Per event: ${bytesPerEvent.toFixed(2)} bytes`);
 
   // Memory baseline: should use less than 1KB per event
-  // Note: This test only runs in environments that support performance.memory
-  if (performance.memory) {
+  // Note: This test only runs in environments that support (performance as any).memory
+  if ((performance as any).memory) {
     assertEquals(bytesPerEvent < 1024, true, "Memory usage too high per event");
   }
 });

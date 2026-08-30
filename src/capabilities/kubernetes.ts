@@ -10,7 +10,6 @@ import {
   CapabilityContext,
   CapabilityResult,
   CapabilityNotInitializedError,
-  CapabilityExecutionError,
 } from "./capability.ts";
 
 // ============================================================================
@@ -180,7 +179,7 @@ export class KubernetesCapability implements IKubernetesCapability {
     this.context = null;
   }
 
-  async listPods(namespace?: string): Promise<CapabilityResult<KubernetesPod[]>> {
+  async listPods(_namespace?: string): Promise<CapabilityResult<KubernetesPod[]>> {
     this.ensureInitialized();
 
     try {
@@ -242,7 +241,7 @@ export class KubernetesCapability implements IKubernetesCapability {
     }
   }
 
-  async listServices(namespace?: string): Promise<CapabilityResult<KubernetesService[]>> {
+  async listServices(_namespace?: string): Promise<CapabilityResult<KubernetesService[]>> {
     this.ensureInitialized();
 
     try {
@@ -280,7 +279,7 @@ export class KubernetesCapability implements IKubernetesCapability {
     }
   }
 
-  async listDeployments(namespace?: string): Promise<CapabilityResult<KubernetesDeployment[]>> {
+  async listDeployments(_namespace?: string): Promise<CapabilityResult<KubernetesDeployment[]>> {
     this.ensureInitialized();
 
     try {
@@ -383,9 +382,9 @@ export class KubernetesCapability implements IKubernetesCapability {
   }
 
   async getEvents(
-    resourceType: string,
-    resourceName: string,
-    namespace?: string,
+    _resourceType: string,
+    _resourceName: string,
+    _namespace?: string,
   ): Promise<CapabilityResult<KubernetesEvent[]>> {
     this.ensureInitialized();
 
@@ -403,8 +402,8 @@ export class KubernetesCapability implements IKubernetesCapability {
   }
 
   async applyManifest(
-    manifest: Record<string, unknown>,
-    namespace?: string,
+    _manifest: Record<string, unknown>,
+    _namespace?: string,
   ): Promise<CapabilityResult<{ success: boolean; message: string }>> {
     this.ensureInitialized();
 
@@ -425,7 +424,7 @@ export class KubernetesCapability implements IKubernetesCapability {
   async deleteResource(
     resourceType: string,
     name: string,
-    namespace?: string,
+    _namespace?: string,
   ): Promise<CapabilityResult<{ success: boolean; message: string }>> {
     this.ensureInitialized();
 

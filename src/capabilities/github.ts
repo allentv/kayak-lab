@@ -10,7 +10,6 @@ import {
   CapabilityContext,
   CapabilityResult,
   CapabilityNotInitializedError,
-  CapabilityExecutionError,
 } from "./capability.ts";
 
 // ============================================================================
@@ -138,8 +137,8 @@ export interface IGitHubCapability extends ICapability {
 
   /** List issue comments. */
   listIssueComments(
-    issueNumber: number,
-    limit?: number,
+    _issueNumber: number,
+    _limit?: number,
   ): Promise<CapabilityResult<GitHubComment[]>>;
 
   /** Create issue comment. */
@@ -198,7 +197,7 @@ export class GitHubCapability implements IGitHubCapability {
     }
   }
 
-  async listIssues(options?: {
+  async listIssues(_options?: {
     state?: IssueState;
     labels?: string[];
     assignee?: string;
@@ -310,7 +309,7 @@ export class GitHubCapability implements IGitHubCapability {
     }
   }
 
-  async listPullRequests(options?: {
+  async listPullRequests(_options?: {
     state?: PullRequestState;
     limit?: number;
   }): Promise<CapabilityResult<GitHubPullRequest[]>> {
@@ -391,7 +390,7 @@ export class GitHubCapability implements IGitHubCapability {
 
   async mergePullRequest(
     number: number,
-    options?: {
+    _options?: {
       merge_method?: "merge" | "squash" | "rebase";
       commit_title?: string;
     },
@@ -422,8 +421,8 @@ export class GitHubCapability implements IGitHubCapability {
   }
 
   async listIssueComments(
-    issueNumber: number,
-    limit?: number,
+    _issueNumber: number,
+    _limit?: number,
   ): Promise<CapabilityResult<GitHubComment[]>> {
     this.ensureInitialized();
 
@@ -441,7 +440,7 @@ export class GitHubCapability implements IGitHubCapability {
   }
 
   async createIssueComment(
-    issueNumber: number,
+    _issueNumber: number,
     body: string,
   ): Promise<CapabilityResult<GitHubComment>> {
     this.ensureInitialized();
