@@ -1,7 +1,7 @@
 import {
   assertEquals,
   assertExists,
-} from "https://deno.land/std@0.224.0/assert/mod.ts";
+} from "@std/assert";
 import { EventStream } from "../../core/event-stream.ts";
 import { SessionManager } from "../../core/session-manager.ts";
 import { ModelManager } from "../model-provider.ts";

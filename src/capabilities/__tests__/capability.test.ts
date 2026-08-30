@@ -1,6 +1,6 @@
 import {
   assertEquals,
-} from "https://deno.land/std@0.224.0/assert/mod.ts";
+} from "@std/assert";
 import { CapabilityRegistry } from "../capability.ts";
 import { GitCapability } from "../git.ts";
 import { ShellCapability } from "../shell.ts";

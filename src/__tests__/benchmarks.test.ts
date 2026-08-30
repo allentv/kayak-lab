@@ -2,7 +2,7 @@
  * Performance benchmarks for critical paths.
  */
 
-import { assertEquals } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assertEquals } from "@std/assert";
 import { EventStream } from "../core/event-stream.ts";
 import { SessionManager } from "../core/session-manager.ts";
 import { ProjectionProtocol } from "../projection/protocol.ts";

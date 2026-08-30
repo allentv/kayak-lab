@@ -2,7 +2,7 @@
  * Integration tests for projection protocol.
  */
 
-import { assertEquals, assertExists } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assertEquals, assertExists } from "@std/assert";
 import { EventStream } from "../../core/event-stream.ts";
 import { BaseEvent } from "../../types/events.ts";
 import { ProjectionProtocol } from "../protocol.ts";

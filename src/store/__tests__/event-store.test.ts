@@ -1,7 +1,7 @@
 import {
   assertEquals,
   assertExists,
-} from "https://deno.land/std@0.224.0/assert/mod.ts";
+} from "@std/assert";
 import { EventStore } from "../event-store.ts";
 import { BaseEvent, EventTypes } from "../../types/events.ts";
 

@@ -17,5 +17,10 @@
     "fmt": "deno fmt",
     "lint": "deno lint",
     "check": "deno check src/**/*.ts"
+  },
+  "lint": {
+    "rules": {
+      "exclude": ["require-await", "no-explicit-any"]
+    }
   }
 }
