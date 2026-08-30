@@ -6,6 +6,10 @@ export default defineConfig({
     "Event-sourced agent interaction platform built with Deno 2",
   base: "/kayak-lab/",
 
+  markdown: {
+    mermaid: true,
+  },
+
   themeConfig: {
     nav: [
       { text: "Home", link: "/" },

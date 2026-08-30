@@ -36,12 +36,13 @@ Lifecycle events for agent sessions.
 
 ### State Transitions
 
-```
-  active ──→ paused ──→ active    (interruptible)
-    │
-    ├──→ completed                 (success)
-    ├──→ failed                    (error)
-    └──→ cancelled                 (user abort)
+```mermaid
+stateDiagram-v2
+    active --> paused : interruptible
+    paused --> active : resume
+    active --> completed : success
+    active --> failed : error
+    active --> cancelled : user abort
 ```
 
 ## Agent Events

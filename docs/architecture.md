@@ -2,34 +2,34 @@
 
 kayak-lab is built as a three-layer architecture: **Core**, **Capabilities**, and **Projections**.
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    KAYAK-LAB ARCHITECTURE                    │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │                   Core Layer                         │   │
-│  │  EventStream ←→ SessionManager ←→ AgentRuntime      │   │
-│  │       │                               │              │   │
-│  │  EventStore                    ModelProvider         │   │
-│  │  (in-memory, persistence       (OpenAI, Anthropic,  │   │
-│  │   planned)                      local models)       │   │
-│  └─────────────────────┬───────────────────────────────┘   │
-│                        │                                    │
-│  ┌─────────────────────▼───────────────────────────────┐   │
-│  │                Capability Layer                      │   │
-│  │  Shell (real)  Git (stubbed)  GitHub (stubbed)      │   │
-│  │  Kubernetes (stubbed)                               │   │
-│  └─────────────────────┬───────────────────────────────┘   │
-│                        │                                    │
-│  ┌─────────────────────▼───────────────────────────────┐   │
-│  │              Projection Layer                        │   │
-│  │  Protocol ←→ Terminal (real)                         │   │
-│  │            ←→ WebSocket (planned)                    │   │
-│  │            ←→ Web UI (planned)                       │   │
-│  └─────────────────────────────────────────────────────┘   │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph Core["Core Layer"]
+        ES["EventStream"] <--> SM["SessionManager"]
+        SM <--> AR["AgentRuntime"]
+        ES --- ESTORE["EventStore<br/>(in-memory, persistence planned)"]
+        AR --- MP["ModelProvider<br/>(OpenAI, Anthropic, local)"]
+    end
+
+    subgraph Capabilities["Capability Layer"]
+        Shell["Shell (real)"]
+        Git["Git (stubbed)"]
+        GitHub["GitHub (stubbed)"]
+        K8s["Kubernetes (stubbed)"]
+    end
+
+    subgraph Projections["Projection Layer"]
+        Protocol["Protocol"]
+        Terminal["Terminal (real)"]
+        WebSocket["WebSocket (planned)"]
+        WebUI["Web UI (planned)"]
+        Protocol <--> Terminal
+        Protocol <--> WebSocket
+        Protocol <--> WebUI
+    end
+
+    Core --> Capabilities
+    Capabilities --> Projections
 ```
 
 ## Core Layer
@@ -146,23 +146,33 @@ await terminal.start("abc-123");
 
 ## Data Flow
 
-```
-User Input → AgentRuntime → ModelProvider → ToolRegistry → Capability
-     │              │              │              │              │
-     │         (emit events)  (emit events) (emit events) (emit events)
-     │              │              │              │              │
-     └──────────────┴──────────────┴──────────────┴──────────────┘
-                                   │
-                            EventStream.append()
-                                   │
-                            ┌──────▼──────┐
-                            │ Projection  │
-                            │ Protocol    │
-                            └──────┬──────┘
-                                   │
-                    ┌──────────────┼──────────────┐
-                    │              │              │
-               Terminal        WebSocket        Web UI
+```mermaid
+sequenceDiagram
+    participant User
+    participant AR as AgentRuntime
+    participant MP as ModelProvider
+    participant TR as ToolRegistry
+    participant Cap as Capability
+    participant ES as EventStream
+    participant PP as ProjectionProtocol
+    participant UI as UI Surfaces
+
+    User->>AR: Input
+    AR->>MP: Request
+    MP-->>AR: Response
+    AR->>TR: Invoke tool
+    TR->>Cap: Execute
+    Cap-->>TR: Result
+    TR-->>AR: Result
+
+    AR->>ES: Append events
+    MP->>ES: Append events
+    TR->>ES: Append events
+    Cap->>ES: Append events
+
+    ES->>PP: Stream events
+    PP->>UI: Project to surfaces
+    UI-->>PP: User actions
 ```
 
 ## Design Principles

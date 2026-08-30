@@ -4,22 +4,17 @@ Sessions manage the lifecycle of agent interactions. Each session is an isolated
 
 ## Session States
 
-```
-                    ┌──────────┐
-          ┌────────▶│  active  │◀────────┐
-          │         └────┬─────┘         │
-          │              │               │
-          │    ┌─────────┼─────────┐     │
-          │    │         │         │     │
-          ▼    ▼         ▼         ▼     │
-    ┌─────────┐  ┌───────────┐  ┌───────┴─┐
-    │ paused  │  │ completed │  │cancelled│
-    └─────────┘  └───────────┘  └─────────┘
-                     │
-                     ▼
-               ┌──────────┐
-               │  failed  │
-               └──────────┘
+```mermaid
+stateDiagram-v2
+    [*] --> active
+    active --> paused
+    paused --> active
+    active --> completed
+    active --> failed
+    active --> cancelled
+    completed --> [*]
+    failed --> [*]
+    cancelled --> [*]
 ```
 
 | State | Description | Terminal? |
