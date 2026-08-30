@@ -1,24 +1,40 @@
 ## Purpose
 
-Fresh-based Web UI embedded in the harness process, providing real-time monitoring of agent sessions, events, and capability health. Serves as the first runnable application and foundation for visual verification of harness behavior.
+Fresh-based Web UI as a separate process that connects to one or more headless harness instances, providing a unified real-time monitoring dashboard for agent sessions, events, and capabilities.
 
 ## ADDED Requirements
 
-### Requirement: Harness entry point
+### Requirement: Harness headless mode
 
-The harness MUST provide a main entry point that wires components and starts the web server.
+The harness MUST run without the web server when `--no-web` is passed.
 
-#### Scenario: Start harness with web UI
-- **WHEN** `deno run -A src/main.ts` is executed
-- **THEN** the harness initializes (EventStream, SessionManager, Capabilities) and starts a Fresh web server on the configured port (default 8000)
+#### Scenario: Headless start
+- **WHEN** `deno run -A src/main.ts --no-web --port 9001` is executed
+- **THEN** the harness initializes and starts an HTTP/WebSocket server on port 9001 without Fresh UI
+
+#### Scenario: Default mode
+- **WHEN** `deno run -A src/main.ts --port 9001` is executed (no `--no-web`)
+- **THEN** the harness starts with the embedded Fresh UI on the same port (single-instance mode)
 
 #### Scenario: Port configuration
-- **WHEN** the `PORT` environment variable is set
-- **THEN** the Fresh server listens on that port
+- **WHEN** the `PORT` environment variable or `--port` flag is set
+- **THEN** the server listens on that port
 
-#### Scenario: Harness without web UI
-- **WHEN** `--no-web` flag is passed
-- **THEN** the harness starts without the web server (headless mode for tests/CI)
+### Requirement: Harness HTTP/WebSocket server
+
+The harness MUST expose API and WebSocket endpoints even in headless mode.
+
+#### Scenario: REST API available
+- **WHEN** the harness starts (headless or with UI)
+- **THEN** `GET /api/sessions`, `GET /api/sessions/:id`, `GET /api/sessions/:id/events`, `GET /api/capabilities`, `GET /api/health` are available
+
+#### Scenario: WebSocket available
+- **WHEN** the harness starts
+- **THEN** `ws://host:port/ws/events` accepts connections and streams events
+
+#### Scenario: Multiple harness instances
+- **WHEN** 3 harness instances run on ports 9001, 9002, 9003
+- **THEN** each exposes its own API and WebSocket independently
 
 ### Requirement: Event stream subscription
 
@@ -36,25 +52,45 @@ The EventStream MUST support real-time subscription for pushing events to consum
 - **WHEN** `eventStream.onAppend(sessionId, callback)` is called
 - **THEN** the callback is invoked only for events in the specified session
 
+### Requirement: Web UI as separate process
+
+The Web UI MUST be a separate Fresh application that connects to harness instances.
+
+#### Scenario: Connect to single harness
+- **WHEN** `deno run -A web/main.ts --connect localhost:9001` is executed
+- **THEN** the UI starts on port 8000 and connects to the harness on port 9001
+
+#### Scenario: Connect to multiple harnesses
+- **WHEN** `deno run -A web/main.ts --connect localhost:9001,localhost:9002,localhost:9003` is executed
+- **THEN** the UI connects to all three harnesses and aggregates their state
+
+#### Scenario: Dynamic connection
+- **WHEN** the UI is running and a new harness URL is added via the UI
+- **THEN** the UI connects to the new harness without restart
+
+#### Scenario: Harness disconnect
+- **WHEN** a connected harness becomes unavailable
+- **THEN** the UI shows the harness as "disconnected" and continues showing data from other harnesses
+
 ### Requirement: Dashboard page
 
-The web UI MUST display a dashboard overview of the harness state.
+The web UI MUST display an aggregated dashboard of all connected harnesses.
 
-#### Scenario: Active sessions
+#### Scenario: Multi-harness overview
 - **WHEN** the dashboard loads
-- **THEN** a list of all sessions is displayed with: id, state, created_at, event count, last event type
+- **THEN** each connected harness is listed with: name/URL, status (connected/disconnected), session count, event count
 
-#### Scenario: Session summary stats
+#### Scenario: Aggregated session list
 - **WHEN** the dashboard loads
-- **THEN** summary counts are shown: total sessions, active, completed, failed, paused
+- **THEN** all sessions across all harnesses are displayed with: harness source, session id, state, created_at, event count
 
-#### Scenario: Capability health
+#### Scenario: Aggregated capability health
 - **WHEN** the dashboard loads
-- **THEN** each registered capability is listed with: name, version, initialized status, last error (if any)
+- **THEN** capabilities from all harnesses are listed with: harness source, name, version, initialized status
 
-#### Scenario: Recent events
+#### Scenario: Recent events feed
 - **WHEN** the dashboard loads
-- **THEN** the last 20 events across all sessions are displayed in reverse chronological order
+- **THEN** the last 50 events across all harnesses are displayed in reverse chronological order with source harness label
 
 ### Requirement: Session inspector page
 
@@ -72,65 +108,45 @@ The web UI MUST provide a per-session detail view with event timeline.
 - **WHEN** the user selects event type filters
 - **THEN** only events matching the selected types are displayed
 
-#### Scenario: Session state display
-- **WHEN** a session is viewed
-- **THEN** the current session state (active/paused/completed/failed/cancelled) is prominently displayed
+#### Scenario: Harness source label
+- **WHEN** events from different harnesses are displayed
+- **THEN** each event shows which harness it came from
 
 ### Requirement: Real-time WebSocket event stream
 
-The web UI MUST receive events in real time via WebSocket.
+The web UI MUST receive events in real time via WebSocket from each connected harness.
 
-#### Scenario: WebSocket connection
-- **WHEN** the web UI loads any page
-- **THEN** a WebSocket connection is established to `/ws/events`
+#### Scenario: Per-harness WebSocket
+- **WHEN** the UI connects to a harness
+- **THEN** a WebSocket connection is established to `ws://harness/ws/events`
 
 #### Scenario: Real-time event push
-- **WHEN** a new event is appended to the EventStream
-- **THEN** all connected WebSocket clients receive the event within 100ms
+- **WHEN** a new event is appended to any connected harness
+- **THEN** the UI receives the event within 100ms
 
-#### Scenario: Event filtering over WebSocket
-- **WHEN** a client sends a filter message `{ type: "subscribe", session_id?: string, event_types?: string[] }`
-- **THEN** only matching events are delivered to that client
+#### Scenario: Event filtering
+- **WHEN** the UI sends a filter message `{ type: "subscribe", session_id?, event_types? }`
+- **THEN** only matching events are delivered from that harness
 
 #### Scenario: Reconnection
-- **WHEN** the WebSocket connection drops and reconnects
-- **THEN** the client receives events from its last known sequence number (no gaps)
+- **WHEN** a WebSocket connection drops and reconnects
+- **THEN** the UI receives events from its last known sequence number (no gaps)
 
 ### Requirement: REST API
 
-The web UI MUST expose REST API endpoints for programmatic access.
+The web UI MUST expose its own REST API for programmatic access to aggregated state.
 
-#### Scenario: List sessions
-- **WHEN** `GET /api/sessions` is called
-- **THEN** a JSON array of all sessions with state and metadata is returned
+#### Scenario: List all sessions
+- **WHEN** `GET /api/sessions` is called on the UI
+- **THEN** all sessions from all connected harnesses are returned with source harness labels
 
-#### Scenario: Get session
-- **WHEN** `GET /api/sessions/:id` is called
-- **THEN** the full session object including event count is returned
-
-#### Scenario: Get session events
-- **WHEN** `GET /api/sessions/:id/events` is called
-- **THEN** all events for that session are returned in order, with optional `?type=` filter and `?limit=` pagination
-
-#### Scenario: Get capabilities
-- **WHEN** `GET /api/capabilities` is called
-- **THEN** a JSON array of all registered capabilities with name, version, initialized status is returned
+#### Scenario: List connected harnesses
+- **WHEN** `GET /api/harnesses` is called on the UI
+- **THEN** a list of all configured harness connections with status is returned
 
 #### Scenario: Health check
-- **WHEN** `GET /api/health` is called
-- **THEN** `{ status: "ok", uptime, session_count, event_count }` is returned
-
-### Requirement: WebSocket server upgrade
-
-The WebSocket server MUST use Deno's native WebSocket support.
-
-#### Scenario: Upgrade handshake
-- **WHEN** a client connects to `/ws/events`
-- **THEN** the connection is upgraded from HTTP to WebSocket
-
-#### Scenario: Heartbeat
-- **WHEN** a client is idle for 30 seconds
-- **THEN** the server sends a ping; if no pong in 5 seconds, the client is disconnected
+- **WHEN** `GET /api/health` is called on the UI
+- **THEN** `{ status: "ok", harnesses: [...], total_sessions, total_events }` is returned
 
 ### Requirement: Fresh islands architecture
 
@@ -138,7 +154,7 @@ The web UI MUST use Fresh's islands architecture for interactive components.
 
 #### Scenario: SSR pages
 - **WHEN** a page is requested
-- **THEN** the initial HTML is server-rendered (fast load, SEO-friendly)
+- **THEN** the initial HTML is server-rendered (fast load)
 
 #### Scenario: Interactive islands
 - **WHEN** the page loads in the browser
@@ -146,4 +162,4 @@ The web UI MUST use Fresh's islands architecture for interactive components.
 
 #### Scenario: No build step
 - **WHEN** the Fresh server starts
-- **THEN** no separate build step is required (Deno-native, no webpack/vite)
+- **THEN** no separate build step is required (Deno-native)
