@@ -144,4 +144,173 @@ Deno.test("EventStream", async (t) => {
     const events = stream.getEvents("non-existent");
     assertEquals(events.length, 0);
   });
+
+  await t.step("gets events in range", () => {
+    const stream = new EventStream();
+    const sessionId = "session-6";
+
+    stream.append({
+      session_id: sessionId,
+      sequence_number: 1,
+      event_type: EventTypes.SESSION_CREATED,
+      payload: {},
+      metadata: { source: "test" },
+    });
+
+    stream.append({
+      session_id: sessionId,
+      sequence_number: 2,
+      event_type: EventTypes.SESSION_PAUSED,
+      payload: {},
+      metadata: { source: "test" },
+    });
+
+    stream.append({
+      session_id: sessionId,
+      sequence_number: 3,
+      event_type: EventTypes.SESSION_RESUMED,
+      payload: {},
+      metadata: { source: "test" },
+    });
+
+    const events = stream.getEventsInRange(sessionId, 2, 3);
+    assertEquals(events.length, 2);
+    assertEquals(events[0].sequence_number, 2);
+    assertEquals(events[1].sequence_number, 3);
+  });
+
+  await t.step("returns empty range for from > to", () => {
+    const stream = new EventStream();
+    const sessionId = "session-7";
+
+    stream.append({
+      session_id: sessionId,
+      sequence_number: 1,
+      event_type: EventTypes.SESSION_CREATED,
+      payload: {},
+      metadata: { source: "test" },
+    });
+
+    const events = stream.getEventsInRange(sessionId, 5, 2);
+    assertEquals(events.length, 0);
+  });
+
+  await t.step("gets last event", () => {
+    const stream = new EventStream();
+    const sessionId = "session-8";
+
+    stream.append({
+      session_id: sessionId,
+      sequence_number: 1,
+      event_type: EventTypes.SESSION_CREATED,
+      payload: {},
+      metadata: { source: "test" },
+    });
+
+    stream.append({
+      session_id: sessionId,
+      sequence_number: 2,
+      event_type: EventTypes.SESSION_PAUSED,
+      payload: {},
+      metadata: { source: "test" },
+    });
+
+    const last = stream.getLastEvent(sessionId);
+    assertEquals(last?.sequence_number, 2);
+  });
+
+  await t.step("returns undefined for last event of non-existent session", () => {
+    const stream = new EventStream();
+    const last = stream.getLastEvent("non-existent");
+    assertEquals(last, undefined);
+  });
+
+  await t.step("checks session existence", () => {
+    const stream = new EventStream();
+
+    assertEquals(stream.hasSession("session-9"), false);
+
+    stream.append({
+      session_id: "session-9",
+      sequence_number: 1,
+      event_type: EventTypes.SESSION_CREATED,
+      payload: {},
+      metadata: { source: "test" },
+    });
+
+    assertEquals(stream.hasSession("session-9"), true);
+  });
+
+  await t.step("gets session IDs", () => {
+    const stream = new EventStream();
+
+    stream.append({
+      session_id: "session-a",
+      sequence_number: 1,
+      event_type: EventTypes.SESSION_CREATED,
+      payload: {},
+      metadata: { source: "test" },
+    });
+
+    stream.append({
+      session_id: "session-b",
+      sequence_number: 1,
+      event_type: EventTypes.SESSION_CREATED,
+      payload: {},
+      metadata: { source: "test" },
+    });
+
+    const ids = stream.getSessionIds();
+    assertEquals(ids.length, 2);
+    assertEquals(ids.includes("session-a"), true);
+    assertEquals(ids.includes("session-b"), true);
+  });
+
+  await t.step("tracks total events", () => {
+    const stream = new EventStream();
+
+    assertEquals(stream.totalEvents, 0);
+
+    stream.append({
+      session_id: "session-1",
+      sequence_number: 1,
+      event_type: EventTypes.SESSION_CREATED,
+      payload: {},
+      metadata: { source: "test" },
+    });
+
+    stream.append({
+      session_id: "session-2",
+      sequence_number: 1,
+      event_type: EventTypes.SESSION_CREATED,
+      payload: {},
+      metadata: { source: "test" },
+    });
+
+    assertEquals(stream.totalEvents, 2);
+  });
+
+  await t.step("tracks session count", () => {
+    const stream = new EventStream();
+
+    assertEquals(stream.sessionCount, 0);
+
+    stream.append({
+      session_id: "session-1",
+      sequence_number: 1,
+      event_type: EventTypes.SESSION_CREATED,
+      payload: {},
+      metadata: { source: "test" },
+    });
+
+    stream.append({
+      session_id: "session-2",
+      sequence_number: 1,
+      event_type: EventTypes.SESSION_CREATED,
+      payload: {},
+      metadata: { source: "test" },
+    });
+
+    assertEquals(stream.sessionCount, 2);
+  });
 });

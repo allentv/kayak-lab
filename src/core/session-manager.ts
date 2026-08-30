@@ -90,6 +90,8 @@ export interface ISessionManager {
 
 /**
  * Session manager that coordinates session lifecycle with the event stream.
+ *
+ * Returns immutable copies of session objects to preserve event-sourcing invariants.
  */
 export class SessionManager implements ISessionManager {
   private readonly sessions = new Map<string, Session>();
@@ -128,7 +130,7 @@ export class SessionManager implements ISessionManager {
       metadata: { source: "session-manager" },
     });
 
-    return session;
+    return this.cloneSession(session);
   }
 
   pauseSession(sessionId: string): Session {
@@ -154,11 +156,19 @@ export class SessionManager implements ISessionManager {
   }
 
   getSession(sessionId: string): Session | undefined {
-    return this.sessions.get(sessionId);
+    const session = this.sessions.get(sessionId);
+    return session ? this.cloneSession(session) : undefined;
   }
 
   getSessions(): Session[] {
-    return Array.from(this.sessions.values());
+    return Array.from(this.sessions.values()).map((s) => this.cloneSession(s));
+  }
+
+  /**
+   * Returns an immutable copy of a session.
+   */
+  private cloneSession(session: Session): Session {
+    return { ...session };
   }
 
   private transition(
@@ -199,6 +209,6 @@ export class SessionManager implements ISessionManager {
       metadata: { source: "session-manager" },
     });
 
-    return session;
+    return this.cloneSession(session);
   }
 }

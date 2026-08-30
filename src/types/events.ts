@@ -5,8 +5,6 @@
  * for all agent interactions.
  */
 
-import { v4 as uuidv4 } from "uuid";
-
 // ============================================================================
 // Event Type Registry
 // ============================================================================
@@ -209,36 +207,6 @@ export const CURRENT_SCHEMA_VERSION = 1;
  */
 export type AppendEventInput = Omit<BaseEvent, "event_id" | "timestamp" | "schema_version">;
 
-/**
- * Creates a new event with proper defaults.
- *
- * @param params - Event parameters
- * @returns A new immutable event
- */
-export function createEvent<T extends Record<string, unknown>>(
-  params: {
-    session_id: string;
-    sequence_number: number;
-    event_type: EventType;
-    payload: T;
-    metadata?: Partial<EventMetadata>;
-  },
-): BaseEvent {
-  return {
-    event_id: uuidv4(),
-    session_id: params.session_id,
-    sequence_number: params.sequence_number,
-    timestamp: new Date().toISOString(),
-    event_type: params.event_type,
-    schema_version: CURRENT_SCHEMA_VERSION,
-    payload: params.payload,
-    metadata: {
-      source: "unknown",
-      ...params.metadata,
-    },
-  };
-}
-
 // ============================================================================
 // Event Type Guards
 // ============================================================================
@@ -253,20 +221,26 @@ export function isValidEventType(type: string): type is EventType {
 /**
  * Type guard for session events.
  */
-export function isSessionEvent(event: BaseEvent): boolean {
+export function isSessionEvent(
+  event: BaseEvent,
+): event is BaseEvent & { event_type: "session.created" | "session.resumed" | "session.paused" | "session.completed" | "session.failed" | "session.cancelled" } {
   return event.event_type.startsWith("session.");
 }
 
 /**
  * Type guard for tool events.
  */
-export function isToolEvent(event: BaseEvent): boolean {
+export function isToolEvent(
+  event: BaseEvent,
+): event is BaseEvent & { event_type: "tool.execution.started" | "tool.execution.completed" | "tool.execution.failed" } {
   return event.event_type.startsWith("tool.");
 }
 
 /**
  * Type guard for model events.
  */
-export function isModelEvent(event: BaseEvent): boolean {
+export function isModelEvent(
+  event: BaseEvent,
+): event is BaseEvent & { event_type: "model.request" | "model.response" | "model.stream.delta" } {
   return event.event_type.startsWith("model.");
 }

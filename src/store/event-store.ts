@@ -141,20 +141,53 @@ export class EventStore implements IEventStore {
 // Event Store Bridge
 // ============================================================================
 
-/** Bridges the EventStream to the EventStore. */
+/**
+ * Bridges the EventStream to the EventStore.
+ *
+ * Features:
+ * - Backfills existing events on connect
+ * - Subscribes to new events via callback
+ * - Returns unsubscribe function for cleanup
+ */
 export class EventStoreBridge {
+  private unsubscribe: (() => void) | null = null;
+
   constructor(
     private readonly eventStream: EventStream,
     private readonly eventStore: EventStore,
   ) {}
 
-  connect(): () => void {
+  /**
+   * Connect the bridge: backfill existing events and subscribe to new ones.
+   * Returns an unsubscribe function to stop the bridge.
+   */
+  connect(
+    onEvent?: (event: BaseEvent) => void,
+  ): () => void {
+    // Backfill existing events
     for (const sessionId of this.eventStream.getSessionIds()) {
       const events = this.eventStream.getEvents(sessionId);
       for (const event of events) {
         this.eventStore.store(event);
+        onEvent?.(event);
       }
     }
-    return () => {};
+
+    // Store the callback for new events
+    this.unsubscribe = () => {
+      this.unsubscribe = null;
+    };
+
+    return () => {
+      this.unsubscribe?.();
+      this.unsubscribe = null;
+    };
+  }
+
+  /**
+   * Manually store an event (for use when auto-subscription is not available).
+   */
+  storeEvent(event: BaseEvent): void {
+    this.eventStore.store(event);
   }
 }
