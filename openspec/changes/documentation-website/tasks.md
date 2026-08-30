@@ -2,7 +2,7 @@
 
 - [x] 1.1 Initialize `docs/package.json` with vitepress devDependency. Verify: `pnpm install` succeeds.
 - [x] 1.2 Create `docs/.vitepress/config.ts` with title, description, base path, nav, sidebar, social links, footer. Verify: `pnpm vitepress dev` starts.
-- [x] 1.3 Enable MermaidJS: add `markdown: { mermaid: true }` to config. Verify: `mermaid` code blocks render.
+- [x] 1.3 Enable MermaidJS: install `mermaid` and `vitepress-plugin-mermaid`, configure with `withMermaid()`. Verify: `mermaid` code blocks render as SVG.
 - [x] 1.4 Add `docs/.gitignore` entries for `.vitepress/dist/` and `.vitepress/cache/`. Verify: build output not tracked.
 
 ## 2. Content Pages
@@ -24,28 +24,24 @@
 
 ## 4. MermaidJS Diagrams
 
-- [x] 4.1 Convert architecture ASCII block diagram to Mermaid `graph TB`. Verify: diagram renders correctly.
-- [x] 4.2 Convert architecture data flow ASCII to Mermaid `sequenceDiagram`. Verify: diagram renders correctly.
-- [x] 4.3 Convert sessions ASCII state machine to Mermaid `stateDiagram-v2`. Verify: diagram renders correctly.
-- [x] 4.4 Convert event-types ASCII transitions to Mermaid `stateDiagram-v2`. Verify: diagram renders correctly.
+- [x] 4.1 Install `mermaid` and `vitepress-plugin-mermaid` as devDependencies. Verify: `pnpm install` succeeds.
+- [x] 4.2 Configure `withMermaid()` in config.ts with mermaid theme and brand color variables. Verify: config compiles without TS errors.
+- [x] 4.3 Convert architecture ASCII block diagram to Mermaid `graph TB`. Verify: diagram renders as SVG.
+- [x] 4.4 Convert architecture data flow ASCII to Mermaid `sequenceDiagram`. Verify: diagram renders as SVG.
+- [x] 4.5 Convert sessions ASCII state machine to Mermaid `stateDiagram-v2`. Verify: diagram renders as SVG.
+- [x] 4.6 Convert event-types ASCII transitions to Mermaid `stateDiagram-v2`. Verify: diagram renders as SVG.
 
 ## 5. GitHub Actions Deployment
 
 - [x] 5.1 Create `.github/workflows/deploy-docs.yml` with push trigger on `docs/**`, workflow_dispatch. Verify: workflow syntax valid.
-- [x] 5.2 Add pnpm setup step (`pnpm/action-setup@v4`), deno setup, install, build, upload artifact, deploy steps. Verify: workflow completes.
+- [x] 5.2 Add pnpm setup (`pnpm/action-setup@v6`), install, build, upload artifact, deploy steps. Remove unused deno setup. Verify: workflow completes.
 - [x] 5.3 Add concurrency group to prevent parallel deploys. Verify: concurrent pushes queue correctly.
 - [x] 5.4 Replace npm lockfile with pnpm lockfile (`pnpm-lock.yaml`). Verify: `pnpm install` produces consistent lockfile.
+- [x] 5.5 Update actions to Node 24-compatible versions: checkout@v7, pnpm/action-setup@v6, upload-pages-artifact@v5, deploy-pages@v5. Verify: no deprecation warnings.
 
-## 6. MermaidJS Migration
+## 6. Verification
 
-- [x] 6.1 Replace architecture ASCII diagram with Mermaid block diagram. Verify: visual parity.
-- [x] 6.2 Replace architecture data flow ASCII with Mermaid sequence diagram. Verify: visual parity.
-- [x] 6.3 Replace sessions ASCII state diagram with Mermaid state diagram. Verify: visual parity.
-- [x] 6.4 Replace event-types ASCII transitions with Mermaid state diagram. Verify: visual parity.
-
-## 7. Verification
-
-- [x] 7.1 Run `pnpm vitepress build` — verify build completes without errors. Verify: `docs/.vitepress/dist/` contains HTML files.
-- [x] 7.2 Verify all pages are present in build output. Verify: index, architecture, getting-started, event-types, sessions, capabilities, contributing, changelog.
-- [x] 7.3 Verify Mermaid diagrams render as SVG in build output. Verify: no raw `mermaid` code blocks in HTML.
-- [x] 7.4 Verify custom theme CSS is included in build output. Verify: brand colors present in CSS bundle.
+- [x] 6.1 Run `pnpm vitepress build` — verify build completes without errors. Verify: `docs/.vitepress/dist/` contains HTML files.
+- [x] 6.2 Verify all pages are present in build output. Verify: index, architecture, getting-started, event-types, sessions, capabilities, contributing, changelog.
+- [x] 6.3 Verify Mermaid diagrams render as SVG in build output. Verify: `<div class="mermaid">` present, no raw code blocks.
+- [x] 6.4 Verify custom theme CSS is included in build output. Verify: brand colors present in CSS bundle.
