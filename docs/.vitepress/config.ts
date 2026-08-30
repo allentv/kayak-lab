@@ -12,18 +12,6 @@ export default withMermaid(
       mermaid: true,
     },
 
-    mermaid: {
-      theme: "base",
-      themeVariables: {
-        primaryColor: "#e0f2fe",
-        primaryTextColor: "#0f172a",
-        primaryBorderColor: "#5b9bd5",
-        lineColor: "#64748b",
-        secondaryColor: "#f0fdf4",
-        tertiaryColor: "#fef3c7",
-      },
-    },
-
     themeConfig: {
       nav: [
         { text: "Home", link: "/" },
@@ -71,5 +59,18 @@ export default withMermaid(
         copyright: "© 2026 kayak-lab",
       },
     },
-  })
+  }),
+  {
+    mermaid: {
+      theme: "base",
+      themeVariables: {
+        primaryColor: "#e0f2fe",
+        primaryTextColor: "#0f172a",
+        primaryBorderColor: "#5b9bd5",
+        lineColor: "#64748b",
+        secondaryColor: "#f0fdf4",
+        tertiaryColor: "#fef3c7",
+      },
+    },
+  }
 );
