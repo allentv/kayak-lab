@@ -2,13 +2,28 @@
 
 Building an enterprise agent platform with multiple UI surfaces (CLI, VS Code, Web, Desktop, API) that share common capabilities. The core challenge is decoupling the agent runtime from UI implementations while maintaining a complete interaction history and enabling replay/recovery.
 
-Current state: No existing implementation. This is a greenfield project.
+Current state: Core implementation complete (Event Stream, Session Manager, Agent Runtime, Model Abstraction, Tool Registry, Capabilities, Event Store). Projection Protocol and Terminal Projection pending.
 
 Constraints:
 - Must support multiple model providers (OpenAI, Anthropic, local models)
 - Must handle real-time streaming and async operations
 - Must be recoverable after failures (process crash, network failure, pod termination)
 - Must maintain session isolation and security
+
+### Implementation Status
+
+| Module | Status | Tests |
+|--------|--------|-------|
+| Core Event Stream | Complete | 15 tests |
+| Session Manager | Complete | 22 tests |
+| Agent Runtime | Complete | 7 tests |
+| Model Abstraction | Complete | 9 tests |
+| Tool Registry | Complete | 10 tests |
+| Capabilities (Git, Shell) | Complete | 31 tests |
+| Event Store | Complete | 14 tests |
+| E2E Lifecycle | Complete | 4 tests |
+| Projection Protocol | Pending | — |
+| Terminal Projection | Pending | — |
 
 ## Goals / Non-Goals
 

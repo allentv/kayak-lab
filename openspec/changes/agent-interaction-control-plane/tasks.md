@@ -61,12 +61,30 @@
 - [x] 8.3 Implement full and partial replay support
 - [x] 8.4 Add snapshot support for large event streams
 - [x] 8.5 Implement crash recovery and corrupted event handling
+- [x] 8.6 Fix EventStoreBridge timeout and error handling (commit 32ca4f5)
 
 ## 9. Integration and Testing
 
 - [x] 9.1 Create integration tests for event stream and session manager
-- [ ] 9.2 Create integration tests for agent runtime and model abstraction
+- [x] 9.2 Create integration tests for agent runtime and model abstraction
 - [x] 9.3 Create integration tests for capability layer
 - [ ] 9.4 Create integration tests for projection protocol and terminal
 - [x] 9.5 Create end-to-end tests for complete interaction flows
 - [ ] 9.6 Add performance benchmarks for critical paths
+
+---
+
+## Implementation Log
+
+| Commit | Date | Description |
+|--------|------|-------------|
+| 48ef196 | 2026-08-30 | feat: agent runtime, model abstraction, tool registry, capabilities |
+| 32ca4f5 | 2026-08-30 | fix: shell timeout signal, ToolTimeoutError args, EventStoreBridge docs |
+
+### Test Status
+- **112 tests passing** across 10 test suites
+- Runtime: agent-runtime, model-provider, tool-registry
+- Capabilities: capability-registry, git, shell
+- Core: event-stream, session-manager
+- Store: event-store
+- E2E: session lifecycle
