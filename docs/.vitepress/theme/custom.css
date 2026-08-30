@@ -1,0 +1,128 @@
+/**
+ * kayak-lab custom theme
+ * Palette: light blue, light orange, pale green
+ */
+
+:root {
+  /* Brand (light blue) */
+  --vp-c-brand-1: #5b9bd5;
+  --vp-c-brand-2: #4a8ac4;
+  --vp-c-brand-3: #3a7ab3;
+  --vp-c-brand-soft: rgba(91, 155, 213, 0.14);
+
+  /* Button — brand (light blue) */
+  --vp-button-brand-border: transparent;
+  --vp-button-brand-text: #fff;
+  --vp-button-brand-bg: var(--vp-c-brand-1);
+  --vp-button-brand-hover-border: transparent;
+  --vp-button-brand-hover-text: #fff;
+  --vp-button-brand-hover-bg: var(--vp-c-brand-2);
+  --vp-button-brand-active-border: transparent;
+  --vp-button-brand-active-text: #fff;
+  --vp-button-brand-active-bg: var(--vp-c-brand-3);
+
+  /* Button — alt (light orange) */
+  --vp-button-alt-border: #f4a261;
+  --vp-button-alt-text: #e76f51;
+  --vp-button-alt-bg: rgba(244, 162, 97, 0.08);
+  --vp-button-alt-hover-border: #f4a261;
+  --vp-button-alt-hover-text: #e76f51;
+  --vp-button-alt-hover-bg: rgba(244, 162, 97, 0.16);
+  --vp-button-alt-active-border: #f4a261;
+  --vp-button-alt-active-text: #e76f51;
+  --vp-button-alt-active-bg: rgba(244, 162, 97, 0.22);
+
+  /* Home hero gradient */
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(135deg, #5b9bd5 0%, #95d5b2 50%, #f4a261 100%);
+  --vp-home-hero-image-background-image: linear-gradient(135deg, rgba(91, 155, 213, 0.2) 0%, rgba(149, 213, 178, 0.2) 50%, rgba(244, 162, 97, 0.2) 100%);
+  --vp-home-hero-image-filter: blur(44px);
+
+  /* Feature cards */
+  --vp-feature-item-color: rgba(91, 155, 213, 0.08);
+
+  /* Green accent (pale green) */
+  --vp-c-green-1: #95d5b2;
+  --vp-c-green-2: #74c69d;
+  --vp-c-green-3: #52b788;
+
+  /* Yellow/Orange accent (light orange) */
+  --vp-c-yellow-1: #f4a261;
+  --vp-c-yellow-2: #e9c46a;
+  --vp-c-yellow-3: #e76f51;
+
+  /* Tip boxes — pale green */
+  --vp-custom-block-tip-bg: rgba(149, 213, 178, 0.14);
+  --vp-custom-block-tip-border: rgba(149, 213, 178, 0.5);
+  --vp-custom-block-tip-text: #1a7a4c;
+
+  /* Warning boxes — light orange */
+  --vp-custom-block-warning-bg: rgba(244, 162, 97, 0.14);
+  --vp-custom-block-warning-border: rgba(244, 162, 97, 0.5);
+  --vp-custom-block-warning-text: #9c4221;
+
+  /* Info boxes — light blue */
+  --vp-custom-block-info-bg: rgba(91, 155, 213, 0.14);
+  --vp-custom-block-info-border: rgba(91, 155, 213, 0.5);
+  --vp-custom-block-info-text: #2c5282;
+
+  /* Sidebar active indicator */
+  --vp-sidebar-active-color: var(--vp-c-brand-1);
+
+  /* Carbon badge */
+  --vp-name-status-done-color: var(--vp-c-green-3);
+
+  /* Outline button */
+  --vp-button-outline-border: var(--vp-c-brand-1);
+  --vp-button-outline-text: var(--vp-c-brand-1);
+  --vp-button-outline-hover-bg: var(--vp-c-brand-soft);
+}
+
+.dark {
+  /* Dark mode brand (brighter blue) */
+  --vp-c-brand-1: #7db8e8;
+  --vp-c-brand-2: #5b9bd5;
+  --vp-c-brand-3: #4a8ac4;
+  --vp-c-brand-soft: rgba(125, 184, 232, 0.16);
+
+  /* Dark mode button — alt (light orange, brighter) */
+  --vp-button-alt-border: #f4a261;
+  --vp-button-alt-text: #f4a261;
+  --vp-button-alt-bg: rgba(244, 162, 97, 0.1);
+  --vp-button-alt-hover-border: #f4a261;
+  --vp-button-alt-hover-text: #f4a261;
+  --vp-button-alt-hover-bg: rgba(244, 162, 97, 0.2);
+
+  /* Dark home hero */
+  --vp-home-hero-name-background: linear-gradient(135deg, #7db8e8 0%, #95d5b2 50%, #f4a261 100%);
+  --vp-home-hero-image-background-image: linear-gradient(135deg, rgba(125, 184, 232, 0.3) 0%, rgba(149, 213, 178, 0.3) 50%, rgba(244, 162, 97, 0.3) 100%);
+
+  /* Dark green accent */
+  --vp-c-green-1: #74c69d;
+  --vp-c-green-2: #52b788;
+  --vp-c-green-3: #40916c;
+
+  /* Dark yellow/orange */
+  --vp-c-yellow-1: #f4a261;
+  --vp-c-yellow-2: #e9c46a;
+  --vp-c-yellow-3: #e76f51;
+
+  /* Dark custom blocks */
+  --vp-custom-block-tip-bg: rgba(116, 198, 157, 0.12);
+  --vp-custom-block-tip-border: rgba(116, 198, 157, 0.4);
+  --vp-custom-block-tip-text: #95d5b2;
+
+  --vp-custom-block-warning-bg: rgba(244, 162, 97, 0.12);
+  --vp-custom-block-warning-border: rgba(244, 162, 97, 0.4);
+  --vp-custom-block-warning-text: #f4a261;
+
+  --vp-custom-block-info-bg: rgba(125, 184, 232, 0.12);
+  --vp-custom-block-info-border: rgba(125, 184, 232, 0.4);
+  --vp-custom-block-info-text: #7db8e8;
+
+  /* Dark sidebar */
+  --vp-sidebar-active-color: var(--vp-c-brand-1);
+
+  /* Dark feature cards */
+  --vp-feature-item-color: rgba(125, 184, 232, 0.08);
+}
