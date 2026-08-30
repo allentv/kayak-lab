@@ -1,18 +1,18 @@
 ## 1. Core Event Stream
 
-- [ ] 1.1 Define event schema with required fields (event_id, session_id, sequence_number, timestamp, event_type, schema_version, payload, metadata)
-- [ ] 1.2 Implement event append operation with immutability guarantee
-- [ ] 1.3 Implement event ordering with sequence number validation
-- [ ] 1.4 Implement session isolation for concurrent sessions
-- [ ] 1.5 Add event type registry and validation
+- [x] 1.1 Define event schema with required fields (event_id, session_id, sequence_number, timestamp, event_type, schema_version, payload, metadata)
+- [x] 1.2 Implement event append operation with immutability guarantee
+- [x] 1.3 Implement event ordering with sequence number validation
+- [x] 1.4 Implement session isolation for concurrent sessions
+- [x] 1.5 Add event type registry and validation
 
 ## 2. Session Manager
 
-- [ ] 2.1 Implement session creation with unique session_id generation
-- [ ] 2.2 Implement session state machine (active → paused → active, active → completed, active → failed, active → cancelled)
-- [ ] 2.3 Implement session pause/resume operations
-- [ ] 2.4 Implement session completion and failure handling
-- [ ] 2.5 Add session resumption from event stream
+- [x] 2.1 Implement session creation with unique session_id generation
+- [x] 2.2 Implement session state machine (active → paused → active, active → completed, active → failed, active → cancelled)
+- [x] 2.3 Implement session pause/resume operations
+- [x] 2.4 Implement session completion and failure handling
+- [x] 2.5 Add session resumption from event stream
 
 ## 3. Agent Runtime
 
@@ -56,17 +56,17 @@
 
 ## 8. Event Store
 
-- [ ] 8.1 Implement in-memory event store with persistence interface
-- [ ] 8.2 Add event retrieval by session and range
-- [ ] 8.3 Implement full and partial replay support
-- [ ] 8.4 Add snapshot support for large event streams
-- [ ] 8.5 Implement crash recovery and corrupted event handling
+- [x] 8.1 Implement in-memory event store with persistence interface
+- [x] 8.2 Add event retrieval by session and range
+- [x] 8.3 Implement full and partial replay support
+- [x] 8.4 Add snapshot support for large event streams
+- [x] 8.5 Implement crash recovery and corrupted event handling
 
 ## 9. Integration and Testing
 
-- [ ] 9.1 Create integration tests for event stream and session manager
+- [x] 9.1 Create integration tests for event stream and session manager
 - [ ] 9.2 Create integration tests for agent runtime and model abstraction
 - [ ] 9.3 Create integration tests for capability layer
 - [ ] 9.4 Create integration tests for projection protocol and terminal
-- [ ] 9.5 Create end-to-end tests for complete interaction flows
+- [x] 9.5 Create end-to-end tests for complete interaction flows
 - [ ] 9.6 Add performance benchmarks for critical paths
