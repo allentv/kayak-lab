@@ -61,6 +61,13 @@ All tests pass: 112 tests across 10 suites.`,
   },
   task: `Review the kayak-lab codebase for code quality, file decomposition needs, simplified abstractions, and test improvements. Follow the review checklist.
 
+## Pre-Review Steps
+1. Run \`deno task check\` — ensure no type errors
+2. Run \`deno lint\` — ensure no lint errors
+3. Run \`deno task test\` — ensure all tests pass
+
+Only proceed with code review if all three pass.
+
 ## Review Checklist
 1. **File Decomposition** — Files exceeding ~400 lines should be decomposed. Identify cohesive groups that can be extracted. Prefer splitting by responsibility (types, implementation, errors, utilities).
 2. **Abstraction Quality** — Unnecessary abstractions, over-engineering, leaky abstractions, missing abstractions.
@@ -124,7 +131,7 @@ interface ReviewFinding {
 
 ## Tips
 
-- **Run tests first**: Ensure code compiles and tests pass before review
+- **Run pre-review checks first**: `deno task check`, `deno lint`, and `deno task test` must all pass before reviewing
 - **Be specific**: Point the reviewer at specific files or directories
 - **Apply selectively**: Not all findings need to be fixed; use judgment
 - **Verify after changes**: Always run tests after applying review findings
