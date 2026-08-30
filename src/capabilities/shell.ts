@@ -168,16 +168,17 @@ export class ShellCapability implements IShellCapability {
     const maxOutputBytes = options.max_output_bytes || 1024 * 1024; // 1MB
 
     try {
+      const timeoutController = new AbortController();
+      const timeoutId = setTimeout(() => timeoutController.abort(), timeoutMs);
+
       const cmd = new Deno.Command("sh", {
         args: ["-c", commandStr],
         cwd,
         env,
         stdout: "piped",
         stderr: "piped",
+        signal: timeoutController.signal,
       });
-
-      const timeoutController = new AbortController();
-      const timeoutId = setTimeout(() => timeoutController.abort(), timeoutMs);
 
       try {
         const output = await cmd.output();

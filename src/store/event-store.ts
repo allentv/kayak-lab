@@ -146,8 +146,8 @@ export class EventStore implements IEventStore {
  *
  * Features:
  * - Backfills existing events on connect
- * - Subscribes to new events via callback
  * - Returns unsubscribe function for cleanup
+ * - NOTE: New event subscription is not yet wired (EventStream lacks subscribe API)
  */
 export class EventStoreBridge {
   private unsubscribe: (() => void) | null = null;
@@ -158,13 +158,18 @@ export class EventStoreBridge {
   ) {}
 
   /**
-   * Connect the bridge: backfill existing events and subscribe to new ones.
-   * Returns an unsubscribe function to stop the bridge.
+   * Connect the bridge: backfill existing events into the EventStore.
+   *
+   * NOTE: EventStream currently lacks a subscribe/observe API, so events
+   * appended after connect() are NOT automatically propagated. Use
+   * `storeEvent()` to manually bridge new events until EventStream gains
+   * subscription support. Returns an unsubscribe function (currently a
+   * no-op placeholder).
    */
   connect(
     onEvent?: (event: BaseEvent) => void,
   ): () => void {
-    // Backfill existing events
+    // Backfill existing events from the EventStream into the EventStore
     for (const sessionId of this.eventStream.getSessionIds()) {
       const events = this.eventStream.getEvents(sessionId);
       for (const event of events) {
@@ -173,7 +178,10 @@ export class EventStoreBridge {
       }
     }
 
-    // Store the callback for new events
+    // TODO: EventStream has no subscribe/observe API, so we cannot react to
+    // new events. When EventStream gains a subscription mechanism (e.g.
+    // `onAppend(callback): unsubscribe`), wire it here to call
+    // `this.eventStore.store(event)` and `onEvent?.(event)` for each new event.
     this.unsubscribe = () => {
       this.unsubscribe = null;
     };

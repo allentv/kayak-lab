@@ -163,6 +163,7 @@ export class ToolRegistry {
           registration.handler,
           toolCall.arguments,
           toolContext,
+          registration.name,
           registration.timeout_ms,
         );
       } else {
@@ -201,23 +202,24 @@ export class ToolRegistry {
     handler: ToolHandler,
     params: unknown,
     context: ToolContext,
+    toolName: string,
     timeoutMs: number,
   ): Promise<unknown> {
-    return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => {
-        reject(new ToolTimeoutError(context.tool_call_id, timeoutMs));
-      }, timeoutMs);
+    const { promise, resolve, reject } = Promise.withResolvers<unknown>();
+    const timer = setTimeout(() => {
+      reject(new ToolTimeoutError(toolName, timeoutMs));
+    }, timeoutMs);
 
-      Promise.resolve()
-        .then(() => handler(params, context))
-        .then((result) => {
-          clearTimeout(timer);
-          resolve(result);
-        })
-        .catch((error) => {
-          clearTimeout(timer);
-          reject(error);
-        });
-    });
+    Promise.resolve()
+      .then(() => handler(params, context))
+      .then((result) => {
+        clearTimeout(timer);
+        resolve(result);
+      })
+      .catch((error) => {
+        clearTimeout(timer);
+        reject(error);
+      });
+    return promise;
   }
 }
