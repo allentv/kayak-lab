@@ -55,12 +55,25 @@ This file captures patterns, decisions, and gotchas discovered during kayak-lab 
 - Generic type params cause assignability issues in test callbacks — use `unknown` and cast inside handler
 - `mod.ts` barrel files separate type exports from value exports for tree-shaking
 - Custom error assertion: use manual try/catch when verifying specific error properties (e.g., `error.name`)
+- `deno check src/**/*.ts` catches type errors; add it to pre-push hooks for early detection
+- `deno lint` catches unused imports/params, inline URLs, and async-without-await — configure rule exclusions in `deno.json` for stubbed implementations
+- Test files should use bare specifiers (`@std/assert`) not inline `https://deno.land` URLs — avoids `no-import-prefix` lint errors
+- `require-await` lint rule fires on stubbed async methods that implement async interfaces — suppress globally rather than removing `async` (would break interface contract)
+- `no-explicit-any` fires on `performance.memory` casts — suppress globally or use typed wrapper for non-standard APIs
 
-## Projection Protocol
+## VitePress / Documentation
 
-- WebSocket provides bidirectional real-time communication
-- Reconnection must handle event gaps (resume from last received event)
-- Ordered delivery is non-negotiable for event-sourced systems
+- `markdown.mermaid: true` alone marks code blocks for rendering but doesn't render them — you need `vitepress-plugin-mermaid` as a direct dependency
+- `withMermaid(config, mermaidConfig)` takes mermaid options as second argument — nesting inside `defineConfig` causes TS errors because `mermaid` isn't part of VitePress's `UserConfig` type
+- VitePress 1.6.x pins Vite to 5.4.x and esbuild to 0.21.x — overriding these for security patches breaks the build (Rolldown incompatibility, destructuring transform errors). Wait for VitePress 2.0.
+- GitHub Actions `actions/checkout@v4`, `upload-pages-artifact@v3`, `deploy-pages@v4` use Node 20 (deprecated) — update to v5+ for Node 24 compatibility
+- `pnpm/action-setup@v4` → `v6` for latest Node 24 support
+
+## Git Hooks
+
+- Pre-push hooks are better than pre-commit for `deno check` + `deno lint` — avoids slowing down WIP commits
+- Hook runs `deno task check` then `deno lint` sequentially — first failure blocks push
+- Can be bypassed with `git push --no-verify` — acceptable for emergencies
 
 ## Testing Patterns
 
