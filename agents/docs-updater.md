@@ -13,7 +13,7 @@ Use the Docs Updater to check if docs are current
 ```typescript
 const result = await task({
   agent: "docs-updater",
-  task: `Check if docs/capabilities.md and docs/architecture.md are current with the codebase.`,
+  task: `Check if docs/capabilities.md, docs/architecture.md, and README.md are current with the codebase.`,
 });
 ```
 
@@ -116,3 +116,13 @@ interface DocsAuditResult {
 - Focus on public APIs and user-facing features, not internal implementation details
 - When suggesting changes, provide the exact text to add or modify
 - Cross-reference with `src/capabilities/mod.ts` exports for completeness
+
+### 6. README Audit
+Read README.md. Check for:
+- Architecture diagram matches current modules
+- Capability table includes all implementations (Shell, Sandbox, Git, GitHub, K8s)
+- Project structure reflects new files (sandbox/, health.ts, config.ts, etc.)
+- Test count is current (140+ tests)
+- "Planned" items that are now implemented → move to completed
+- Active Changes table reflects archived vs in-progress
+- Quick start commands are correct

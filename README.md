@@ -6,34 +6,35 @@ Decouples an AI agent runtime from multiple UI surfaces (CLI, VS Code, Web, Desk
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    KAYAK-LAB ARCHITECTURE                    │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │                   Core Layer                         │   │
-│  │  EventStream ←→ SessionManager ←→ AgentRuntime      │   │
-│  │       │                               │              │   │
-│  │  EventStore                    ModelProvider         │   │
-│  │  (in-memory, persistence       (OpenAI, Anthropic,  │   │
-│  │   planned)                      local models)       │   │
-│  └─────────────────────┬───────────────────────────────┘   │
-│                        │                                    │
-│  ┌─────────────────────▼───────────────────────────────┐   │
-│  │                Capability Layer                      │   │
-│  │  Shell (real)  Git (stubbed)  GitHub (stubbed)      │   │
-│  │  Kubernetes (stubbed)                               │   │
-│  └─────────────────────┬───────────────────────────────┘   │
-│                        │                                    │
-│  ┌─────────────────────▼───────────────────────────────┐   │
-│  │              Projection Layer                        │   │
-│  │  Protocol ←→ Terminal (real)                         │   │
-│  │            ←→ WebSocket (planned)                    │   │
-│  │            ←→ Web UI (planned)                       │   │
-│  └─────────────────────────────────────────────────────┘   │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph Core["Core Layer"]
+        ES["EventStream"] <--> SM["SessionManager"]
+        SM <--> AR["AgentRuntime"]
+        ES --- ESTORE["EventStore"]
+        AR --- MP["ModelProvider"]
+        HR["HealthRegistry"] --- ES
+        CFG["Config"] --- AR
+    end
+
+    subgraph Capabilities["Capability Layer"]
+        Shell["Shell"]
+        Sandbox["Sandbox (Docker/gVisor)"]
+        Git["Git"]
+        GitHub["GitHub"]
+        K8s["Kubernetes"]
+    end
+
+    subgraph Projections["Projection Layer"]
+        Protocol["Protocol"]
+        Terminal["Terminal"]
+        WebSocket["WebSocket"]
+        Protocol <--> Terminal
+        Protocol <--> WebSocket
+    end
+
+    Core --> Capabilities
+    Capabilities --> Projections
 ```
 
 ## Core Concepts
@@ -71,7 +72,8 @@ Abstract interfaces for external systems. Capabilities are pluggable — swap im
 
 | Capability | Status | Description |
 |-----------|--------|-------------|
-| Shell | Real execution | `Deno.Command` with safety constraints (blocked/dangerous command lists) |
+| Shell | Real execution | `Deno.Command` with safety constraints |
+| Sandbox | Real execution | Docker/gVisor with default-deny security |
 | Git | Stubbed | Interface defined, returns simulated data |
 | GitHub | Stubbed | Interface defined, returns simulated data |
 | Kubernetes | Stubbed | Interface defined, returns simulated data |
@@ -83,9 +85,8 @@ UI surfaces subscribe to the event stream and render events appropriately. Each 
 | Projection | Status | Description |
 |-----------|--------|-------------|
 | Terminal | Implemented | ANSI-colored event rendering with streaming display |
+| WebSocket | Implemented | Real-time event delivery with gap recovery |
 | Protocol | Implemented | Subscription management with filtering and reconnection |
-| WebSocket | Planned | Real-time event delivery over WebSocket |
-| Web UI | Planned | Fresh-based monitoring dashboard |
 
 ## Project Structure
 
@@ -95,14 +96,26 @@ src/
 │   └── events.ts           BaseEvent, EventTypes registry, type guards
 ├── core/                   Core infrastructure
 │   ├── event-stream.ts     Immutable, ordered event stream with session isolation
-│   └── session-manager.ts  Session lifecycle state machine
+│   ├── session-manager.ts  Session lifecycle state machine
+│   ├── health.ts           HealthRegistry, HTTP health endpoints
+│   ├── component-health.ts Component health check registrations
+│   ├── config.ts           YAML config loading, validation, secret masking
+│   ├── rate-limiter.ts     Token bucket rate limiter
+│   ├── bounded-queue.ts    Queue with overflow policies
+│   ├── circuit-breaker.ts  Circuit breaker pattern
+│   ├── retry.ts            Retry with backoff
+│   ├── fallback.ts         Graceful degradation
+│   ├── errors.ts           Typed error hierarchy
+│   └── schema-registry.ts  Event schema versioning and migration
 ├── runtime/                Agent execution
 │   ├── agent-runtime.ts    Agent loop: input → model → tool cycle
-│   ├── model-provider.ts   Provider-agnostic model interface (IModelProvider)
+│   ├── model-provider.ts   Provider-agnostic model interface
 │   └── tool-registry.ts    Typed tool registration and invocation
 ├── capabilities/           External system interfaces
-│   ├── capability.ts       ICapability interface, registry, error hierarchy
+│   ├── capability.ts       ICapability interface, registry
 │   ├── shell.ts            Shell execution via Deno.Command
+│   ├── sandboxed-shell.ts  Sandboxed execution via ISandboxRuntime
+│   ├── sandbox/            Docker/gVisor runtime implementations
 │   ├── git.ts              Git operations (stubbed)
 │   ├── github.ts           GitHub API operations (stubbed)
 │   └── kubernetes.ts       Kubernetes API operations (stubbed)
@@ -110,14 +123,20 @@ src/
 │   └── event-store.ts      In-memory event store with snapshots and replay
 ├── projection/             UI projection layer
 │   ├── protocol.ts         Subscription protocol with filtering
-│   └── terminal.ts         Terminal/CLI event rendering
+│   ├── terminal.ts         Terminal/CLI event rendering
+│   └── websocket-server.ts WebSocket server for real-time delivery
+├── __test-utils__/         Shared test infrastructure
+│   ├── mocks/              Mock implementations for all interfaces
+│   ├── helpers/            Test builders, generators, assertions
+│   ├── fixtures/           JSON test fixtures
+│   └── harness/            Integration test environment
 └── __tests__/              End-to-end and benchmark tests
 ```
 
 ## Quick Start
 
 ```bash
-# Run all tests (112+ tests across 10 suites)
+# Run all tests (140+ tests across 15 suites)
 deno test --allow-read --allow-env --allow-run
 
 # Type check
@@ -130,13 +149,23 @@ deno fmt
 deno lint
 ```
 
+### Sandbox Setup
+
+For sandboxed execution of untrusted code:
+
+```bash
+# Install gVisor and configure Docker (requires sudo)
+scripts/setup-sandbox.sh
+
+# Verify sandbox is working
+scripts/sandbox-health-check.sh
+```
+
 ### Running Benchmarks
 
 ```bash
 deno test src/__tests__/benchmarks.test.ts --allow-read --allow-env
 ```
-
-Benchmarks measure: event append throughput, event read throughput, subscription creation, event delivery, session lifecycle, and memory usage.
 
 ## Event Types
 
@@ -160,18 +189,26 @@ This project uses [OpenSpec](https://github.com/allentv/openspec) for specificat
 
 | Change | Focus | Status |
 |--------|-------|--------|
-| `persistence-layer` | File-based event persistence (JSONL, snapshots, recovery) | Spec complete |
-| `real-capabilities` | Real Git/GitHub/K8s execution replacing stubs | Spec complete |
-| `schema-evolution` | Event schema versioning, compatibility, migration | Spec complete |
-| `error-handling-recovery` | Error taxonomy, retry policies, circuit breaker | Spec complete |
-| `configuration-management` | Typed config, env overrides, secrets, hot-reload | Spec complete |
-| `websocket-projection` | WebSocket transport for real-time event delivery | Spec complete |
-| `additional-projections` | VS Code, Web, Desktop, REST API projections | Spec complete |
-| `rate-limiting-backpressure` | Token bucket rate limiters, backpressure, queue bounds | Spec complete |
-| `health-checks-observability` | Health/readiness/liveness probes, component health | Spec complete |
-| `cross-cutting-concerns` | Identity, policy, telemetry, evaluation | Spec complete |
-| `testing-infrastructure` | Mock registry, test helpers, fixtures, harness | Spec complete |
-| `web-monitoring-ui` | Fresh-based monitoring dashboard (separate process) | Spec complete |
+| `persistence-layer` | File-based event persistence (JSONL, snapshots, recovery) | In progress |
+| `real-capabilities` | Real Git/GitHub/K8s execution replacing stubs | In progress |
+| `additional-projections` | VS Code, Web, Desktop, REST API projections | In progress |
+| `cross-cutting-concerns` | Identity, policy, telemetry, evaluation | In progress |
+| `web-monitoring-ui` | Fresh-based monitoring dashboard | In progress |
+
+### Archived Changes
+
+| Change | Focus |
+|--------|-------|
+| `testing-infrastructure` | Mock registry, test helpers, fixtures, harness |
+| `health-checks-observability` | Health probes, component health checks |
+| `error-handling-recovery` | Error taxonomy, retry, circuit breaker |
+| `schema-evolution` | Event schema versioning and migration |
+| `configuration-management` | Typed config with env overrides |
+| `rate-limiting-backpressure` | Rate limiters and flow control |
+| `websocket-projection` | WebSocket transport for real-time events |
+| `local-sandbox-execution` | Docker/GVisor sandbox execution |
+| `code-quality-tooling` | Linting, formatting, pre-push checks |
+| `documentation-website` | VitePress documentation site |
 
 ### Working with OpenSpec
 
@@ -189,13 +226,13 @@ openspec validate <change-name>
 openspec instructions apply --change <change-name> --json
 ```
 
-Change artifacts live in `openspec/changes/<change-name>/` with: `proposal.md`, `specs/`, `design.md`, `tasks.md`.
-
 ## Documentation
 
-- [OpenSpec Analysis](docs/openspec-analysis.md) — Pros/cons of using OpenSpec for this project
-- [Learnings](docs/learnings.md) — Patterns, decisions, and gotchas discovered during development
-- [Agents](AGENTS.md) — Code reviewer and scout agent configurations
+- [Architecture](docs/architecture.md) — System design and module descriptions
+- [Capabilities](docs/capabilities.md) — External system interfaces
+- [Changelog](docs/changelog.md) — Version history
+- [Learnings](docs/learnings.md) — Patterns, decisions, and gotchas
+- [Agents](AGENTS.md) — Code reviewer, scout, and docs-updater configurations
 
 ## Development
 
@@ -216,9 +253,10 @@ Change artifacts live in `openspec/changes/<change-name>/` with: `proposal.md`, 
 ### Testing Patterns
 
 - `Deno.test` with async `t.step` for nested test organization
-- Mock providers implement `IModelProvider` with configurable responses
-- Test context objects provide minimal required fields
-- E2E tests wire real components together (EventStream → SessionManager → AgentRuntime)
+- Mock registry in `src/__test-utils__/mocks/` for all interfaces
+- Test helpers in `src/__test-utils__/helpers/` for builders and assertions
+- Integration harness via `createTestEnvironment()` in `src/__test-utils__/harness/`
+- E2E tests wire real components together
 
 ## License
 
