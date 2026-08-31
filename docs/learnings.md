@@ -20,7 +20,9 @@ This file captures patterns, decisions, and gotchas discovered during kayak-lab 
 - Sequence numbers must be monotonically increasing (no gaps)
 - Session isolation: events from session A never appear in session B
 - Schema versioning is critical for forward compatibility
-- Start with in-memory store, add persistence later
+- Persistence layer implemented: JSONL append-only logs, snapshot persistence, startup recovery via `PersistentEventStore`
+- `IPersistenceBackend` interface enables pluggable backends (file, SQLite, etc.) without changing callers
+- `FilePersistenceBackend` uses synchronous Deno I/O — guaranteed durability per write, no buffering needed
 - `EventStream.append()` takes a single `AppendEventInput` object — not separate session_id + event args
 - Sequence numbers start at 1, not 0 — `getCurrentSequence()` returns 0 for new sessions; next = `getCurrentSequence() + 1`
 - Event types use dot notation with `ui.` prefix for user input: `ui.user.input`, not `user.input`

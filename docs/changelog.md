@@ -14,6 +14,8 @@ All notable changes to kayak-lab will be documented in this file.
 - Shell capability with real execution and safety constraints (blocked/dangerous commands)
 - Git, GitHub, Kubernetes capability interfaces (stubbed implementations)
 - Event store with in-memory persistence, snapshots, and replay
+- Persistent event store with file-based JSONL append-only logs, snapshot persistence, and startup recovery
+- Pluggable persistence backend interface (`IPersistenceBackend`) for alternative storage engines
 - Projection protocol with subscription management and event filtering
 - Terminal projection with ANSI-colored event rendering
 - Schema registry with event versioning and migration support
@@ -40,7 +42,6 @@ All notable changes to kayak-lab will be documented in this file.
 
 ### OpenSpec Changes (Planned)
 
-- `persistence-layer` — File-based event persistence with JSONL
 - `real-capabilities` — Real Git/GitHub/K8s execution
 - `additional-projections` — VS Code, Web, Desktop, REST API
 - `cross-cutting-concerns` — Identity, policy, telemetry, evaluation
@@ -48,6 +49,7 @@ All notable changes to kayak-lab will be documented in this file.
 
 ### OpenSpec Changes (Archived)
 
+- `persistence-layer` — File-based event persistence with JSONL, snapshots, and recovery
 - `testing-infrastructure` — Mocks, helpers, fixtures, harness
 - `health-checks-observability` — Health probes and component health
 - `error-handling-recovery` — Error taxonomy, retry, circuit breaker

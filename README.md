@@ -119,8 +119,9 @@ src/
 │   ├── git.ts              Git operations (stubbed)
 │   ├── github.ts           GitHub API operations (stubbed)
 │   └── kubernetes.ts       Kubernetes API operations (stubbed)
-├── store/                  Event persistence
-│   └── event-store.ts      In-memory event store with snapshots and replay
+├── store/                  Event persistence and replay
+│   ├── event-store.ts      In-memory event store with snapshots and replay
+│   └── persistence.ts      PersistentEventStore with JSONL, snapshots, and recovery
 ├── projection/             UI projection layer
 │   ├── protocol.ts         Subscription protocol with filtering
 │   ├── terminal.ts         Terminal/CLI event rendering
@@ -189,7 +190,7 @@ This project uses [OpenSpec](https://github.com/allentv/openspec) for specificat
 
 | Change | Focus | Status |
 |--------|-------|--------|
-| `persistence-layer` | File-based event persistence (JSONL, snapshots, recovery) | In progress |
+| `persistence-layer` | File-based event persistence (JSONL, snapshots, recovery) | ✅ Done |
 | `real-capabilities` | Real Git/GitHub/K8s execution replacing stubs | In progress |
 | `additional-projections` | VS Code, Web, Desktop, REST API projections | In progress |
 | `cross-cutting-concerns` | Identity, policy, telemetry, evaluation | In progress |

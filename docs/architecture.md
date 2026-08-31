@@ -7,7 +7,7 @@ graph TB
     subgraph Core["Core Layer"]
         ES["EventStream"] <--> SM["SessionManager"]
         SM <--> AR["AgentRuntime"]
-        ES --- ESTORE["EventStore<br/>(in-memory, persistence planned)"]
+        ES --- ESTORE["EventStore<br/>(in-memory + persistent)"]
         AR --- MP["ModelProvider<br/>(OpenAI, Anthropic, local)"]
     end
 
@@ -86,9 +86,11 @@ const response = await runtime.processInput("Run ls -la");
 
 ### EventStore
 
-In-memory event persistence with snapshot support. Stores events per session with range queries and replay capabilities.
+In-memory event persistence with snapshot support. Stores events per session with range queries and replay capabilities. Can be used as a fast/ephemeral store, or swapped with the persistent store for durability.
 
 ```typescript
+import { EventStore } from "./src/store/event-store.ts";
+
 const store = new EventStore();
 
 // Store an event
@@ -101,6 +103,68 @@ const recent = store.getEventsInRange("session-1", 5, 10);
 // Snapshots for fast replay
 const snapshot = store.createSnapshot("session-1", { lastEventId: "abc" });
 ```
+
+### PersistentEventStore
+
+File-based event persistence with JSONL append-only logs, snapshot persistence, and startup recovery. Durably writes events to disk and reconstructs in-memory state on initialization, enabling sessions to survive process restarts and crashes.
+
+```typescript
+import { PersistentEventStore } from "./src/store/persistence.ts";
+
+// Default: uses ./data/events/ directory
+const store = new PersistentEventStore({ dataDir: "./data/events" });
+
+// Custom directory
+const store = new PersistentEventStore({ dataDir: "/var/lib/kayak/events" });
+
+// Custom backend (e.g., SQLite in the future)
+const store = new PersistentEventStore({
+  dataDir: "./data/events",
+  backend: new SQLitePersistenceBackend("./data/kayak.db"),
+});
+
+// Store events — written synchronously to JSONL on disk
+store.store(event);
+
+// Read events — served from in-memory cache (rebuilt from disk on startup)
+const events = store.getEvents("session-1");
+const recent = store.getEventsInRange("session-1", 5, 10);
+
+// Snapshots — persisted to disk as JSON files
+const snapshot = store.createSnapshot("session-1", { lastEventId: "abc" });
+
+// Explicit flush (no-op for synchronous writes, available for future buffered backends)
+store.flush();
+```
+
+**File layout:**
+
+| File | Purpose |
+|------|---------|
+| `<session_id>.jsonl` | Append-only event log (one JSON object per line) |
+| `<session_id>.snapshot.json` | Latest snapshot for fast recovery |
+
+**Recovery behavior:**
+- On startup, `PersistentEventStore` scans the data directory, loads snapshots, and replays events after the snapshot point.
+- Corrupted lines are logged and skipped; valid events continue loading.
+- Empty or missing data directory → clean start with no sessions.
+
+**Pluggable backends:**
+
+The `IPersistenceBackend` interface allows swapping storage engines without changing callers:
+
+```typescript
+interface IPersistenceBackend {
+  write(sessionId: string, line: string): void;
+  readLines(sessionId: string): string[];
+  writeSnapshot(sessionId: string, data: Snapshot): void;
+  readSnapshot(sessionId: string): Snapshot | undefined;
+  listSessions(): string[];
+  exists(sessionId: string): boolean;
+}
+```
+
+The default `FilePersistenceBackend` uses synchronous Deno file I/O for guaranteed durability per write. Implement this interface for SQLite, PostgreSQL, or other backends.
 
 ### Schema Registry
 

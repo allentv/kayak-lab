@@ -31,7 +31,7 @@ src/
 ├── core/                   Event stream and session manager
 ├── runtime/                Agent runtime, model abstraction, tool registry
 ├── capabilities/           External system interfaces (Shell, Git, GitHub, K8s)
-├── store/                  Event persistence and replay
+├── store/                  Event persistence, replay, and file-based durability
 ├── projection/             UI projection protocol and terminal rendering
 └── __tests__/              End-to-end tests and benchmarks
 ```
@@ -134,6 +134,25 @@ const toolSub = protocol.subscribe(session.id, (event) => {
   filter: { event_types: ["tool.execution.started", "tool.execution.completed"] },
 });
 ```
+
+## Persisting Events
+
+For durable sessions that survive restarts, use the `PersistentEventStore`:
+
+```typescript
+import { PersistentEventStore } from "./src/store/persistence.ts";
+
+// Writes events to ./data/events/<session_id>.jsonl
+const store = new PersistentEventStore({ dataDir: "./data/events" });
+
+// Store events — written synchronously to disk
+store.store(event);
+
+// On next startup, recover state automatically
+// Snapshot + events replayed from disk into memory
+```
+
+For ephemeral/testing use, the in-memory `EventStore` remains available and requires no configuration.
 
 ## Running Benchmarks
 
