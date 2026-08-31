@@ -5,8 +5,9 @@
  * Supports full and partial replay, snapshots, and crash recovery.
  */
 
-import { BaseEvent } from "../types/events.ts";
+import { BaseEvent, CURRENT_SCHEMA_VERSION } from "../types/events.ts";
 import { EventStream } from "../core/event-stream.ts";
+import { SchemaRegistry, migrate } from "../core/schema-registry.ts";
 
 // ============================================================================
 // Snapshot Types
@@ -53,6 +54,11 @@ export interface IEventStore {
 export class EventStore implements IEventStore {
   private readonly events = new Map<string, BaseEvent[]>();
   private readonly snapshots = new Map<string, Snapshot[]>();
+  private readonly schemaRegistry: SchemaRegistry | null;
+
+  constructor(schemaRegistry?: SchemaRegistry) {
+    this.schemaRegistry = schemaRegistry ?? null;
+  }
 
   store(event: BaseEvent): void {
     const sessionEvents = this.events.get(event.session_id) ?? [];
@@ -60,8 +66,21 @@ export class EventStore implements IEventStore {
     this.events.set(event.session_id, sessionEvents);
   }
 
+  private migrateIfNeeded(events: readonly BaseEvent[]): readonly BaseEvent[] {
+    if (!this.schemaRegistry) {
+      return events;
+    }
+    return events.map((event) => {
+      if (event.schema_version !== CURRENT_SCHEMA_VERSION) {
+        return migrate(this.schemaRegistry!, event, CURRENT_SCHEMA_VERSION);
+      }
+      return event;
+    });
+  }
+
   getEvents(sessionId: string): readonly BaseEvent[] {
-    return Object.freeze([...(this.events.get(sessionId) ?? [])]);
+    const raw = this.events.get(sessionId) ?? [];
+    return Object.freeze([...this.migrateIfNeeded(raw)]);
   }
 
   getEventsInRange(
@@ -70,9 +89,8 @@ export class EventStore implements IEventStore {
     to: number,
   ): readonly BaseEvent[] {
     const events = this.events.get(sessionId) ?? [];
-    return Object.freeze(
-      events.filter((e) => e.sequence_number >= from && e.sequence_number <= to),
-    );
+    const filtered = events.filter((e) => e.sequence_number >= from && e.sequence_number <= to);
+    return Object.freeze([...this.migrateIfNeeded(filtered)]);
   }
 
   getLastEvent(sessionId: string): BaseEvent | undefined {
