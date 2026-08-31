@@ -88,7 +88,7 @@ Deno.test("ShellCapability", async (t) => {
 
     const result = await shell.exec("sudo ls");
     assertEquals(result.success, false);
-    assertEquals(result.error?.includes("Blocked"), true);
+    assertEquals(typeof result.error === "string" && result.error.includes("Blocked"), true);
   });
 
   await t.step("rejects dangerous commands", async () => {
@@ -97,7 +97,7 @@ Deno.test("ShellCapability", async (t) => {
 
     const result = await shell.exec("rm -rf /");
     assertEquals(result.success, false);
-    assertEquals(result.error?.includes("approval"), true);
+    assertEquals(typeof result.error === "string" && result.error.includes("approval"), true);
   });
 
   await t.step("fails when not initialized", async () => {

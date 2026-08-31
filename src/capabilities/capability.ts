@@ -5,6 +5,8 @@
  * Capabilities provide typed access to external systems.
  */
 
+import { AppError } from "../core/errors.ts";
+
 // ============================================================================
 // Capability Types
 // ============================================================================
@@ -27,7 +29,7 @@ export interface CapabilityContext {
 export interface CapabilityResult<T = unknown> {
   success: boolean;
   data?: T;
-  error?: string;
+  error?: string | AppError;
   metadata?: Record<string, unknown>;
 }
 
