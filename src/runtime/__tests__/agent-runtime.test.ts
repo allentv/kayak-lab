@@ -7,45 +7,7 @@ import { SessionManager } from "../../core/session-manager.ts";
 import { ModelManager } from "../model-provider.ts";
 import { ToolRegistry } from "../tool-registry.ts";
 import { AgentRuntime } from "../agent-runtime.ts";
-import type { IModelProvider, ModelResponse, StreamDelta } from "../model-provider.ts";
-
-/** Mock model provider for agent runtime tests. */
-class MockAgentProvider implements IModelProvider {
-  name = "mock-agent";
-  private responses: ModelResponse[];
-  private responseIndex = 0;
-
-  constructor(responses: ModelResponse[]) {
-    this.responses = responses;
-  }
-
-  async invoke(): Promise<ModelResponse> {
-    const response = this.responses[this.responseIndex % this.responses.length];
-    this.responseIndex++;
-    return response;
-  }
-
-  async *stream(): AsyncIterable<StreamDelta> {
-    const response = this.responses[this.responseIndex % this.responses.length];
-    this.responseIndex++;
-
-    if (response.content) {
-      const words = response.content.split(" ");
-      for (const word of words) {
-        yield { content: word + " " };
-      }
-    }
-
-    if (response.tool_calls.length > 0) {
-      yield {
-        tool_calls: response.tool_calls,
-        finish_reason: "tool_calls",
-      };
-    } else {
-      yield { finish_reason: "stop" };
-    }
-  }
-}
+import { MockModelProvider } from "../../__test-utils__/mocks/mock-model.ts";
 
 Deno.test("AgentRuntime", async (t) => {
   await t.step("starts a new session", async () => {
@@ -76,13 +38,15 @@ Deno.test("AgentRuntime", async (t) => {
     const modelManager = new ModelManager();
     const toolRegistry = new ToolRegistry();
 
-    const provider = new MockAgentProvider([
-      {
-        content: "Hello! How can I help you?",
-        tool_calls: [],
-        finish_reason: "stop",
-      },
-    ]);
+    const provider = new MockModelProvider("mock-agent", {
+      responses: [
+        {
+          content: "Hello! How can I help you?",
+          tool_calls: [],
+          finish_reason: "stop",
+        },
+      ],
+    });
     modelManager.register(provider);
 
     const agent = new AgentRuntime(
@@ -116,24 +80,26 @@ Deno.test("AgentRuntime", async (t) => {
     });
 
     // First response asks for tool, second gives final answer
-    const provider = new MockAgentProvider([
-      {
-        content: null,
-        tool_calls: [
-          {
-            id: "call-1",
-            name: "calculator",
-            arguments: { expression: "2 + 2" },
-          },
-        ],
-        finish_reason: "tool_calls",
-      },
-      {
-        content: "The result is 4",
-        tool_calls: [],
-        finish_reason: "stop",
-      },
-    ]);
+    const provider = new MockModelProvider("mock-agent", {
+      responses: [
+        {
+          content: null,
+          tool_calls: [
+            {
+              id: "call-1",
+              name: "calculator",
+              arguments: { expression: "2 + 2" },
+            },
+          ],
+          finish_reason: "tool_calls",
+        },
+        {
+          content: "The result is 4",
+          tool_calls: [],
+          finish_reason: "stop",
+        },
+      ],
+    });
     modelManager.register(provider);
 
     const agent = new AgentRuntime(
@@ -155,18 +121,20 @@ Deno.test("AgentRuntime", async (t) => {
     const modelManager = new ModelManager();
     const toolRegistry = new ToolRegistry();
 
-    const provider = new MockAgentProvider([
-      {
-        content: "Response 1",
-        tool_calls: [],
-        finish_reason: "stop",
-      },
-      {
-        content: "Response 2",
-        tool_calls: [],
-        finish_reason: "stop",
-      },
-    ]);
+    const provider = new MockModelProvider("mock-agent", {
+      responses: [
+        {
+          content: "Response 1",
+          tool_calls: [],
+          finish_reason: "stop",
+        },
+        {
+          content: "Response 2",
+          tool_calls: [],
+          finish_reason: "stop",
+        },
+      ],
+    });
     modelManager.register(provider);
 
     const agent = new AgentRuntime(
@@ -195,13 +163,15 @@ Deno.test("AgentRuntime", async (t) => {
 
     const events: string[] = [];
 
-    const provider = new MockAgentProvider([
-      {
-        content: "Response",
-        tool_calls: [],
-        finish_reason: "stop",
-      },
-    ]);
+    const provider = new MockModelProvider("mock-agent", {
+      responses: [
+        {
+          content: "Response",
+          tool_calls: [],
+          finish_reason: "stop",
+        },
+      ],
+    });
     modelManager.register(provider);
 
     const agent = new AgentRuntime(
@@ -229,13 +199,15 @@ Deno.test("AgentRuntime", async (t) => {
     const modelManager = new ModelManager();
     const toolRegistry = new ToolRegistry();
 
-    const provider = new MockAgentProvider([
-      {
-        content: "Response",
-        tool_calls: [],
-        finish_reason: "stop",
-      },
-    ]);
+    const provider = new MockModelProvider("mock-agent", {
+      responses: [
+        {
+          content: "Response",
+          tool_calls: [],
+          finish_reason: "stop",
+        },
+      ],
+    });
     modelManager.register(provider);
 
     const agent = new AgentRuntime(
@@ -259,13 +231,19 @@ Deno.test("AgentRuntime", async (t) => {
     const modelManager = new ModelManager();
     const toolRegistry = new ToolRegistry();
 
-    const provider = new MockAgentProvider([
-      {
-        content: "Hello World",
-        tool_calls: [],
-        finish_reason: "stop",
-      },
-    ]);
+    const provider = new MockModelProvider("mock-agent", {
+      responses: [
+        {
+          content: "Hello World",
+          tool_calls: [],
+          finish_reason: "stop",
+        },
+      ],
+      streamDeltas: [
+        { content: "Hello ", finish_reason: undefined },
+        { content: "World ", finish_reason: "stop" },
+      ],
+    });
     modelManager.register(provider);
 
     const agent = new AgentRuntime(

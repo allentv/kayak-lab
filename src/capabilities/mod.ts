@@ -40,3 +40,21 @@ export type {
   ShellExecResult,
   ShellEnvironment,
 } from "./shell.ts";
+// Sandbox execution
+export { SandboxedShellCapability } from "./sandboxed-shell.ts";
+export type { SandboxedShellExecOptions } from "./sandboxed-shell.ts";
+export {
+  DockerRuntime,
+  GVisorRuntime,
+} from "./sandbox/mod.ts";
+export type {
+  ISandboxRuntime,
+  SandboxExecConfig,
+  SandboxExecResult,
+  SandboxResourceLimits,
+  SandboxMount,
+  HealthStatus,
+  HealthCheckResult,
+  DockerRuntimeConfig,
+  GVisorRuntimeConfig,
+} from "./sandbox/mod.ts";

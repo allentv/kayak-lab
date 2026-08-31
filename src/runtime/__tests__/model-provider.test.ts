@@ -6,79 +6,17 @@ import {
   ProviderNotFoundError,
   ModelError,
 } from "../model-provider.ts";
-import type {
-  IModelProvider,
-  ModelRequest,
-  ModelResponse,
-  StreamDelta,
-} from "../model-provider.ts";
-
-/** Mock model provider for testing. */
-class MockProvider implements IModelProvider {
-  name: string;
-  private response: ModelResponse;
-  private shouldFail: boolean;
-  private invokeCount = 0;
-
-  constructor(
-    name: string,
-    response: ModelResponse,
-    shouldFail = false,
-  ) {
-    this.name = name;
-    this.response = response;
-    this.shouldFail = shouldFail;
-  }
-
-  getInvokeCount(): number {
-    return this.invokeCount;
-  }
-
-  async invoke(_request: ModelRequest): Promise<ModelResponse> {
-    this.invokeCount++;
-    if (this.shouldFail) {
-      throw new Error(`${this.name} failed`);
-    }
-    return this.response;
-  }
-
-  async *stream(_request: ModelRequest): AsyncIterable<StreamDelta> {
-    this.invokeCount++;
-    if (this.shouldFail) {
-      throw new Error(`${this.name} failed`);
-    }
-
-    // Yield content in chunks
-    if (this.response.content) {
-      const chunks = this.response.content.split(" ");
-      for (const chunk of chunks) {
-        yield { content: chunk + " " };
-      }
-    }
-
-    // Yield tool calls
-    if (this.response.tool_calls.length > 0) {
-      yield {
-        tool_calls: this.response.tool_calls.map((tc) => ({
-          id: tc.id,
-          name: tc.name,
-          arguments: tc.arguments,
-        })),
-        finish_reason: "tool_calls",
-      };
-    } else {
-      yield { finish_reason: "stop" };
-    }
-  }
-}
+import { MockModelProvider } from "../../__test-utils__/mocks/mock-model.ts";
 
 Deno.test("ModelManager", async (t) => {
   await t.step("registers a provider", () => {
     const manager = new ModelManager();
-    const provider = new MockProvider("test", {
-      content: "Hello",
-      tool_calls: [],
-      finish_reason: "stop",
+    const provider = new MockModelProvider("test", {
+      responses: [{
+        content: "Hello",
+        tool_calls: [],
+        finish_reason: "stop",
+      }],
     });
 
     manager.register(provider);
@@ -88,10 +26,12 @@ Deno.test("ModelManager", async (t) => {
 
   await t.step("sets default provider", () => {
     const manager = new ModelManager();
-    const provider = new MockProvider("test", {
-      content: "Hello",
-      tool_calls: [],
-      finish_reason: "stop",
+    const provider = new MockModelProvider("test", {
+      responses: [{
+        content: "Hello",
+        tool_calls: [],
+        finish_reason: "stop",
+      }],
     });
 
     manager.register(provider);
@@ -113,10 +53,12 @@ Deno.test("ModelManager", async (t) => {
 
   await t.step("invokes default provider", async () => {
     const manager = new ModelManager();
-    const provider = new MockProvider("test", {
-      content: "Hello",
-      tool_calls: [],
-      finish_reason: "stop",
+    const provider = new MockModelProvider("test", {
+      responses: [{
+        content: "Hello",
+        tool_calls: [],
+        finish_reason: "stop",
+      }],
     });
 
     manager.register(provider);
@@ -125,20 +67,24 @@ Deno.test("ModelManager", async (t) => {
     });
 
     assertEquals(response.content, "Hello");
-    assertEquals(provider.getInvokeCount(), 1);
+    assertEquals(provider.invokeCount, 1);
   });
 
   await t.step("invokes specified provider", async () => {
     const manager = new ModelManager();
-    const provider1 = new MockProvider("p1", {
-      content: "From P1",
-      tool_calls: [],
-      finish_reason: "stop",
+    const provider1 = new MockModelProvider("p1", {
+      responses: [{
+        content: "From P1",
+        tool_calls: [],
+        finish_reason: "stop",
+      }],
     });
-    const provider2 = new MockProvider("p2", {
-      content: "From P2",
-      tool_calls: [],
-      finish_reason: "stop",
+    const provider2 = new MockModelProvider("p2", {
+      responses: [{
+        content: "From P2",
+        tool_calls: [],
+        finish_reason: "stop",
+      }],
     });
 
     manager.register(provider1);
@@ -150,21 +96,22 @@ Deno.test("ModelManager", async (t) => {
     );
 
     assertEquals(response.content, "From P2");
-    assertEquals(provider2.getInvokeCount(), 1);
-    assertEquals(provider1.getInvokeCount(), 0);
+    assertEquals(provider2.invokeCount, 1);
+    assertEquals(provider1.invokeCount, 0);
   });
 
   await t.step("falls back to default on failure", async () => {
     const manager = new ModelManager();
-    const failingProvider = new MockProvider(
-      "failing",
-      { content: "", tool_calls: [], finish_reason: "stop" },
-      true,
-    );
-    const fallbackProvider = new MockProvider("fallback", {
-      content: "Fallback response",
-      tool_calls: [],
-      finish_reason: "stop",
+    const failingProvider = new MockModelProvider("failing", {
+      responses: [{ content: "", tool_calls: [], finish_reason: "stop" }],
+      shouldFail: true,
+    });
+    const fallbackProvider = new MockModelProvider("fallback", {
+      responses: [{
+        content: "Fallback response",
+        tool_calls: [],
+        finish_reason: "stop",
+      }],
     });
 
     manager.register(failingProvider);
@@ -177,26 +124,26 @@ Deno.test("ModelManager", async (t) => {
     });
 
     assertEquals(response.content, "Fallback response");
-    assertEquals(failingProvider.getInvokeCount(), 1);
-    assertEquals(fallbackProvider.getInvokeCount(), 1);
+    assertEquals(failingProvider.invokeCount, 1);
+    assertEquals(fallbackProvider.invokeCount, 1);
   });
 
   await t.step("sets fallback providers", async () => {
     const manager = new ModelManager();
-    const primary = new MockProvider(
-      "primary",
-      { content: "", tool_calls: [], finish_reason: "stop" },
-      true,
-    );
-    const fallback1 = new MockProvider(
-      "fallback1",
-      { content: "", tool_calls: [], finish_reason: "stop" },
-      true,
-    );
-    const fallback2 = new MockProvider("fallback2", {
-      content: "Success",
-      tool_calls: [],
-      finish_reason: "stop",
+    const primary = new MockModelProvider("primary", {
+      responses: [{ content: "", tool_calls: [], finish_reason: "stop" }],
+      shouldFail: true,
+    });
+    const fallback1 = new MockModelProvider("fallback1", {
+      responses: [{ content: "", tool_calls: [], finish_reason: "stop" }],
+      shouldFail: true,
+    });
+    const fallback2 = new MockModelProvider("fallback2", {
+      responses: [{
+        content: "Success",
+        tool_calls: [],
+        finish_reason: "stop",
+      }],
     });
 
     manager.register(primary);
@@ -210,23 +157,21 @@ Deno.test("ModelManager", async (t) => {
     });
 
     assertEquals(response.content, "Success");
-    assertEquals(primary.getInvokeCount(), 1);
-    assertEquals(fallback1.getInvokeCount(), 1);
-    assertEquals(fallback2.getInvokeCount(), 1);
+    assertEquals(primary.invokeCount, 1);
+    assertEquals(fallback1.invokeCount, 1);
+    assertEquals(fallback2.invokeCount, 1);
   });
 
   await t.step("throws when all providers fail", async () => {
     const manager = new ModelManager();
-    const provider1 = new MockProvider(
-      "p1",
-      { content: "", tool_calls: [], finish_reason: "stop" },
-      true,
-    );
-    const provider2 = new MockProvider(
-      "p2",
-      { content: "", tool_calls: [], finish_reason: "stop" },
-      true,
-    );
+    const provider1 = new MockModelProvider("p1", {
+      responses: [{ content: "", tool_calls: [], finish_reason: "stop" }],
+      shouldFail: true,
+    });
+    const provider2 = new MockModelProvider("p2", {
+      responses: [{ content: "", tool_calls: [], finish_reason: "stop" }],
+      shouldFail: true,
+    });
 
     manager.register(provider1);
     manager.register(provider2);
@@ -245,10 +190,16 @@ Deno.test("ModelManager", async (t) => {
 
   await t.step("streams from provider", async () => {
     const manager = new ModelManager();
-    const provider = new MockProvider("test", {
-      content: "Hello World",
-      tool_calls: [],
-      finish_reason: "stop",
+    const provider = new MockModelProvider("test", {
+      responses: [{
+        content: "Hello World",
+        tool_calls: [],
+        finish_reason: "stop",
+      }],
+      streamDeltas: [
+        { content: "Hello ", finish_reason: undefined },
+        { content: "World ", finish_reason: "stop" },
+      ],
     });
 
     manager.register(provider);
