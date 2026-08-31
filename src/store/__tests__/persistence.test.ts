@@ -2,7 +2,7 @@
  * Tests for persistence layer.
  */
 
-import { assertEquals, assertExists } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assertEquals, assertExists } from "@std/assert";
 import { FilePersistenceBackend, PersistentEventStore } from "../persistence.ts";
 import { BaseEvent, EventTypes } from "../../types/events.ts";
 import { Snapshot } from "../event-store.ts";
