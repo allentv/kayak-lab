@@ -8,6 +8,7 @@
 import { BaseEvent, CURRENT_SCHEMA_VERSION } from "../types/events.ts";
 import { EventStream } from "../core/event-stream.ts";
 import { SchemaRegistry, migrate } from "../core/schema-registry.ts";
+import { PersistenceConfig, PersistentEventStore } from "./persistence.ts";
 
 // ============================================================================
 // Snapshot Types
@@ -45,6 +46,7 @@ export interface IEventStore {
     sessionId: string,
     snapshot: Snapshot,
   ): readonly BaseEvent[];
+  flush(): void;
 }
 
 // ============================================================================
@@ -142,6 +144,10 @@ export class EventStore implements IEventStore {
     );
   }
 
+  flush(): void {
+    // No-op for in-memory store
+  }
+
   get totalEvents(): number {
     let total = 0;
     for (const events of this.events.values()) {
@@ -169,11 +175,20 @@ export class EventStore implements IEventStore {
  */
 export class EventStoreBridge {
   private unsubscribe: (() => void) | null = null;
+  private readonly eventStore: IEventStore;
 
   constructor(
     private readonly eventStream: EventStream,
-    private readonly eventStore: EventStore,
-  ) {}
+    eventStoreOrConfig?: EventStore | PersistenceConfig,
+  ) {
+    if (eventStoreOrConfig && "dataDir" in eventStoreOrConfig) {
+      // PersistenceConfig provided - use PersistentEventStore
+      this.eventStore = new PersistentEventStore(eventStoreOrConfig as PersistenceConfig);
+    } else {
+      // EventStore provided or no config - use in-memory store
+      this.eventStore = (eventStoreOrConfig as EventStore) ?? new EventStore();
+    }
+  }
 
   /**
    * Connect the bridge: backfill existing events into the EventStore.

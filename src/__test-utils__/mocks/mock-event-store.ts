@@ -125,6 +125,10 @@ export class MockEventStore implements IEventStore {
     );
   }
 
+  flush(): void {
+    // No-op for mock
+  }
+
   reset(): void {
     this.events = [];
     this.snapshots.clear();
