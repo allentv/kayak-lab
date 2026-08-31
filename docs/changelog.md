@@ -16,7 +16,25 @@ All notable changes to kayak-lab will be documented in this file.
 - Event store with in-memory persistence, snapshots, and replay
 - Projection protocol with subscription management and event filtering
 - Terminal projection with ANSI-colored event rendering
-- 112+ tests across 10 test suites
+- Schema registry with event versioning and migration support
+- Error taxonomy with typed errors (ValidationError, TimeoutError, RateLimitError, etc.)
+- Circuit breaker, retry, and fallback reliability patterns
+- Configuration management with YAML loading, env var overrides, and secret masking
+- Health registry with parallel checks and Kubernetes-compatible endpoints (/health, /ready, /alive)
+- Component health checks for EventStore, Capabilities, and WebSocket server
+- Token bucket rate limiter with configurable capacity and refill rate
+- Bounded queue with overflow policies (drop-oldest, drop-newest, block, reject)
+- Docker/GVisor sandbox execution with default-deny security posture
+- SandboxedShellCapability with Deno permission flag injection
+- WebSocket projection server with subscription management, gap recovery, and backpressure
+- Shared mock registry (MockGitCapability, MockGitHubCapability, MockShellCapability, MockModelProvider, MockEventStore)
+- Test helpers (session builder, event generators, assertions)
+- Fixture loader and session fixture files
+- Integration test harness with createTestEnvironment()
+- Setup script for sandbox runtime installation
+- Health check script for sandbox verification
+- Documentation freshness agent and skill
+- 140+ tests across 15 test suites
 - Performance benchmarks for critical paths
 - End-to-end session lifecycle tests
 
@@ -24,13 +42,19 @@ All notable changes to kayak-lab will be documented in this file.
 
 - `persistence-layer` — File-based event persistence with JSONL
 - `real-capabilities` — Real Git/GitHub/K8s execution
-- `schema-evolution` — Event schema versioning and migration
-- `error-handling-recovery` — Error taxonomy, retry, circuit breaker
-- `configuration-management` — Typed config with env overrides
-- `websocket-projection` — WebSocket transport for real-time events
 - `additional-projections` — VS Code, Web, Desktop, REST API
-- `rate-limiting-backpressure` — Rate limiters and flow control
-- `health-checks-observability` — Health probes and component health
 - `cross-cutting-concerns` — Identity, policy, telemetry, evaluation
-- `testing-infrastructure` — Mocks, helpers, fixtures, harness
 - `web-monitoring-ui` — Fresh-based monitoring dashboard
+
+### OpenSpec Changes (Archived)
+
+- `testing-infrastructure` — Mocks, helpers, fixtures, harness
+- `health-checks-observability` — Health probes and component health
+- `error-handling-recovery` — Error taxonomy, retry, circuit breaker
+- `schema-evolution` — Event schema versioning and migration
+- `configuration-management` — Typed config with env overrides
+- `rate-limiting-backpressure` — Rate limiters and flow control
+- `websocket-projection` — WebSocket transport for real-time events
+- `local-sandbox-execution` — Docker/GVisor sandbox execution
+- `code-quality-tooling` — Linting, formatting, pre-push checks
+- `documentation-website` — VitePress documentation site

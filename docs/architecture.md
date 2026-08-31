@@ -13,6 +13,7 @@ graph TB
 
     subgraph Capabilities["Capability Layer"]
         Shell["Shell (real)"]
+        Sandbox["Sandbox (Docker/gVisor)"]
         Git["Git (stubbed)"]
         GitHub["GitHub (stubbed)"]
         K8s["Kubernetes (stubbed)"]
@@ -21,11 +22,9 @@ graph TB
     subgraph Projections["Projection Layer"]
         Protocol["Protocol"]
         Terminal["Terminal (real)"]
-        WebSocket["WebSocket (planned)"]
-        WebUI["Web UI (planned)"]
+        WebSocket["WebSocket (real)"]
         Protocol <--> Terminal
         Protocol <--> WebSocket
-        Protocol <--> WebUI
     end
 
     Core --> Capabilities
@@ -85,6 +84,167 @@ await runtime.start();
 const response = await runtime.processInput("Run ls -la");
 ```
 
+### EventStore
+
+In-memory event persistence with snapshot support. Stores events per session with range queries and replay capabilities.
+
+```typescript
+const store = new EventStore();
+
+// Store an event
+store.store(event);
+
+// Read events
+const events = store.getEvents("session-1");
+const recent = store.getEventsInRange("session-1", 5, 10);
+
+// Snapshots for fast replay
+const snapshot = store.createSnapshot("session-1", { lastEventId: "abc" });
+```
+
+### Schema Registry
+
+Event schema versioning and migration. Registers schema versions per event type and migrates events on read.
+
+```typescript
+const registry = new SchemaRegistry();
+
+// Register schema with migration
+registry.register("session.created", 2, schemaV2, (event) => migrateV1toV2(event));
+
+// EventStore uses registry for automatic migration
+const store = new EventStore(undefined, registry);
+```
+
+### Health System
+
+Component health reporting with parallel checks and Kubernetes-compatible endpoints.
+
+```typescript
+import { HealthRegistry, createHealthHandler } from "./src/core/health.ts";
+
+const registry = new HealthRegistry();
+registry.register("event-store", () => checkEventStore(store));
+registry.register("capabilities", () => checkCapabilities(registry));
+
+// Run all checks in parallel (1s timeout each)
+const result = await registry.check();
+// result.status: "healthy" | "degraded" | "unhealthy"
+
+// HTTP endpoints
+const handler = createHealthHandler(registry);
+// GET /health  → full status (200/503)
+// GET /ready   → readiness (200/503)
+// GET /alive   → liveness (200)
+```
+
+### Configuration Management
+
+YAML-based config loading with env var overrides and secret masking.
+
+```typescript
+import { loadConfig, validateConfig, maskSecrets } from "./src/core/config.ts";
+
+// Load from config directory (precedence: env > file > defaults)
+const config = await loadConfig("./config");
+
+// Validate raw config
+const result = validateConfig(rawObj);
+if (!result.valid) {
+  console.error(result.errors);
+}
+
+// Mask secrets in output
+console.log(maskSecrets(config));
+// { persistence: { dataDir: "/data" }, capabilities: { github: { token: "***" } } }
+```
+
+**Env var overrides:** `KAYAK_PERSISTENCE_DATA_DIR` → `config.persistence.dataDir`
+
+### Rate Limiting
+
+Token bucket rate limiter for external API calls. Smooths burst traffic while enforcing average rate.
+
+```typescript
+import { TokenBucket, RateLimiter } from "./src/core/rate-limiter.ts";
+
+const bucket = new TokenBucket({
+  capacity: 100,        // max burst
+  refillRate: 10,       // tokens per interval
+  refillIntervalMs: 1000,
+});
+
+const limiter = new RateLimiter(bucket);
+
+// Wrap async function — throws on limit exceeded
+const limitedFetch = limiter.wrap(fetch);
+await limitedFetch("https://api.example.com");
+
+// Or wait for tokens
+const waitingFetch = limiter.wrapWithWait(fetch);
+await waitingFetch("https://api.example.com"); // blocks until tokens available
+```
+
+### Bounded Queue
+
+Queue with configurable overflow policies for backpressure handling.
+
+```typescript
+import { BoundedQueue } from "./src/core/bounded-queue.ts";
+
+const queue = new BoundedQueue<Event>({
+  maxSize: 1000,
+  policy: "drop-oldest",  // or: drop-newest, block, reject
+});
+
+queue.push(event);
+const next = queue.shift();
+```
+
+**Overflow policies:**
+
+| Policy | Behavior |
+|--------|----------|
+| `drop-oldest` | Remove oldest item when full |
+| `drop-newest` | Discard new item when full |
+| `block` | Wait until space available |
+| `reject` | Throw error when full |
+
+### Reliability Patterns
+
+Circuit breaker, retry, and fallback for fault tolerance.
+
+```typescript
+import { CircuitBreaker } from "./src/core/circuit-breaker.ts";
+import { withRetry } from "./src/core/retry.ts";
+import { executeWithFallback } from "./src/core/fallback.ts";
+
+// Circuit breaker — opens after N failures
+const breaker = new CircuitBreaker({ failureThreshold: 5, recoveryTimeMs: 30_000 });
+
+// Retry with backoff
+const result = await withRetry(fn, { maxRetries: 3, baseDelayMs: 100 });
+
+// Fallback — try primary, fall back on failure
+const result = await executeWithFallback(primaryFn, fallbackFn, breaker);
+```
+
+### Error Taxonomy
+
+Typed error hierarchy with error codes and retryability.
+
+```typescript
+import { AppError, ValidationError, TimeoutError, RateLimitError } from "./src/core/errors.ts";
+
+// All errors extend AppError
+throw new ValidationError("Invalid input", { field: "name" });
+throw new TimeoutError("Request timed out", { timeoutMs: 5000 });
+throw new RateLimitError("Rate limited", { retryAfterMs: 60_000 });
+
+// Error codes are unique strings
+// AppError carries context, module, and operation
+```
+
 ## Capability Layer
 
 Abstract interfaces for external systems. Capabilities are pluggable and independently testable.
@@ -92,6 +252,7 @@ Abstract interfaces for external systems. Capabilities are pluggable and indepen
 | Capability | Interface | Implementation |
 |-----------|-----------|---------------|
 | Shell | `IShellCapability` | Real — `Deno.Command` with safety constraints |
+| Sandbox | `ISandboxRuntime` | Real — Docker/gVisor with hardened flags |
 | Git | `IGitCapability` | Stubbed — simulated data |
 | GitHub | `IGitHubCapability` | Stubbed — simulated data |
 | Kubernetes | `IKubernetesCapability` | Stubbed — simulated data |
@@ -143,6 +304,25 @@ ANSI-colored event rendering for CLI surfaces.
 const terminal = new TerminalProjection(protocol);
 await terminal.start("abc-123");
 ```
+
+### WebSocket Projection
+
+Real-time event delivery to connected clients via WebSocket. Supports subscription management, gap recovery, and backpressure.
+
+```typescript
+import { WebSocketProjectionServer } from "./src/projection/websocket-server.ts";
+
+const server = new WebSocketProjectionServer(eventStore, { port: 8080 });
+await server.start();
+
+// Clients connect via WebSocket, receive:
+// - Welcome message with version and capabilities
+// - Events matching their subscription filter
+// - Gap recovery on reconnect
+```
+
+**Client messages:** `subscribe`, `unsubscribe`, `reconnect`, `pong`
+**Server messages:** `welcome`, `event`, `error`, `ping`
 
 ## Data Flow
 

@@ -132,6 +132,75 @@ const pods = await k8s.listPods("default");
 // Returns simulated: [{ name: "pod-1", status: "Running", ... }]
 ```
 
+### Sandbox
+
+OS-level sandboxed execution for untrusted code. Runs commands inside Docker containers with hardened security flags. Supports Docker and gVisor (`runsc`) runtimes.
+
+```typescript
+import { DockerRuntime } from "./src/capabilities/sandbox/docker-runtime.ts";
+import { SandboxedShellCapability } from "./src/capabilities/sandboxed-shell.ts";
+
+const runtime = new DockerRuntime();
+const shell = new SandboxedShellCapability(runtime);
+await shell.initialize({ session_id: "my-session" });
+
+// Execute in sandbox — no network, read-only rootfs, dropped capabilities
+const result = await shell.exec("echo hello");
+if (result.success) {
+  console.log(result.data.stdout); // "hello"
+}
+```
+
+**Security posture (default-deny):**
+
+| Flag | Effect |
+|------|--------|
+| `--network=none` | No network access |
+| `--read-only` | Read-only root filesystem |
+| `--cap-drop=ALL` | Drop all Linux capabilities |
+| `--security-opt=no-new-privileges` | Prevent privilege escalation |
+| `--user=65532:65532` | Run as non-root (nobody) |
+| `--pids-limit=128` | Prevent fork bombs |
+| `--memory=512m` | Memory cap |
+| `--cpus=1` | CPU cap |
+
+**Runtime implementations:**
+
+| Runtime | Isolation | Setup |
+|---------|-----------|-------|
+| `DockerRuntime` | Container namespaces + cgroups | Docker installed |
+| `GVisorRuntime` | Userspace kernel (Sentry) | `apt install runsc` |
+
+**Resource limits:**
+
+```typescript
+const result = await shell.exec("long-task", {
+  resource_limits: {
+    memory: "256m",
+    cpus: 0.5,
+    pids: 64,
+    timeout_ms: 10_000,
+  },
+});
+```
+
+**File mounts:**
+
+```typescript
+const result = await shell.exec("process-data", {
+  input_mounts: [{ host_path: "./input", container_path: "/data/input", read_only: true }],
+  output_mount: { host_path: "./output", container_path: "/data/output" },
+});
+```
+
+**Health check:**
+
+```typescript
+const runtime = new DockerRuntime();
+const status = await runtime.healthCheck();
+console.log(status.healthy); // true if Docker + runtime working
+```
+
 ## Capability Registry
 
 Capabilities are registered and managed through the `CapabilityRegistry`:
