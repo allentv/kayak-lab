@@ -10,6 +10,7 @@ Reusable agent configurations for kayak-lab. Detailed configs live in `agents/`.
 |-------|---------|--------|-------|
 | `reviewer` | Code quality, decomposition, test coverage | [agents/reviewer.md](agents/reviewer.md) | Medium |
 | `scout` | Read-only research, learning capture | [agents/scout.md](agents/scout.md) | Fast |
+| `docs-updater` | Documentation freshness audit | [agents/docs-updater.md](agents/docs-updater.md) | Fast |
 
 ### Built-in Agents (OMP)
 
