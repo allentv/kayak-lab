@@ -1,0 +1,92 @@
+{
+  "sessions": [
+    {
+      "id": "fixture-session-1",
+      "description": "First test session",
+      "events": [
+        {
+          "event_id": "evt-s1-001",
+          "session_id": "fixture-session-1",
+          "sequence_number": 1,
+          "timestamp": "2025-01-15T10:00:00.000Z",
+          "event_type": "session.created",
+          "schema_version": 1,
+          "payload": { "initial_state": "active" },
+          "metadata": { "source": "fixture" }
+        },
+        {
+          "event_id": "evt-s1-002",
+          "session_id": "fixture-session-1",
+          "sequence_number": 2,
+          "timestamp": "2025-01-15T10:00:01.000Z",
+          "event_type": "session.completed",
+          "schema_version": 1,
+          "payload": { "previous_state": "active", "new_state": "completed" },
+          "metadata": { "source": "fixture" }
+        }
+      ]
+    },
+    {
+      "id": "fixture-session-2",
+      "description": "Second test session with pause/resume",
+      "events": [
+        {
+          "event_id": "evt-s2-001",
+          "session_id": "fixture-session-2",
+          "sequence_number": 1,
+          "timestamp": "2025-01-15T11:00:00.000Z",
+          "event_type": "session.created",
+          "schema_version": 1,
+          "payload": { "initial_state": "active" },
+          "metadata": { "source": "fixture" }
+        },
+        {
+          "event_id": "evt-s2-002",
+          "session_id": "fixture-session-2",
+          "sequence_number": 2,
+          "timestamp": "2025-01-15T11:00:01.000Z",
+          "event_type": "session.paused",
+          "schema_version": 1,
+          "payload": { "previous_state": "active", "new_state": "paused" },
+          "metadata": { "source": "fixture" }
+        },
+        {
+          "event_id": "evt-s2-003",
+          "session_id": "fixture-session-2",
+          "sequence_number": 3,
+          "timestamp": "2025-01-15T11:00:02.000Z",
+          "event_type": "session.resumed",
+          "schema_version": 1,
+          "payload": { "previous_state": "paused", "new_state": "active" },
+          "metadata": { "source": "fixture" }
+        }
+      ]
+    },
+    {
+      "id": "fixture-session-3",
+      "description": "Third test session that failed",
+      "events": [
+        {
+          "event_id": "evt-s3-001",
+          "session_id": "fixture-session-3",
+          "sequence_number": 1,
+          "timestamp": "2025-01-15T12:00:00.000Z",
+          "event_type": "session.created",
+          "schema_version": 1,
+          "payload": { "initial_state": "active" },
+          "metadata": { "source": "fixture" }
+        },
+        {
+          "event_id": "evt-s3-002",
+          "session_id": "fixture-session-3",
+          "sequence_number": 2,
+          "timestamp": "2025-01-15T12:00:01.000Z",
+          "event_type": "session.failed",
+          "schema_version": 1,
+          "payload": { "previous_state": "active", "new_state": "failed", "error": "Test error" },
+          "metadata": { "source": "fixture" }
+        }
+      ]
+    }
+  ]
+}

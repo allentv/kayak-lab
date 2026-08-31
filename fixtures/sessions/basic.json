@@ -1,0 +1,56 @@
+{
+  "id": "fixture-basic-session",
+  "description": "A basic 5-event session fixture",
+  "events": [
+    {
+      "event_id": "evt-001",
+      "session_id": "fixture-basic-session",
+      "sequence_number": 1,
+      "timestamp": "2025-01-15T10:00:00.000Z",
+      "event_type": "session.created",
+      "schema_version": 1,
+      "payload": { "initial_state": "active", "description": "Fixture session" },
+      "metadata": { "source": "fixture" }
+    },
+    {
+      "event_id": "evt-002",
+      "session_id": "fixture-basic-session",
+      "sequence_number": 2,
+      "timestamp": "2025-01-15T10:00:01.000Z",
+      "event_type": "user.input",
+      "schema_version": 1,
+      "payload": { "input": "Hello, agent!" },
+      "metadata": { "source": "fixture" }
+    },
+    {
+      "event_id": "evt-003",
+      "session_id": "fixture-basic-session",
+      "sequence_number": 3,
+      "timestamp": "2025-01-15T10:00:02.000Z",
+      "event_type": "model.request",
+      "schema_version": 1,
+      "payload": { "model": "test-model", "messages": [] },
+      "metadata": { "source": "fixture" }
+    },
+    {
+      "event_id": "evt-004",
+      "session_id": "fixture-basic-session",
+      "sequence_number": 4,
+      "timestamp": "2025-01-15T10:00:03.000Z",
+      "event_type": "model.response",
+      "schema_version": 1,
+      "payload": { "content": "Hello! How can I help?", "finish_reason": "stop" },
+      "metadata": { "source": "fixture" }
+    },
+    {
+      "event_id": "evt-005",
+      "session_id": "fixture-basic-session",
+      "sequence_number": 5,
+      "timestamp": "2025-01-15T10:00:04.000Z",
+      "event_type": "session.completed",
+      "schema_version": 1,
+      "payload": { "previous_state": "active", "new_state": "completed" },
+      "metadata": { "source": "fixture" }
+    }
+  ]
+}
