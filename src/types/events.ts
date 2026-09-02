@@ -50,6 +50,10 @@ export const EventTypes = {
   // Context events
   CONTEXT_WINDOW_UPDATED: "context.window.updated",
   CONTEXT_STATE_CHANGED: "context.state.changed",
+
+  // Self-observation events
+  AGENT_SELF_OBSERVED: "agent.self_observed",
+  AGENT_PATTERN_DETECTED: "agent.pattern_detected",
 } as const;
 
 export type EventType = (typeof EventTypes)[keyof typeof EventTypes];
@@ -193,6 +197,43 @@ export interface UserInputPayload {
   [key: string]: unknown;
 }
 
+/**
+ * Self-observation event payload.
+ */
+export interface SelfObservedPayload {
+  /** What was observed (e.g., "tool_performance", "error_pattern") */
+  observation_type: string;
+
+  /** The observed data */
+  data: Record<string, unknown>;
+
+  /** Session ID where observation occurred */
+  source_session_id: string;
+
+  /** Index signature for Record<string, unknown> compatibility */
+  [key: string]: unknown;
+}
+
+/**
+ * Pattern detected event payload.
+ */
+export interface PatternDetectedPayload {
+  /** Pattern identifier (e.g., "repeated_tool_failure", "high_token_usage") */
+  pattern_id: string;
+
+  /** Confidence score (0-1) */
+  confidence: number;
+
+  /** Pattern description */
+  description: string;
+
+  /** Sessions where pattern was observed */
+  session_ids: string[];
+
+  /** Index signature for Record<string, unknown> compatibility */
+  [key: string]: unknown;
+}
+
 // ============================================================================
 // Event Creation Helpers
 // ============================================================================
@@ -243,4 +284,13 @@ export function isModelEvent(
   event: BaseEvent,
 ): event is BaseEvent & { event_type: "model.request" | "model.response" | "model.stream.delta" } {
   return event.event_type.startsWith("model.");
+}
+
+/**
+ * Type guard for self-observation events.
+ */
+export function isSelfObservationEvent(
+  event: BaseEvent,
+): event is BaseEvent & { event_type: "agent.self_observed" | "agent.pattern_detected" } {
+  return event.event_type.startsWith("agent.self_observed") || event.event_type.startsWith("agent.pattern_detected");
 }
