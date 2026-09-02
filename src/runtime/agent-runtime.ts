@@ -23,6 +23,8 @@ import {
   ToolResult,
 } from "./tool-registry.ts";
 
+import { ISelfObservation, ObservationContext } from "./self-observation.ts";
+
 // ============================================================================
 // Agent Types
 // ============================================================================
@@ -168,6 +170,7 @@ export class AgentRuntime {
 
   private state: AgentState | null = null;
   private contextManager: ContextManager | null = null;
+  private selfObservation: ISelfObservation | null = null;
 
   constructor(
     eventStream: IEventStream,
@@ -176,6 +179,7 @@ export class AgentRuntime {
     toolRegistry: ToolRegistry,
     config: AgentConfig = {},
     events: AgentEvents = {},
+    selfObservation?: ISelfObservation,
   ) {
     this.eventStream = eventStream;
     this.sessionManager = sessionManager;
@@ -183,6 +187,7 @@ export class AgentRuntime {
     this.toolRegistry = toolRegistry;
     this.config = config;
     this.events = events;
+    this.selfObservation = selfObservation ?? null;
   }
 
   /**
@@ -295,9 +300,15 @@ export class AgentRuntime {
   private async runLoop(): Promise<string> {
     let iterations = 0;
     const maxIterations = 10; // Safety limit
+    let observationContext: ObservationContext | undefined;
 
     while (iterations < maxIterations) {
       iterations++;
+
+      // Pre-turn observation
+      if (this.selfObservation && this.state) {
+        observationContext = await this.selfObservation.preTurn(this.state.session_id);
+      }
 
       // Build model request
       const request = this.buildModelRequest();
@@ -321,6 +332,11 @@ export class AgentRuntime {
         finish_reason: response.finish_reason,
         usage: response.usage,
       });
+
+      // Post-turn observation
+      if (this.selfObservation && this.state && observationContext) {
+        await this.selfObservation.postTurn(this.state.session_id, observationContext);
+      }
 
       // Add assistant message to context
       if (response.content) {
@@ -364,9 +380,15 @@ export class AgentRuntime {
   private async *runLoopStreaming(): AsyncIterable<string | StreamDelta> {
     let iterations = 0;
     const maxIterations = 10;
+    let observationContext: ObservationContext | undefined;
 
     while (iterations < maxIterations) {
       iterations++;
+
+      // Pre-turn observation
+      if (this.selfObservation && this.state) {
+        observationContext = await this.selfObservation.preTurn(this.state.session_id);
+      }
 
       // Build model request
       const request = this.buildModelRequest();
@@ -434,6 +456,11 @@ export class AgentRuntime {
         tool_calls: response.tool_calls,
         finish_reason: response.finish_reason,
       });
+
+      // Post-turn observation
+      if (this.selfObservation && this.state && observationContext) {
+        await this.selfObservation.postTurn(this.state.session_id, observationContext);
+      }
 
       // Add assistant message to context
       if (fullContent) {
