@@ -1,6 +1,6 @@
 # Event Types
 
-kayak-lab defines 25 event types across 7 categories. Every event conforms to the `BaseEvent` interface.
+kayak-lab defines 34 event types across 10 categories. Every event conforms to the `BaseEvent` interface.
 
 ## BaseEvent
 
@@ -104,12 +104,99 @@ Context management.
 | `context.window.updated` | `{ messages_added, messages_trimmed }` | Context window modified |
 | `context.state.changed` | `{ key, old_value, new_value }` | Context state changed |
 
+## Self-Observation Events
+
+Agent self-awareness and pattern detection.
+
+| Event | Payload | Description |
+|-------|---------|-------------|
+| `agent.self_observed` | `{ observation_type, data, source_session_id }` | Agent observed its own behavior |
+| `agent.pattern_detected` | `{ pattern_id, confidence, description, session_ids }` | Agent detected a recurring pattern |
+
+## Tool Calling Protocol Events
+
+Structured tool invocation and results through the new tool calling protocol.
+
+| Event | Payload | Description |
+|-------|---------|-------------|
+| `tool.call.invocation` | `ToolInvocationPayload` | Tool call initiated by the agent |
+| `tool.call.result` | `ToolResultPayload` | Tool call result returned |
+
+## Tool Authoring Events
+
+Tool creation, proposal, and review lifecycle.
+
+| Event | Payload | Description |
+|-------|---------|-------------|
+| `tool.authored.proposed` | `ToolAuthoredPayload` | New tool proposed for review |
+| `tool.authored.created` | `ToolAuthoredPayload` | Tool accepted and created |
+| `tool.authored.rejected` | `ToolAuthoredPayload` | Tool proposal rejected |
+
+## Tool Self-Improvement Events
+
+Automated tool optimization and improvement suggestions.
+
+| Event | Payload | Description |
+|-------|---------|-------------|
+| `tool.improvement.suggested` | `ToolImprovementPayload` | Improvement suggestion generated |
+| `tool.improvement.auto_created` | `ToolImprovementPayload` | Improvement auto-accepted and tool created |
+| `tool.improvement.auto_improved` | `ToolImprovementPayload` | Existing tool auto-improved |
+
+## Payload Interfaces
+
+### ToolInvocationPayload
+
+```typescript
+interface ToolInvocationPayload {
+  tool_name: string;
+  parameters: Record<string, unknown>;
+  tool_call_id: string;
+  [key: string]: unknown;
+}
+```
+
+### ToolResultPayload
+
+```typescript
+interface ToolResultPayload {
+  tool_name: string;
+  tool_call_id: string;
+  exit_code: number;
+  stdout: string;
+  stderr: string;
+  duration_ms: number;
+  success: boolean;
+  [key: string]: unknown;
+}
+```
+
+### ToolAuthoredPayload
+
+```typescript
+interface ToolAuthoredPayload {
+  tool_name: string;
+  description: string;
+  reason?: string;         // Rejection reason (rejected events only)
+  [key: string]: unknown;
+}
+```
+
+### ToolImprovementPayload
+
+```typescript
+interface ToolImprovementPayload {
+  tool_name: string;
+  description: string;
+  [key: string]: unknown;
+}
+```
+
 ## Using Event Types
 
 ### Type Guards
 
 ```typescript
-import { isSessionEvent, isToolEvent, isModelEvent } from "./src/types/events.ts";
+import { isSessionEvent, isToolEvent, isModelEvent, isToolCallingEvent, isToolAuthoredEvent, isToolImprovementEvent } from "./src/types/events.ts";
 
 if (isSessionEvent(event)) {
   // event.payload is typed as session event payload
@@ -117,6 +204,18 @@ if (isSessionEvent(event)) {
 
 if (isToolEvent(event)) {
   // event.payload is typed as tool event payload
+}
+
+if (isToolCallingEvent(event)) {
+  // event.payload is typed as tool.call.invocation or tool.call.result
+}
+
+if (isToolAuthoredEvent(event)) {
+  // event.payload is typed as tool.authored.* event
+}
+
+if (isToolImprovementEvent(event)) {
+  // event.payload is typed as tool.improvement.* event
 }
 ```
 

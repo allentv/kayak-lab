@@ -54,6 +54,20 @@ export const EventTypes = {
   // Self-observation events
   AGENT_SELF_OBSERVED: "agent.self_observed",
   AGENT_PATTERN_DETECTED: "agent.pattern_detected",
+
+  // Tool calling protocol events
+  TOOL_CALL_INVOCATION: "tool.call.invocation",
+  TOOL_CALL_RESULT: "tool.call.result",
+
+  // Tool authoring events
+  TOOL_AUTHORED_PROPOSED: "tool.authored.proposed",
+  TOOL_AUTHORED_CREATED: "tool.authored.created",
+  TOOL_AUTHORED_REJECTED: "tool.authored.rejected",
+
+  // Tool self-improvement events
+  TOOL_IMPROVEMENT_SUGGESTED: "tool.improvement.suggested",
+  TOOL_IMPROVEMENT_AUTO_CREATED: "tool.improvement.auto_created",
+  TOOL_IMPROVEMENT_AUTO_IMPROVED: "tool.improvement.auto_improved",
 } as const;
 
 export type EventType = (typeof EventTypes)[keyof typeof EventTypes];
@@ -234,6 +248,68 @@ export interface PatternDetectedPayload {
   [key: string]: unknown;
 }
 
+/**
+ * Tool invocation event payload.
+ */
+export interface ToolInvocationPayload {
+  /** Tool name */
+  tool_name: string;
+  /** Parameters passed to the tool */
+  parameters: Record<string, unknown>;
+  /** Tool call ID */
+  tool_call_id: string;
+  /** Index signature for Record<string, unknown> compatibility */
+  [key: string]: unknown;
+}
+
+/**
+ * Tool result event payload.
+ */
+export interface ToolResultPayload {
+  /** Tool name */
+  tool_name: string;
+  /** Tool call ID */
+  tool_call_id: string;
+  /** Exit code */
+  exit_code: number;
+  /** Standard output */
+  stdout: string;
+  /** Standard error */
+  stderr: string;
+  /** Duration in milliseconds */
+  duration_ms: number;
+  /** Whether the call succeeded */
+  success: boolean;
+  /** Index signature for Record<string, unknown> compatibility */
+  [key: string]: unknown;
+}
+
+/**
+ * Tool authoring event payload.
+ */
+export interface ToolAuthoredPayload {
+  /** Tool name */
+  tool_name: string;
+  /** Tool description */
+  description: string;
+  /** Reason for rejection (rejected events only) */
+  reason?: string;
+  /** Index signature for Record<string, unknown> compatibility */
+  [key: string]: unknown;
+}
+
+/**
+ * Tool self-improvement event payload.
+ */
+export interface ToolImprovementPayload {
+  /** Tool name */
+  tool_name: string;
+  /** Tool description */
+  description: string;
+  /** Index signature for Record<string, unknown> compatibility */
+  [key: string]: unknown;
+}
+
 // ============================================================================
 // Event Creation Helpers
 // ============================================================================
@@ -293,4 +369,31 @@ export function isSelfObservationEvent(
   event: BaseEvent,
 ): event is BaseEvent & { event_type: "agent.self_observed" | "agent.pattern_detected" } {
   return event.event_type.startsWith("agent.self_observed") || event.event_type.startsWith("agent.pattern_detected");
+}
+
+/**
+ * Type guard for tool calling protocol events.
+ */
+export function isToolCallingEvent(
+  event: BaseEvent,
+): event is BaseEvent & { event_type: "tool.call.invocation" | "tool.call.result" } {
+  return event.event_type === "tool.call.invocation" || event.event_type === "tool.call.result";
+}
+
+/**
+ * Type guard for tool authoring events.
+ */
+export function isToolAuthoredEvent(
+  event: BaseEvent,
+): event is BaseEvent & { event_type: "tool.authored.proposed" | "tool.authored.created" | "tool.authored.rejected" } {
+  return event.event_type.startsWith("tool.authored.");
+}
+
+/**
+ * Type guard for tool self-improvement events.
+ */
+export function isToolImprovementEvent(
+  event: BaseEvent,
+): event is BaseEvent & { event_type: "tool.improvement.suggested" | "tool.improvement.auto_created" | "tool.improvement.auto_improved" } {
+  return event.event_type.startsWith("tool.improvement.");
 }

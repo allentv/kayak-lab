@@ -10,7 +10,12 @@ All notable changes to kayak-lab will be documented in this file.
 - Session manager with full lifecycle state machine (active/paused/completed/failed/cancelled)
 - Agent runtime with input → model → tool execution loop
 - Model provider abstraction with OpenAI, Anthropic, and local model support
-- Tool registry with typed parameters and timeout support
+- Structured tool calling protocol with JSON Schema validation (ToolCallingEngine)
+- Tool registry with enable/disable lifecycle and discovery (ToolRegistry)
+- Interactive tool authoring with proposal/review/accept/reject flow (ToolAuthoring)
+- Tool self-improvement with usage tracking and suggestion generation (ToolSelfImprovement)
+- Dual-protocol dispatch in AgentRuntime (newToolRegistry + legacy fallback)
+- Tool registry with typed parameters and timeout support (legacy)
 - Shell capability with real execution and safety constraints (blocked/dangerous commands)
 - Git, GitHub, Kubernetes capability interfaces (stubbed implementations)
 - Event store with in-memory persistence, snapshots, and replay
@@ -60,3 +65,4 @@ All notable changes to kayak-lab will be documented in this file.
 - `local-sandbox-execution` — Docker/GVisor sandbox execution
 - `code-quality-tooling` — Linting, formatting, pre-push checks
 - `documentation-website` — VitePress documentation site
+- `tool-calling` — Structured tool calling protocol with registry, authoring, and self-improvement

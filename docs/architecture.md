@@ -7,6 +7,7 @@ graph TB
     subgraph Core["Core Layer"]
         ES["EventStream"] <--> SM["SessionManager"]
         SM <--> AR["AgentRuntime"]
+        AR <--> TR["ToolCallingModule"]
         ES --- ESTORE["EventStore<br/>(in-memory + persistent)"]
         AR --- MP["ModelProvider<br/>(OpenAI, Anthropic, local)"]
     end
@@ -79,10 +80,48 @@ The agent execution loop: input → model → tool cycle. Manages context window
 ```typescript
 const runtime = new AgentRuntime(eventStream, sessionManager, modelManager, toolRegistry);
 
+// Or with the new structured tool calling protocol
+const runtime = new AgentRuntime(eventStream, sessionManager, modelManager, legacyToolRegistry, newToolRegistry);
+
 // Start and process input
 await runtime.start();
 const response = await runtime.processInput("Run ls -la");
 ```
+
+**Dual-protocol dispatch:** AgentRuntime checks `newToolRegistry` first for structured tools (JSON Schema validated), then falls back to the legacy `toolRegistry`. This enables incremental migration from legacy tools to the structured protocol.
+
+### Tool Calling Module
+
+Structured tool execution protocol with JSON Schema validation, tool registry, authoring, and self-improvement.
+
+The module lives in `src/tools/` and provides:
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| `ToolDefinition` | `tool-definition.ts` | JSON Schema parameter validation for tool invocations |
+| `ToolCallingEngine` | `calling-engine.ts` | Executes tools with structured input/output and timeout handling |
+| `ToolRegistry` | `registry.ts` | Enable/disable lifecycle, discovery, and lookup of tools |
+| `ToolAuthoring` | `authoring.ts` | Proposal/review/accept/reject flow for creating new tools |
+| `ToolSelfImprovement` | `self-improvement.ts` | Usage tracking, suggestion generation, and auto-improvement |
+| Types | `types.ts` | Shared interfaces (`ToolHandlerContext`, `ToolDefinition`, etc.) |
+
+```typescript
+import { ToolCallingEngine, ToolRegistry } from "./src/tools/mod.ts";
+
+// Register tools with definitions
+const registry = new ToolRegistry();
+registry.enable("shell", { description: "Execute shell commands", parameters: { /* JSON Schema */ } });
+
+// Execute a tool call
+const engine = new ToolCallingEngine(registry);
+const result = await engine.invoke({
+  tool_name: "shell",
+  parameters: { command: "ls -la" },
+  tool_call_id: "call-123",
+});
+```
+
+**Tool authoring flow:** Propose → Review → Accept/Reject → Register. Tools go through a review lifecycle before being added to the registry. Self-improvement tracks usage patterns and suggests optimizations.
 
 ### EventStore
 

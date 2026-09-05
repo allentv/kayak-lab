@@ -111,6 +111,13 @@ src/
 │   ├── agent-runtime.ts    Agent loop: input → model → tool cycle
 │   ├── model-provider.ts   Provider-agnostic model interface
 │   └── tool-registry.ts    Typed tool registration and invocation
+├── tools/                  Structured tool calling protocol
+│   ├── types.ts            ToolHandlerContext, ToolDefinition interfaces
+│   ├── tool-definition.ts  JSON Schema parameter validation
+│   ├── calling-engine.ts   Structured tool execution engine
+│   ├── registry.ts         Tool enable/disable lifecycle and discovery
+│   ├── authoring.ts        Proposal/review/accept/reject tool creation
+│   └── self-improvement.ts Usage tracking and suggestion generation
 ├── capabilities/           External system interfaces
 │   ├── capability.ts       ICapability interface, registry
 │   ├── shell.ts            Shell execution via Deno.Command
@@ -137,7 +144,7 @@ src/
 ## Quick Start
 
 ```bash
-# Run all tests (140+ tests across 15 suites)
+# Run all tests (~71 tests across 34 test files)
 deno test --allow-read --allow-env --allow-run
 
 # Type check
@@ -170,9 +177,9 @@ deno test src/__tests__/benchmarks.test.ts --allow-read --allow-env
 
 ## Event Types
 
-25 event types across 7 categories:
+34 event types across 10 categories:
 
-| Category | Events | Purpose |
+| Event | Events | Purpose |
 |----------|--------|---------|
 | Session | `session.created`, `.resumed`, `.paused`, `.completed`, `.failed`, `.cancelled` | Lifecycle management |
 | Agent | `agent.thinking`, `.decision`, `.tool_invocation` | Agent loop state |
@@ -181,6 +188,10 @@ deno test src/__tests__/benchmarks.test.ts --allow-read --allow-env
 | UI | `ui.user.input`, `.display.update`, `.action` | User interaction |
 | Policy | `policy.approval`, `.denial`, `.constraint` | Policy enforcement (planned) |
 | Context | `context.window.updated`, `.state.changed` | Context management |
+| Self-Observation | `agent.self_observed`, `.pattern_detected` | Agent self-awareness |
+| Tool Calling | `tool.call.invocation`, `.result` | Structured tool protocol |
+| Tool Authoring | `tool.authored.proposed`, `.created`, `.rejected` | Tool creation lifecycle |
+| Tool Self-Improvement | `tool.improvement.suggested`, `.auto_created`, `.auto_improved` | Tool optimization |
 
 ## OpenSpec
 
@@ -210,6 +221,7 @@ This project uses [OpenSpec](https://github.com/allentv/openspec) for specificat
 | `local-sandbox-execution` | Docker/GVisor sandbox execution |
 | `code-quality-tooling` | Linting, formatting, pre-push checks |
 | `documentation-website` | VitePress documentation site |
+| `tool-calling` | Structured tool calling protocol with registry, authoring, and self-improvement |
 
 ### Working with OpenSpec
 
@@ -243,6 +255,15 @@ openspec instructions apply --change <change-name> --json
 2. Register it in `src/capabilities/mod.ts`
 3. Write tests in `src/capabilities/__tests__/<name>.test.ts`
 4. Create an OpenSpec change if the capability has complex behavior
+
+### Adding a New Tool
+
+Tools are created through the `ToolAuthoring` module in `src/tools/authoring.ts`:
+
+1. Propose a tool via `ToolAuthoring.propose(toolName, definition)`
+2. The proposal goes through a review cycle (accept/reject)
+3. Accepted tools are registered in `ToolRegistry` and become available to `ToolCallingEngine`
+4. `ToolSelfImprovement` tracks usage and suggests optimizations
 
 ### Adding a New Event Type
 

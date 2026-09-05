@@ -25,6 +25,9 @@ import {
 
 import { ISelfObservation, ObservationContext } from "./self-observation.ts";
 
+import type { IToolRegistry as INewToolRegistry } from "../tools/registry.ts";
+import type { ToolResult as NewToolResult } from "../tools/types.ts";
+
 // ============================================================================
 // Agent Types
 // ============================================================================
@@ -165,6 +168,7 @@ export class AgentRuntime {
   private sessionManager: ISessionManager;
   private modelManager: ModelManager;
   private toolRegistry: ToolRegistry;
+  private newToolRegistry: INewToolRegistry | null;
   private config: AgentConfig;
   private events: AgentEvents;
 
@@ -180,11 +184,13 @@ export class AgentRuntime {
     config: AgentConfig = {},
     events: AgentEvents = {},
     selfObservation?: ISelfObservation,
+    newToolRegistry?: INewToolRegistry,
   ) {
     this.eventStream = eventStream;
     this.sessionManager = sessionManager;
     this.modelManager = modelManager;
     this.toolRegistry = toolRegistry;
+    this.newToolRegistry = newToolRegistry ?? null;
     this.config = config;
     this.events = events;
     this.selfObservation = selfObservation ?? null;
@@ -515,6 +521,8 @@ export class AgentRuntime {
 
   /**
    * Execute tool calls and return results.
+   * Uses the new tool calling protocol if a new registry is available,
+   * otherwise falls back to the legacy tool registry.
    */
   private async executeToolCalls(toolCalls: ToolCall[]): Promise<ToolResult[]> {
     const results: ToolResult[] = [];
@@ -529,10 +537,47 @@ export class AgentRuntime {
         arguments: toolCall.arguments,
       });
 
-      // Invoke tool
-      const result = await this.toolRegistry.invoke(toolCall, {
-        session_id: this.state!.session_id,
-      });
+      let result: ToolResult;
+
+      if (this.newToolRegistry && this.newToolRegistry.has(toolCall.name)) {
+        // New protocol path
+        await this.appendEvent("tool.call.invocation", {
+          tool_call_id: toolCall.id,
+          tool_name: toolCall.name,
+          parameters: toolCall.arguments,
+        });
+
+        const newResult: NewToolResult = await this.newToolRegistry.invoke(
+          toolCall.id,
+          toolCall.name,
+          toolCall.arguments,
+          { session_id: this.state!.session_id },
+        );
+
+        await this.appendEvent("tool.call.result", {
+          tool_call_id: newResult.tool_call_id,
+          tool_name: newResult.tool_name,
+          exit_code: newResult.exit_code,
+          stdout: newResult.stdout,
+          stderr: newResult.stderr,
+          duration_ms: newResult.duration_ms,
+          success: newResult.success,
+        });
+
+        // Adapt new result to legacy format
+        result = {
+          tool_call_id: newResult.tool_call_id,
+          success: newResult.success,
+          result: newResult.stdout,
+          error: newResult.stderr || undefined,
+          duration_ms: newResult.duration_ms,
+        };
+      } else {
+        // Legacy protocol path
+        result = await this.toolRegistry.invoke(toolCall, {
+          session_id: this.state!.session_id,
+        });
+      }
 
       this.events.onToolResult?.(result);
 

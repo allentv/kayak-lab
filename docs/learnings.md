@@ -43,6 +43,15 @@ This file captures patterns, decisions, and gotchas discovered during kayak-lab 
 - Session manager returns immutable clones via `cloneSession()` — never store a returned Session reference
 - `CapabilityResult<T>` wraps success/data/error pattern — only `ensureInitialized()` throws
 
+## Tool Calling
+
+- **Dual-protocol dispatch:** AgentRuntime checks `newToolRegistry` first for structured tools, then falls back to legacy `toolRegistry` — enables incremental migration without breaking existing tools
+- **JSON Schema validation:** `ToolDefinition` validates tool parameters against JSON Schema before execution — catch bad inputs at definition time, not runtime
+- **Tool authoring lifecycle:** Propose → Review → Accept/Reject → Register. `ToolAuthoring` handles the full flow; rejected proposals get a reason for feedback
+- **Self-improvement deduplication:** `ToolSelfImprovement` tracks usage patterns and deduplicates suggestions — same improvement is not proposed twice for the same tool
+- **ToolHandlerContext:** Provides tool authors with a standardized context (tool name, parameters, call ID) without requiring direct dependency on the event system
+- **Enable/disable lifecycle:** `ToolRegistry` supports runtime enable/disable of tools — useful for feature flags, A/B testing, and safe rollouts
+
 ## Capabilities
 
 - Abstract interfaces enable testing with mocks
@@ -81,7 +90,7 @@ This file captures patterns, decisions, and gotchas discovered during kayak-lab 
 
 - `Deno.test` with async `t.step` for nested test organization
 - Mock providers implement `IModelProvider` with configurable responses and failure flags
-- Test context objects (`CapabilityContext`, `ToolContext`) provide minimal required fields
+- Test context objects (`CapabilityContext`, `ToolHandlerContext`) provide minimal required fields — `ToolHandlerContext` from `src/tools/types.ts` is the structured equivalent of the legacy `ToolContext`
 
 ## Sandbox Execution
 
