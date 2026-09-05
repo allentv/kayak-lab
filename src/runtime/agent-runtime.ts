@@ -27,6 +27,10 @@ import { ISelfObservation, ObservationContext } from "./self-observation.ts";
 
 import type { IToolRegistry as INewToolRegistry } from "../tools/registry.ts";
 import type { ToolResult as NewToolResult } from "../tools/types.ts";
+import type { IMemoryProvider, IMemoryRetrieval, IMemoryUpdate, ISharedMemory } from "../memory/mod.ts";
+import type { AnyMemory, CreateMemoryInput, UpdateMemoryInput } from "../memory/mod.ts";
+import type { RetrievalOptions } from "../memory/mod.ts";
+import type { SnapshotOptions, MemorySnapshot } from "../memory/mod.ts";
 
 // ============================================================================
 // Agent Types
@@ -176,6 +180,12 @@ export class AgentRuntime {
   private contextManager: ContextManager | null = null;
   private selfObservation: ISelfObservation | null = null;
 
+  // Memory subsystem (optional)
+  private memoryProvider: IMemoryProvider | null = null;
+  private memoryRetrieval: IMemoryRetrieval | null = null;
+  private memoryUpdate: IMemoryUpdate | null = null;
+  private sharedMemory: ISharedMemory | null = null;
+
   constructor(
     eventStream: IEventStream,
     sessionManager: ISessionManager,
@@ -185,6 +195,12 @@ export class AgentRuntime {
     events: AgentEvents = {},
     selfObservation?: ISelfObservation,
     newToolRegistry?: INewToolRegistry,
+    memoryComponents?: {
+      provider?: IMemoryProvider;
+      retrieval?: IMemoryRetrieval;
+      update?: IMemoryUpdate;
+      shared?: ISharedMemory;
+    },
   ) {
     this.eventStream = eventStream;
     this.sessionManager = sessionManager;
@@ -194,6 +210,12 @@ export class AgentRuntime {
     this.config = config;
     this.events = events;
     this.selfObservation = selfObservation ?? null;
+    if (memoryComponents) {
+      this.memoryProvider = memoryComponents.provider ?? null;
+      this.memoryRetrieval = memoryComponents.retrieval ?? null;
+      this.memoryUpdate = memoryComponents.update ?? null;
+      this.sharedMemory = memoryComponents.shared ?? null;
+    }
   }
 
   /**
@@ -602,6 +624,96 @@ export class AgentRuntime {
     }
 
     return results;
+  }
+
+  // ==========================================================================
+  // Memory Methods
+  // ==========================================================================
+
+  /**
+   * Retrieve memories on-demand (not automatic context injection).
+   * Agents explicitly request memories, preserving context window space.
+   */
+  async retrieveMemory(options?: RetrievalOptions): Promise<AnyMemory[]> {
+    if (!this.memoryRetrieval) {
+      return [];
+    }
+    return await this.memoryRetrieval.retrieve(options);
+  }
+
+  /**
+   * Store a memory (manual, user-initiated).
+   */
+  async storeMemory(input: CreateMemoryInput): Promise<AnyMemory | null> {
+    if (!this.memoryUpdate) {
+      return null;
+    }
+    return await this.memoryUpdate.manualStore(input);
+  }
+
+  /**
+   * Automatically store a memory from agent interaction context.
+   */
+  async autoStoreMemory(input: CreateMemoryInput): Promise<AnyMemory | null> {
+    if (!this.memoryUpdate) {
+      return null;
+    }
+    return await this.memoryUpdate.autoStore(input);
+  }
+
+  /**
+   * Update an existing memory.
+   */
+  async updateMemory(id: string, input: UpdateMemoryInput): Promise<AnyMemory | null> {
+    if (!this.memoryUpdate) {
+      return null;
+    }
+    return await this.memoryUpdate.update(id, input);
+  }
+
+  /**
+   * Get a snapshot of shared memory for the current session.
+   */
+  async getMemorySnapshot(options?: SnapshotOptions): Promise<MemorySnapshot | null> {
+    if (!this.sharedMemory || !this.state) {
+      return null;
+    }
+    return await this.sharedMemory.getSnapshot(this.state.session_id, options);
+  }
+
+  /**
+   * Reference a specific memory by ID from shared memory.
+   */
+  async referenceMemory(memoryId: string): Promise<AnyMemory | null> {
+    if (!this.sharedMemory || !this.state) {
+      return null;
+    }
+    return await this.sharedMemory.reference(this.state.session_id, memoryId);
+  }
+
+  /**
+   * Check if any memory component is available.
+   */
+  hasMemory(): boolean {
+    return this.memoryProvider !== null ||
+      this.memoryRetrieval !== null ||
+      this.memoryUpdate !== null ||
+      this.sharedMemory !== null;
+  }
+
+  /**
+   * Attach memory components after construction.
+   */
+  setMemoryComponents(components: {
+    provider?: IMemoryProvider;
+    retrieval?: IMemoryRetrieval;
+    update?: IMemoryUpdate;
+    shared?: ISharedMemory;
+  }): void {
+    if (components.provider) this.memoryProvider = components.provider;
+    if (components.retrieval) this.memoryRetrieval = components.retrieval;
+    if (components.update) this.memoryUpdate = components.update;
+    if (components.shared) this.sharedMemory = components.shared;
   }
 
   /**

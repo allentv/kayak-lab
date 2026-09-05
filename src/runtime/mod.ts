@@ -52,3 +52,13 @@ export type {
   AgentState,
   AgentEvents,
 } from "./agent-runtime.ts";
+
+// Memory integration (re-export from memory module)
+export type {
+  AnyMemory,
+  CreateMemoryInput,
+  UpdateMemoryInput,
+  RetrievalOptions,
+  SnapshotOptions,
+  MemorySnapshot,
+} from "../memory/mod.ts";

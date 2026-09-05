@@ -85,6 +85,17 @@ export const EventTypes = {
   MCP_SEARCH: "mcp.search",
   MCP_SEARCH_RESULT: "mcp.search.result",
   MCP_ERROR: "mcp.error",
+
+  // Memory events
+  MEMORY_OPERATION: "memory.operation",
+  MEMORY_STORED: "memory.stored",
+  MEMORY_FALLBACK: "memory.fallback",
+  MEMORY_RETRIEVED: "memory.retrieved",
+  MEMORY_UPDATED: "memory.updated",
+  MEMORY_TYPE: "memory.type",
+  MEMORY_SHARED: "memory.shared",
+  MEMORY_SEARCH: "memory.search",
+  MEMORY_SEARCH_RESULT: "memory.search.result",
 } as const;
 
 export type EventType = (typeof EventTypes)[keyof typeof EventTypes];
@@ -427,4 +438,17 @@ export function isMCPEvent(
     "mcp.tool.unregistered" | "mcp.tool.state_changed" | "mcp.search" | "mcp.search.result" | "mcp.error";
 } {
   return event.event_type.startsWith("mcp.");
+}
+
+/**
+ * Type guard for memory events.
+ */
+export function isMemoryEvent(
+  event: BaseEvent,
+): event is BaseEvent & {
+  event_type: "memory.operation" | "memory.stored" | "memory.fallback" |
+    "memory.retrieved" | "memory.updated" | "memory.type" |
+    "memory.shared" | "memory.search" | "memory.search.result";
+} {
+  return event.event_type.startsWith("memory.");
 }
