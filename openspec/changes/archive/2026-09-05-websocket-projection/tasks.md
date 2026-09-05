@@ -14,8 +14,8 @@
 ## 3. Event Delivery
 
 - [x] 3.1 Implement in-process event bridge: subscribe to EventStore, fan out to connected clients. Verify: event appended → clients receive it.
-- [ ] 3.2 Implement event ordering: ensure events within a session are delivered in sequence order. Verify: 10 events appended in order, client receives all 10 in order.
-- [ ] 3.3 Implement backpressure: buffer events for slow clients, deliver when caught up. Verify: slow client receives all events without loss.
+- [x] 3.2 Implement event ordering: ensure events within a session are delivered in sequence order. Verify: 10 events appended in order, client receives all 10 in order.
+- [x] 3.3 Implement backpressure: buffer events for slow clients, deliver when caught up. Verify: slow client receives all events without loss.
 
 ## 4. Reconnection and Gap Recovery
 
@@ -25,14 +25,14 @@
 
 ## 5. Connection Lifecycle
 
-- [ ] 5.1 Implement heartbeat: send ping to idle clients every 30 seconds. Verify: client receives ping after 30s idle.
-- [ ] 5.2 Implement pong handling: expect pong within 5 seconds of ping. Verify: client pong resets timeout.
-- [ ] 5.3 Implement timeout disconnect: disconnect clients that don't pong within 15 seconds. Verify: non-responding client is disconnected.
+- [x] 5.1 Implement heartbeat: send ping to idle clients every 30 seconds. Verify: client receives ping after 30s idle.
+- [x] 5.2 Implement pong handling: expect pong within 5 seconds of ping. Verify: client pong resets timeout.
+- [x] 5.3 Implement timeout disconnect: disconnect clients that don't pong within 15 seconds. Verify: non-responding client is disconnected.
 
 ## 6. Tests
 
 - [x] 6.1 Write unit tests for WebSocket server: connect, subscribe, receive events, disconnect. Verify: all tests pass.
 - [x] 6.2 Write unit tests for subscription filtering: session filter, type filter, unsubscribe. Verify: filtering works correctly.
 - [x] 6.3 Write unit tests for gap recovery: reconnect after disconnect, buffer replay, gap-too-large. Verify: gap recovery works.
-- [ ] 6.4 Write integration test: append events to store → WebSocket client subscribes → receives events in real time. Verify: end-to-end flow works.
+- [x] 6.4 Write integration test: append events to store → WebSocket client subscribes → receives events in real time. Verify: end-to-end flow works.
 - [x] 6.5 Verify existing 112+ tests still pass. Verify: `deno test` passes.

@@ -19,13 +19,30 @@ export interface Subscription {
   active: boolean;
 }
 
+/** Per-session delivery state for a client. */
+export interface ClientSessionState {
+  /** Next expected sequence number for in-order delivery. */
+  nextSequence: number;
+  /** Buffered events waiting for the gap to fill. */
+  pendingEvents: BaseEvent[];
+}
+
+/** Max events queued per client before dropping. */
+const MAX_SEND_QUEUE = 10_000;
+
 /** Client connection state. */
 export interface ClientState {
   id: string;
   socket: WebSocket;
   subscription: Subscription;
-  lastPing: number;
-  connected: boolean;
+  /** Timestamp of last received pong (or initial connection). */
+  lastPong: number;
+  /** Timestamp of last sent ping. Null if no ping outstanding. */
+  lastPingSent: number | null;
+  /** Per-session delivery state for ordering and backpressure. */
+  sessionState: Map<string, ClientSessionState>;
+  /** Queued events waiting to be sent (backpressure buffer). */
+  sendQueue: ServerMessage[];
 }
 
 /** Welcome message. */
@@ -207,8 +224,10 @@ export class WebSocketProjectionServer {
       id: clientId,
       socket,
       subscription: { active: false },
-      lastPing: Date.now(),
-      connected: true,
+      lastPong: Date.now(),
+      lastPingSent: null,
+      sessionState: new Map(),
+      sendQueue: [],
     };
 
     this.clients.set(clientId, clientState);
@@ -265,7 +284,9 @@ export class WebSocketProjectionServer {
           this.handleReconnect(client, msg);
           break;
         case "pong":
-          client.lastPing = Date.now();
+          client.lastPong = Date.now();
+          client.lastPingSent = null;
+          this.flushClient(client);
           break;
       }
     } catch {
@@ -277,6 +298,14 @@ export class WebSocketProjectionServer {
    * Handle subscribe message.
    */
   private handleSubscribe(client: ClientState, msg: SubscribeMessage): void {
+    // Clear old session state if switching sessions
+    if (
+      client.subscription.sessionId &&
+      client.subscription.sessionId !== msg.session_id
+    ) {
+      client.sessionState.delete(client.subscription.sessionId);
+    }
+
     client.subscription = {
       sessionId: msg.session_id,
       eventTypes: msg.event_types,
@@ -289,6 +318,16 @@ export class WebSocketProjectionServer {
         msg.session_id,
         new RingBuffer(this.config.bufferSize!),
       );
+    }
+
+    // Initialize per-session delivery state
+    if (msg.session_id) {
+      if (!client.sessionState.has(msg.session_id)) {
+        client.sessionState.set(msg.session_id, {
+          nextSequence: 1,
+          pendingEvents: [],
+        });
+      }
     }
   }
 
@@ -339,6 +378,8 @@ export class WebSocketProjectionServer {
 
   /**
    * Deliver an event to all subscribed clients.
+   * Events are buffered per-client per-session to guarantee sequence order.
+   * Slow clients receive events when they catch up (backpressure).
    */
   deliverEvent(event: BaseEvent): void {
     // Store in ring buffer
@@ -367,27 +408,108 @@ export class WebSocketProjectionServer {
         continue;
       }
 
-      this.sendToClient(client, { type: "event", event });
+      // Buffer event for in-order delivery
+      let session = client.sessionState.get(event.session_id);
+      if (!session) {
+        session = { nextSequence: 1, pendingEvents: [] };
+        client.sessionState.set(event.session_id, session);
+      }
+
+      // Binary search insertion point for mostly-in-order events
+      const pending = session.pendingEvents;
+      let lo = 0, hi = pending.length;
+      while (lo < hi) {
+        const mid = (lo + hi) >>> 1;
+        if (pending[mid].sequence_number < event.sequence_number) lo = mid + 1;
+        else hi = mid;
+      }
+      pending.splice(lo, 0, event);
+
+      // Flush ready events
+      this.flushClientSession(client, event.session_id);
+    }
+  }
+
+  /**
+   * Flush buffered events for a specific session on a client.
+   * Delivers events in sequence order, stopping at the first gap.
+   */
+  private flushClientSession(client: ClientState, sessionId: string): void {
+    const session = client.sessionState.get(sessionId);
+    if (!session) return;
+
+    while (session.pendingEvents.length > 0) {
+      const next = session.pendingEvents[0];
+      if (next.sequence_number !== session.nextSequence) break;
+
+      session.pendingEvents.shift();
+      this.enqueueEvent(client, next);
+      session.nextSequence++;
+    }
+
+    this.flushClient(client);
+  }
+
+  /**
+   * Enqueue an event for a client (backpressure buffer).
+   * Drops oldest events when queue exceeds MAX_SEND_QUEUE.
+   */
+  private enqueueEvent(client: ClientState, event: BaseEvent): void {
+    if (client.sendQueue.length >= MAX_SEND_QUEUE) {
+      client.sendQueue.shift();
+    }
+    client.sendQueue.push({ type: "event", event });
+  }
+
+  /**
+   * Flush the send queue for a client.
+   * Stops on backpressure (socket buffer full).
+   */
+  private flushClient(client: ClientState): void {
+    while (client.sendQueue.length > 0) {
+      if (client.socket.readyState !== WebSocket.OPEN) {
+        client.sendQueue = [];
+        return;
+      }
+
+      const msg = client.sendQueue[0];
+      try {
+        client.socket.send(JSON.stringify(msg));
+        client.sendQueue.shift();
+      } catch {
+        // Backpressure — socket buffer full, retry on next pong
+        return;
+      }
     }
   }
 
   /**
    * Send heartbeat pings to idle clients.
+   * - Clients that haven't ponged within pongTimeoutMs are disconnected.
+   * - Idle clients (no pong for heartbeatIntervalMs) receive a ping.
+   * - Clients with an outstanding ping that didn't pong within pongTimeoutMs are disconnected.
    */
   private sendHeartbeats(): void {
     const now = Date.now();
-    const timeout = this.config.pongTimeoutMs!;
+    const heartbeatMs = this.config.heartbeatIntervalMs!;
+    const pongTimeoutMs = this.config.pongTimeoutMs!;
 
     for (const client of this.clients.values()) {
-      if (now - client.lastPing > timeout) {
-        // Client hasn't responded — disconnect
+      // Disconnect if pong timeout exceeded (sent ping but no response)
+      if (
+        client.lastPingSent !== null &&
+        now - client.lastPingSent > pongTimeoutMs
+      ) {
         client.socket.close(1001, "Heartbeat timeout");
         this.clients.delete(client.id);
         continue;
       }
 
-      // Send ping
-      this.sendToClient(client, { type: "ping" });
+      // Send ping if idle and no ping outstanding
+      if (client.lastPingSent === null && now - client.lastPong > heartbeatMs) {
+        client.lastPingSent = now;
+        this.sendToClient(client, { type: "ping" });
+      }
     }
   }
 
