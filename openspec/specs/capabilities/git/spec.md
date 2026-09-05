@@ -1,33 +1,39 @@
+# git Specification
+
 ## Purpose
 
-Git operations capability with abstract interface. Provides version control operations without exposing Git-specific implementation details.
+Real Git operations executed via the system git CLI. Provides version control operations with full access to repository status, staging, committing, branching, and history.
 
-## ADDED Requirements
+## Requirements
 
-### Requirement: Git operations
+### Requirement: Git status
 
-The Git capability MUST provide abstract interfaces for common version control operations.
+The Git capability MUST return real repository status from `git status --porcelain`.
 
-#### Scenario: Repository status
-- **WHEN** the agent requests repository status
-- **THEN** the capability returns current branch, modified files, and staging status
+#### Scenario: Clean working tree
+- **WHEN** `getStatus()` is called on a clean repository
+- **THEN** the result shows the current branch, no changes, and tracking info from `git status`
 
-#### Scenario: File changes
-- **WHEN** the agent requests file changes
-- **THEN** the capability returns added, modified, and deleted files with diffs
+#### Scenario: Dirty working tree
+- **WHEN** `getStatus()` is called with modified files
+- **THEN** the result lists each changed file with its status (modified, added, deleted, untracked)
 
-#### Scenario: Commit operations
-- **WHEN** the agent commits changes
-- **THEN** the capability creates a commit with the specified message and files
+### Requirement: Git stage and commit
 
-### Requirement: Provider independence
+The Git capability MUST execute real `git add` and `git commit` commands.
 
-The Git capability MUST NOT expose Git-specific implementation details.
+#### Scenario: Stage files
+- **WHEN** `stage(paths)` is called
+- **THEN** `git add <paths>` is executed and files are staged
 
-#### Scenario: Abstract interface
-- **WHEN** the agent invokes Git operations
-- **THEN** the interface uses abstract terms (repository, branch, commit) not Git-specific terms
+#### Scenario: Commit staged changes
+- **WHEN** `commit(message)` is called
+- **THEN** `git commit -m <message>` is executed and the real commit hash, author, and date are returned
 
-#### Scenario: Configuration abstraction
-- **WHEN** Git is configured
-- **THEN** the configuration uses abstract terms (remote URL, authentication) not Git-specific config
+### Requirement: Git history
+
+The Git capability MUST return real commit history from `git log`.
+
+#### Scenario: Get commit history
+- **WHEN** `getHistory(limit)` is called
+- **THEN** `git log --oneline -n <limit>` is executed and commits are returned with real hashes, authors, dates, and messages

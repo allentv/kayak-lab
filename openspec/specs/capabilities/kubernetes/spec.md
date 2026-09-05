@@ -1,33 +1,35 @@
+# kubernetes Specification
+
 ## Purpose
 
-Kubernetes operations capability with abstract interface. Provides container orchestration operations without exposing Kubernetes-specific implementation details.
+Kubernetes API capability with real REST API calls. Provides authenticated access to Kubernetes clusters for pod, deployment, service, and namespace management.
 
-## ADDED Requirements
+## Requirements
 
-### Requirement: Kubernetes operations
+### Requirement: Kubernetes authentication
 
-The Kubernetes capability MUST provide abstract interfaces for common operations.
+The Kubernetes capability MUST authenticate using in-cluster config, kubeconfig, or a provided token.
 
-#### Scenario: Resource management
-- **WHEN** the agent manages Kubernetes resources
-- **THEN** the capability provides operations for pods, services, deployments, and namespaces
+#### Scenario: In-cluster config
+- **WHEN** running inside a Kubernetes pod
+- **THEN** the capability uses the service account token and API server URL from the environment
 
-#### Scenario: Resource status
-- **WHEN** the agent requests resource status
-- **THEN** the capability returns current state, health, and events
+#### Scenario: Kubeconfig
+- **WHEN** running outside the cluster
+- **THEN** the capability reads `~/.kube/config` for cluster connection details
 
-#### Scenario: Resource mutations
-- **WHEN** the agent creates, updates, or deletes resources
-- **THEN** the capability applies the changes and reports the result
+### Requirement: Kubernetes resource operations
 
-### Requirement: Cluster abstraction
+The Kubernetes capability MUST execute real Kubernetes API calls.
 
-The Kubernetes capability MUST abstract cluster-specific details.
+#### Scenario: List pods
+- **WHEN** `listPods(namespace)` is called
+- **THEN** `GET /api/v1/namespaces/{namespace}/pods` is called and real pod data is returned
 
-#### Scenario: Multi-cluster support
-- **WHEN** multiple clusters are configured
-- **THEN** the capability can operate on any configured cluster without code changes
+#### Scenario: Get deployment status
+- **WHEN** `getDeploymentStatus(name, namespace)` is called
+- **THEN** `GET /apis/apps/v1/namespaces/{namespace}/deployments/{name}` is called and real deployment status is returned
 
-#### Scenario: Namespace isolation
-- **WHEN** the agent operates within a namespace
-- **THEN** the capability restricts operations to the configured namespace
+#### Scenario: List events
+- **WHEN** `listEvents(namespace)` is called
+- **THEN** `GET /api/v1/namespaces/{namespace}/events` is called and real events are returned
