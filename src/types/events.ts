@@ -68,6 +68,23 @@ export const EventTypes = {
   TOOL_IMPROVEMENT_SUGGESTED: "tool.improvement.suggested",
   TOOL_IMPROVEMENT_AUTO_CREATED: "tool.improvement.auto_created",
   TOOL_IMPROVEMENT_AUTO_IMPROVED: "tool.improvement.auto_improved",
+
+  // MCP events
+  MCP_CONNECTED: "mcp.connected",
+  MCP_DISCONNECTED: "mcp.disconnected",
+  MCP_TOOLS_DISCOVERED: "mcp.tools_discovered",
+  MCP_TOOL_INVOCATION: "mcp.tool.invocation",
+  MCP_TOOL_RESULT: "mcp.tool.result",
+  MCP_SERVER_STARTED: "mcp.server.started",
+  MCP_SERVER_STOPPED: "mcp.server.stopped",
+  MCP_SERVER_TOOL_INVOCATION: "mcp.server.tool.invocation",
+  MCP_SERVER_TOOL_RESULT: "mcp.server.tool.result",
+  MCP_TOOL_REGISTERED: "mcp.tool.registered",
+  MCP_TOOL_UNREGISTERED: "mcp.tool.unregistered",
+  MCP_TOOL_STATE_CHANGED: "mcp.tool.state_changed",
+  MCP_SEARCH: "mcp.search",
+  MCP_SEARCH_RESULT: "mcp.search.result",
+  MCP_ERROR: "mcp.error",
 } as const;
 
 export type EventType = (typeof EventTypes)[keyof typeof EventTypes];
@@ -396,4 +413,18 @@ export function isToolImprovementEvent(
   event: BaseEvent,
 ): event is BaseEvent & { event_type: "tool.improvement.suggested" | "tool.improvement.auto_created" | "tool.improvement.auto_improved" } {
   return event.event_type.startsWith("tool.improvement.");
+}
+
+/**
+ * Type guard for MCP events.
+ */
+export function isMCPEvent(
+  event: BaseEvent,
+): event is BaseEvent & {
+  event_type: "mcp.connected" | "mcp.disconnected" | "mcp.tools_discovered" |
+    "mcp.tool.invocation" | "mcp.tool.result" | "mcp.server.started" | "mcp.server.stopped" |
+    "mcp.server.tool.invocation" | "mcp.server.tool.result" | "mcp.tool.registered" |
+    "mcp.tool.unregistered" | "mcp.tool.state_changed" | "mcp.search" | "mcp.search.result" | "mcp.error";
+} {
+  return event.event_type.startsWith("mcp.");
 }

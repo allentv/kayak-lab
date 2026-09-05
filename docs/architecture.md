@@ -123,6 +123,74 @@ const result = await engine.invoke({
 
 **Tool authoring flow:** Propose → Review → Accept/Reject → Register. Tools go through a review lifecycle before being added to the registry. Self-improvement tracks usage patterns and suggests optimizations.
 
+### MCP Module
+
+Model Context Protocol (MCP) integration for connecting to external MCP servers and exposing harness capabilities as an MCP server. The module provides client, server, registry, and search components with a transport abstraction layer.
+
+```mermaid
+graph LR
+    subgraph MCP["MCP Module"]
+        Client["MCPClient"]
+        Server["MCPServer"]
+        Registry["MCPRegistry"]
+        Search["MCPSearch"]
+        Transport["Transport Layer"]
+    end
+
+    Client --> Transport
+    Server --> Transport
+    Client --> Registry
+    Search --> Registry
+    Server --> ToolRegistry["Tool Registry<br/>(exposable tools)"]
+```
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| `MCPClient` | `client.ts` | Connects to external MCP servers, discovers tools, invokes them |
+| `MCPServer` | `server.ts` | Exposes harness tools (exposable only) to external MCP clients |
+| `MCPRegistry` | `registry.ts` | Manages MCP tools from external servers with state control |
+| `MCPSearch` | `search.ts` | Searches MCP tools by name, capability, or category |
+| Transport | `transport.ts` | Stdio, HTTP, WebSocket transports with factory function |
+| Events | `events.ts` | MCP event types and type guards |
+| Event Wiring | `event-emitter.ts` | Wires MCP events to the event stream |
+
+```typescript
+import { MCPClient, MCPServer, MCPRegistry, MCPSearch } from "./src/mcp/mod.ts";
+
+// Connect to an external MCP server
+const client = new MCPClient({
+  name: "my-mcp-server",
+  transport: { type: "stdio", command: "mcp-server", args: ["--port", "3000"] },
+});
+await client.connect();
+const tools = await client.discover();
+
+// Register discovered tools
+const registry = new MCPRegistry();
+for (const tool of tools) {
+  registry.register({ tool, serverName: "my-mcp-server", enabled: true, capabilities: [] });
+}
+
+// Search for tools
+const search = new MCPSearch(registry, new Map([["my-mcp-server", client]]));
+const results = search.search({ name: "file" });
+
+// Expose harness tools as MCP server
+const server = new MCPServer({
+  transport: { type: "http", url: "http://localhost:8080" },
+  toolRegistry: {
+    getExposableTools: () => toolRegistry.list().filter((t) => t.exposable),
+    getTool: (name) => toolRegistry.get(name),
+    invokeTool: (name, params) => toolRegistry.invoke(name, params),
+  },
+});
+await server.start();
+```
+
+**Transport abstraction:** The `createTransport` factory creates the appropriate transport based on configuration. Each transport implements `IMCPTransport` with `connect`, `disconnect`, `send`, and `notify` methods.
+
+**Event integration:** MCP operations emit events to the event stream via `wireClientEvents`, `wireServerEvents`, `wireRegistryEvents`, and `wireSearchEvents` helpers. Events include `mcp.connected`, `mcp.disconnected`, `mcp.tool.invocation`, `mcp.tool.result`, `mcp.server.started`, `mcp.server.stopped`, and `mcp.error`.
+
 ### EventStore
 
 In-memory event persistence with snapshot support. Stores events per session with range queries and replay capabilities. Can be used as a fast/ephemeral store, or swapped with the persistent store for durability.

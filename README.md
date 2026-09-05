@@ -13,6 +13,7 @@ graph TB
         SM <--> AR["AgentRuntime"]
         ES --- ESTORE["EventStore"]
         AR --- MP["ModelProvider"]
+        AR --- MCP["MCP Module"]
         HR["HealthRegistry"] --- ES
         CFG["Config"] --- AR
     end
@@ -126,6 +127,16 @@ src/
 │   ├── git.ts              Git operations (stubbed)
 │   ├── github.ts           GitHub API operations (stubbed)
 │   └── kubernetes.ts       Kubernetes API operations (stubbed)
+├── mcp/                    Model Context Protocol integration
+│   ├── types.ts            MCP interfaces (transport, client, server, registry, search)
+│   ├── transport.ts        Stdio, HTTP, WebSocket transports with factory
+│   ├── client.ts           MCPClient with connect, discover, invoke, auto-reconnect
+│   ├── server.ts           MCPServer exposing exposable tools to external clients
+│   ├── registry.ts         MCPRegistry for external MCP tools with state control
+│   ├── search.ts           MCPSearch by name, capability, category
+│   ├── events.ts           MCP event types and type guards
+│   ├── event-emitter.ts    Wires MCP events to event stream
+│   └── mod.ts              Module exports
 ├── store/                  Event persistence and replay
 │   ├── event-store.ts      In-memory event store with snapshots and replay
 │   └── persistence.ts      PersistentEventStore with JSONL, snapshots, and recovery
@@ -144,7 +155,7 @@ src/
 ## Quick Start
 
 ```bash
-# Run all tests (~71 tests across 34 test files)
+# Run all tests (~160 tests across 40 test files)
 deno test --allow-read --allow-env --allow-run
 
 # Type check
@@ -177,7 +188,7 @@ deno test src/__tests__/benchmarks.test.ts --allow-read --allow-env
 
 ## Event Types
 
-34 event types across 10 categories:
+48 event types across 11 categories:
 
 | Event | Events | Purpose |
 |----------|--------|---------|
@@ -192,6 +203,7 @@ deno test src/__tests__/benchmarks.test.ts --allow-read --allow-env
 | Tool Calling | `tool.call.invocation`, `.result` | Structured tool protocol |
 | Tool Authoring | `tool.authored.proposed`, `.created`, `.rejected` | Tool creation lifecycle |
 | Tool Self-Improvement | `tool.improvement.suggested`, `.auto_created`, `.auto_improved` | Tool optimization |
+| MCP | `mcp.connected`, `.disconnected`, `.tools_discovered`, `.tool.invocation`, `.tool.result`, `.server.started`, `.server.stopped`, `.server.tool.invocation`, `.server.tool.result`, `.tool.registered`, `.tool.unregistered`, `.tool.state_changed`, `.search`, `.search.result`, `.error` | MCP client/server/registry/search operations |
 
 ## OpenSpec
 
@@ -211,6 +223,7 @@ This project uses [OpenSpec](https://github.com/allentv/openspec) for specificat
 
 | Change | Focus |
 |--------|-------|
+| `mcp-servers` | MCP client, server, registry, search with transport abstraction |
 | `testing-infrastructure` | Mock registry, test helpers, fixtures, harness |
 | `health-checks-observability` | Health probes, component health checks |
 | `error-handling-recovery` | Error taxonomy, retry, circuit breaker |
