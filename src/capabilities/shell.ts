@@ -122,6 +122,7 @@ export class ShellCapability implements IShellCapability {
     name: "shell",
     description: "Shell command execution",
     version: "1.0.0",
+    rateLimit: { maxTokens: 20, refillRateMs: 1_000, refillRate: 5 },
   };
 
   private context: CapabilityContext | null = null;

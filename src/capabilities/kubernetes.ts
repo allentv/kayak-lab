@@ -167,6 +167,7 @@ export class KubernetesCapability implements IKubernetesCapability {
     name: "kubernetes",
     description: "Kubernetes operations",
     version: "1.0.0",
+    rateLimit: { maxTokens: 100, refillRateMs: 10_000, refillRate: 10 },
   };
 
   private context: CapabilityContext | null = null;

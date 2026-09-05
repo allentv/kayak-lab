@@ -11,11 +11,23 @@ import { AppError } from "../core/errors.ts";
 // Capability Types
 // ============================================================================
 
+/** Rate limit configuration for a capability. */
+export interface RateLimitConfig {
+  /** Maximum tokens in the bucket (burst size). */
+  maxTokens: number;
+  /** Milliseconds between token refills. */
+  refillRateMs: number;
+  /** Tokens added per refill. */
+  refillRate: number;
+}
+
 /** Capability definition for registration. */
 export interface CapabilityDefinition {
   name: string;
   description: string;
   version: string;
+  /** Optional rate limit configuration. */
+  rateLimit?: RateLimitConfig;
 }
 
 /** Capability execution context. */

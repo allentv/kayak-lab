@@ -163,6 +163,7 @@ export class GitHubCapability implements IGitHubCapability {
     name: "github",
     description: "GitHub API operations",
     version: "1.0.0",
+    rateLimit: { maxTokens: 60, refillRateMs: 60_000, refillRate: 60 },
   };
 
   private context: CapabilityContext | null = null;

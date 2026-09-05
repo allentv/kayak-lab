@@ -7,6 +7,7 @@
 
 import type { BaseEvent } from "../types/events.ts";
 import type { IEventStore } from "../store/event-store.ts";
+import { BoundedQueue, type BoundedQueueConfig } from "../core/bounded-queue.ts";
 
 // ============================================================================
 // Types
@@ -27,9 +28,6 @@ export interface ClientSessionState {
   pendingEvents: BaseEvent[];
 }
 
-/** Max events queued per client before dropping. */
-const MAX_SEND_QUEUE = 10_000;
-
 /** Client connection state. */
 export interface ClientState {
   id: string;
@@ -41,8 +39,8 @@ export interface ClientState {
   lastPingSent: number | null;
   /** Per-session delivery state for ordering and backpressure. */
   sessionState: Map<string, ClientSessionState>;
-  /** Queued events waiting to be sent (backpressure buffer). */
-  sendQueue: ServerMessage[];
+  /** Bounded send queue with overflow policy. */
+  sendQueue: BoundedQueue<ServerMessage>;
 }
 
 /** Welcome message. */
@@ -88,12 +86,22 @@ export type ClientMessage =
   | { type: "ping" }
   | { type: "pong" };
 
+/** Backpressure configuration for WebSocket event delivery. */
+export interface BackpressureConfig {
+  /** Maximum events queued per client. */
+  maxSize: number;
+  /** Overflow policy when queue is full. */
+  policy: "drop-oldest" | "drop-newest" | "reject";
+}
+
 /** Server configuration. */
 export interface WebSocketServerConfig {
   port: number;
   heartbeatIntervalMs?: number;
   pongTimeoutMs?: number;
   bufferSize?: number;
+  /** Backpressure configuration for client send queues. */
+  backpressure?: BackpressureConfig;
 }
 
 // ============================================================================
@@ -159,6 +167,7 @@ export class WebSocketProjectionServer {
       heartbeatIntervalMs: 30_000,
       pongTimeoutMs: 15_000,
       bufferSize: 1000,
+      backpressure: { maxSize: 10_000, policy: "drop-oldest" },
       ...config,
     };
   }
@@ -220,6 +229,12 @@ export class WebSocketProjectionServer {
     const { socket, response } = Deno.upgradeWebSocket(req);
 
     const clientId = `client-${++this.clientIdCounter}`;
+    const bp = this.config.backpressure!;
+    const queueConfig: BoundedQueueConfig = {
+      maxSize: bp.maxSize,
+      policy: bp.policy === "reject" ? "reject" : bp.policy === "drop-newest" ? "drop-newest" : "drop-oldest",
+    };
+
     const clientState: ClientState = {
       id: clientId,
       socket,
@@ -227,7 +242,7 @@ export class WebSocketProjectionServer {
       lastPong: Date.now(),
       lastPingSent: null,
       sessionState: new Map(),
-      sendQueue: [],
+      sendQueue: new BoundedQueue(queueConfig),
     };
 
     this.clients.set(clientId, clientState);
@@ -452,12 +467,9 @@ export class WebSocketProjectionServer {
 
   /**
    * Enqueue an event for a client (backpressure buffer).
-   * Drops oldest events when queue exceeds MAX_SEND_QUEUE.
+   * Uses BoundedQueue with configured overflow policy.
    */
   private enqueueEvent(client: ClientState, event: BaseEvent): void {
-    if (client.sendQueue.length >= MAX_SEND_QUEUE) {
-      client.sendQueue.shift();
-    }
     client.sendQueue.push({ type: "event", event });
   }
 
@@ -466,13 +478,15 @@ export class WebSocketProjectionServer {
    * Stops on backpressure (socket buffer full).
    */
   private flushClient(client: ClientState): void {
-    while (client.sendQueue.length > 0) {
+    while (client.sendQueue.size > 0) {
       if (client.socket.readyState !== WebSocket.OPEN) {
-        client.sendQueue = [];
+        client.sendQueue.clear();
         return;
       }
 
-      const msg = client.sendQueue[0];
+      const msg = client.sendQueue.peek();
+      if (!msg) break;
+
       try {
         client.socket.send(JSON.stringify(msg));
         client.sendQueue.shift();

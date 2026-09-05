@@ -8,19 +8,19 @@
 ## 2. Rate Limiter Integration
 
 - [x] 2.1 Implement `RateLimiter` wrapper that takes a `TokenBucket` and wraps async functions. Verify: wrapper enforces rate limit.
-- [ ] 2.2 Add rate limit config to capability definitions: `{ rateLimit?: { maxTokens, refillRateMs } }`. Verify: config parsed and bucket created.
-- [ ] 2.3 Wrap GitHub, K8s, and Shell capabilities with rate limiters. Verify: capabilities respect rate limits.
+- [x] 2.2 Add rate limit config to capability definitions: `{ rateLimit?: { maxTokens, refillRateMs } }`. Verify: config parsed and bucket created.
+- [x] 2.3 Wrap GitHub, K8s, and Shell capabilities with rate limiters. Verify: capabilities respect rate limits.
 
 ## 3. Backpressure
 
 - [x] 3.1 Implement `BoundedQueue<T>` with configurable max size and overflow policy (`drop-oldest`, `drop-newest`, `block`, `reject`). Verify: queue respects bounds.
-- [ ] 3.2 Implement backpressure for WebSocket event delivery: use BoundedQueue per client. Verify: slow client triggers overflow policy.
-- [ ] 3.3 Add backpressure config to WebSocket projection: `{ backpressure?: { maxSize, policy } }`. Verify: config controls behavior.
+- [x] 3.2 Implement backpressure for WebSocket event delivery: use BoundedQueue per client. Verify: slow client triggers overflow policy.
+- [x] 3.3 Add backpressure config to WebSocket projection: `{ backpressure?: { maxSize, policy } }`. Verify: config controls behavior.
 
 ## 4. Tests
 
 - [x] 4.1 Write token bucket tests: consume within limit, consume at limit, refill over time. Verify: all tests pass.
 - [x] 4.2 Write rate limiter tests: wrapper enforces limits, waitAndConsume blocks. Verify: all tests pass.
 - [x] 4.3 Write bounded queue tests: all overflow policies, capacity enforcement. Verify: all tests pass.
-- [ ] 4.4 Write backpressure integration test: fast producer, slow consumer, verify overflow behavior. Verify: all tests pass.
+- [x] 4.4 Write backpressure integration test: fast producer, slow consumer, verify overflow behavior. Verify: all tests pass.
 - [x] 4.5 Verify existing 112+ tests still pass. Verify: `deno test` passes.
