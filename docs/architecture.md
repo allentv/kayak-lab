@@ -10,6 +10,7 @@ graph TB
         AR <--> TR["ToolCallingModule"]
         ES --- ESTORE["EventStore<br/>(in-memory + persistent)"]
         AR --- MP["ModelProvider<br/>(OpenAI, Anthropic, local)"]
+        MEM["Memory<br/>(episodic, semantic,<br/>procedural, working)"]
     end
 
     subgraph Capabilities["Capability Layer"]
@@ -191,6 +192,47 @@ await server.start();
 
 **Event integration:** MCP operations emit events to the event stream via `wireClientEvents`, `wireServerEvents`, `wireRegistryEvents`, and `wireSearchEvents` helpers. Events include `mcp.connected`, `mcp.disconnected`, `mcp.tool.invocation`, `mcp.tool.result`, `mcp.server.started`, `mcp.server.stopped`, and `mcp.error`.
 
+### Memory
+
+Persistent memory subsystem for agent learning and context retention. Stores and retrieves memories across sessions, enabling agents to accumulate knowledge over time.
+
+**Memory types:**
+
+| Type | Purpose | Retention |
+|------|---------|-----------|
+| Episodic | Event logs — what happened in a session | Short-term, event-sourced |
+| Semantic | Learned facts — knowledge acquired over time | Long-term, persistent |
+| Procedural | Learned patterns — how to do things | Long-term, persistent |
+| Working | Active context — current session focus | Session-scoped, volatile |
+
+**Key modules:**
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| `MemoryProvider` | `provider.ts` | Abstraction layer over storage backends |
+| `MemoryStorage` | `storage.ts` | Backend storage interface |
+| `MemoryRetrieval` | `retrieval.ts` | Query and ranking of stored memories |
+| `MemorySearch` | `search.ts` | Full-text search across memory stores |
+| `SharedMemory` | `shared.ts` | Sub-agent context snapshots |
+| `MemoryConfig` | `config.ts` | Memory configuration and backend selection |
+| `MemoryUpdate` | `update.ts` | Atomic state transitions with event sourcing |
+| `MemoryEmitter` | `emitter.ts` | Memory event emission for observability |
+
+```typescript
+import { MemoryProvider } from "./src/memory/provider.ts";
+
+const memory = new MemoryProvider(config);
+await memory.initialize();
+
+// Store episodic memory
+await memory.store({ type: "episodic", content: "User prefers dark mode" });
+
+// Retrieve relevant memories
+const results = await memory.search({ query: "user preferences", type: "semantic" });
+```
+
+**Provider abstraction:** The `MemoryProvider` decouples storage logic from consumers. Swap between in-memory, file-based, or database-backed storage without changing application code. `SharedMemory` enables sub-agents to share context snapshots without coupling to parent state.
+
 ### EventStore
 
 In-memory event persistence with snapshot support. Stores events per session with range queries and replay capabilities. Can be used as a fast/ephemeral store, or swapped with the persistent store for durability.
@@ -329,6 +371,8 @@ if (!result.valid) {
 console.log(maskSecrets(config));
 // { persistence: { dataDir: "/data" }, capabilities: { github: { token: "***" } } }
 ```
+
+**Hot-reload:** `ConfigWatcher` watches the config file for changes with debounced file watching to prevent reload storms. On change, the new config is validated before replacing the active one — if validation fails, the previous config is retained and the error is logged, enabling automatic rollback to a known-good state.
 
 **Env var overrides:** `KAYAK_PERSISTENCE_DATA_DIR` → `config.persistence.dataDir`
 
@@ -491,6 +535,12 @@ await server.start();
 // - Events matching their subscription filter
 // - Gap recovery on reconnect
 ```
+
+**Heartbeat lifecycle:** The WebSocket server maintains connection health via configurable heartbeat pings. `heartbeatIntervalMs` controls how often pings are sent; `pongTimeoutMs` determines how long to wait for a pong response before closing a stale connection.
+
+**Per-session event ordering:** Events are inserted into each session's `pendingEvents` queue via binary search on sequence number, ensuring correct ordering even when events arrive out of order from concurrent sources.
+
+**Backpressure:** Each client session uses a `BoundedQueue` for its send queue. When the queue fills, the configured overflow policy (drop-oldest, drop-newest, block, reject) applies, preventing slow consumers from blocking the event stream.
 
 **Client messages:** `subscribe`, `unsubscribe`, `reconnect`, `pong`
 **Server messages:** `welcome`, `event`, `error`, `ping`

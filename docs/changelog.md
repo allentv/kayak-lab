@@ -15,6 +15,7 @@ All notable changes to kayak-lab will be documented in this file.
 - Interactive tool authoring with proposal/review/accept/reject flow (ToolAuthoring)
 - Tool self-improvement with usage tracking and suggestion generation (ToolSelfImprovement)
 - Dual-protocol dispatch in AgentRuntime (newToolRegistry + legacy fallback)
+- Memory support subsystem: 4 memory types, provider abstraction, storage, retrieval, search, shared memory, event emitter (memory-support)
 - Tool registry with typed parameters and timeout support (legacy)
 - Shell capability with real execution and safety constraints (blocked/dangerous commands)
 - Git, GitHub, Kubernetes capability interfaces (stubbed implementations)
@@ -66,3 +67,4 @@ All notable changes to kayak-lab will be documented in this file.
 - `code-quality-tooling` — Linting, formatting, pre-push checks
 - `documentation-website` — VitePress documentation site
 - `tool-calling` — Structured tool calling protocol with registry, authoring, and self-improvement
+- `memory-support` — Persistent memory subsystem with 4 memory types, provider abstraction, storage, retrieval, search, and shared memory
