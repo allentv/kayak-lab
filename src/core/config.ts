@@ -198,7 +198,7 @@ function parseEnvOverrides(envPrefix = "KAYAK_"): Record<string, unknown> {
       current[lastKey] = true;
     } else if (value === "false") {
       current[lastKey] = false;
-    } else if (!isNaN(Number(value))) {
+    } else if (value !== "" && !isNaN(Number(value))) {
       current[lastKey] = Number(value);
     } else {
       current[lastKey] = value;
@@ -224,8 +224,14 @@ export async function loadConfig(configDir: string): Promise<AppConfig> {
     const validation = validateConfig(parsed);
     if (validation.valid) {
       config = validation.config;
+    } else {
+      const msgs = validation.errors.map((e) => `${e.path}: ${e.message}`).join("; ");
+      throw new Error(`Config validation failed: ${msgs}`);
     }
-  } catch {
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith("Config validation failed")) {
+      throw error;
+    }
     // File doesn't exist or can't be read — use defaults
   }
 
@@ -344,4 +350,125 @@ export function maskSecrets(config: AppConfig): AppConfig {
  */
 export function configToString(config: AppConfig): string {
   return JSON.stringify(maskSecrets(config), null, 2);
+}
+
+// ============================================================================
+// Hot-Reload Config Watcher
+// ============================================================================
+
+/** Config change listener. */
+export type ConfigChangeListener = (config: AppConfig) => void;
+
+/** Timer handle returned by setTimeout. */
+type TimerHandle = ReturnType<typeof setTimeout>;
+
+/**
+ * Watches a config directory for changes and hot-reloads configuration.
+ *
+ * On file change: re-reads, validates, merges, and notifies subscribers.
+ * On validation failure: keeps previous config and logs error.
+ */
+export class ConfigWatcher {
+  private configDir: string;
+  private currentConfig: AppConfig;
+  private listeners: ConfigChangeListener[] = [];
+  private watcher?: Deno.FsWatcher;
+  private debounceTimer?: TimerHandle;
+  private reloading = false;
+
+  constructor(configDir: string, initialConfig: AppConfig) {
+    this.configDir = configDir;
+    this.currentConfig = initialConfig;
+  }
+
+  /**
+   * Get a shallow copy of the current configuration.
+   */
+  get config(): AppConfig {
+    return { ...this.currentConfig };
+  }
+
+  /**
+   * Subscribe to config changes.
+   * Returns an unsubscribe function.
+   */
+  onChange(listener: ConfigChangeListener): () => void {
+    this.listeners.push(listener);
+    return () => {
+      this.listeners = this.listeners.filter((l) => l !== listener);
+    };
+  }
+
+  /**
+   * Start watching the config directory for changes.
+   */
+  async start(): Promise<void> {
+    this.watcher = Deno.watchFs(this.configDir);
+
+    for await (const event of this.watcher) {
+      // Debounce: batch rapid file changes (e.g., editor save)
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = setTimeout(() => {
+        this.handleFileChange(event);
+      }, 100);
+    }
+  }
+
+  /**
+   * Stop watching and clean up.
+   */
+  stop(): void {
+    clearTimeout(this.debounceTimer);
+    this.watcher?.close();
+    this.watcher = undefined;
+  }
+
+  /**
+   * Replace the current config (e.g., after external update).
+   */
+  updateConfig(config: AppConfig): void {
+    this.currentConfig = config;
+    this.notifyListeners();
+  }
+
+  /**
+   * Handle a file system event by reloading config.
+   */
+  private async handleFileChange(event: Deno.FsEvent): Promise<void> {
+    // React to any file-system event on yaml files (reload is idempotent)
+    const isYaml = event.paths.some(
+      (p) => p.endsWith(".yaml") || p.endsWith(".yml"),
+    );
+    if (!isYaml) return;
+
+    // Prevent overlapping reloads
+    if (this.reloading) return;
+    this.reloading = true;
+
+    try {
+      const newConfig = await loadConfig(this.configDir);
+      this.currentConfig = newConfig;
+      this.notifyListeners();
+    } catch (error) {
+      // Rollback: keep previous config, log error
+      console.error(
+        `[config] Reload failed, keeping previous config: ${error instanceof Error ? error.message : error}`,
+      );
+    } finally {
+      this.reloading = false;
+    }
+  }
+
+  /**
+   * Notify all listeners of config change.
+   */
+  private notifyListeners(): void {
+    for (const listener of this.listeners) {
+      try {
+        listener(this.currentConfig);
+      } catch (error) {
+        console.error(`[config] Listener error: ${error}`);
+      }
+    }
+  }
 }

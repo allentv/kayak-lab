@@ -18,14 +18,14 @@
 
 ## 4. Hot-Reload
 
-- [ ] 4.1 Implement file watcher on config directory using `Deno.watchFs`. Verify: file change detected.
-- [ ] 4.2 Implement reload: re-read, validate, merge, notify subscribers. Verify: config updated after file change.
-- [ ] 4.3 Implement rollback on validation failure: keep previous config, log error. Verify: bad config doesn't replace valid config.
+- [x] 4.1 Implement file watcher on config directory using `Deno.watchFs`. Verify: file change detected.
+- [x] 4.2 Implement reload: re-read, validate, merge, notify subscribers. Verify: config updated after file change.
+- [x] 4.3 Implement rollback on validation failure: keep previous config, log error. Verify: bad config doesn't replace valid config.
 
 ## 5. Tests
 
 - [x] 5.1 Write config loading tests: base file, env-specific overrides, env var overrides, precedence. Verify: all tests pass.
 - [x] 5.2 Write validation tests: valid config, missing required fields, invalid types. Verify: all tests pass.
 - [x] 5.3 Write secrets tests: loading from env, masking in output. Verify: all tests pass.
-- [ ] 5.4 Write hot-reload tests: file change triggers reload, bad file rollbacks. Verify: all tests pass.
+- [x] 5.4 Write hot-reload tests: file change triggers reload, bad file rollbacks. Verify: all tests pass.
 - [x] 5.5 Verify existing 112+ tests still pass. Verify: `deno test` passes.

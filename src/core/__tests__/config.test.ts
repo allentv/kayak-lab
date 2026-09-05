@@ -8,6 +8,8 @@ import {
   maskSecrets,
   configToString,
   DEFAULT_CONFIG,
+  ConfigWatcher,
+  loadConfig,
 } from "../config.ts";
 import type { AppConfig } from "../config.ts";
 
@@ -132,5 +134,152 @@ Deno.test("configToString", async (t) => {
     const parsed = JSON.parse(str);
     assertExists(parsed.persistence);
     assertExists(parsed.capabilities);
+  });
+});
+
+// ============================================================================
+// Hot-Reload Tests
+// ============================================================================
+
+Deno.test("ConfigWatcher", async (t) => {
+  await t.step("creates watcher with initial config", () => {
+    const watcher = new ConfigWatcher("/tmp/test-config", DEFAULT_CONFIG);
+    assertEquals(watcher.config, DEFAULT_CONFIG);
+    watcher.stop();
+  });
+
+  await t.step("notifies listeners on config change", async () => {
+    const tmpDir = await Deno.makeTempDir();
+    const configPath = `${tmpDir}/config.yaml`;
+
+    // Write initial config
+    await Deno.writeTextFile(configPath, `
+persistence:
+  dataDir: ./test-data
+  backupEnabled: false
+telemetry:
+  enabled: false
+  logLevel: info
+`);
+
+    const initialConfig = await loadConfig(tmpDir);
+    const watcher = new ConfigWatcher(tmpDir, initialConfig);
+
+    const received: AppConfig[] = [];
+    const unsub = watcher.onChange((config) => {
+      received.push(config);
+    });
+
+    // Start watcher in background
+    watcher.start();
+
+    // Wait for watcher to be ready
+    await new Promise((r) => setTimeout(r, 200)); // real timer: watcher startup
+
+    // Modify config file — trigger reload
+    await Deno.writeTextFile(configPath, `
+persistence:
+  dataDir: ./updated-data
+  backupEnabled: true
+telemetry:
+  enabled: true
+  logLevel: debug
+`);
+
+    // Wait for debounce + reload
+    await new Promise((r) => setTimeout(r, 500)); // real timer: debounce + fs event
+
+    assertEquals(received.length, 1);
+    assertEquals(received[0].persistence.dataDir, "./updated-data");
+    assertEquals(received[0].persistence.backupEnabled, true);
+    assertEquals(received[0].telemetry.enabled, true);
+    assertEquals(received[0].telemetry.logLevel, "debug");
+
+    unsub();
+    watcher.stop();
+    await Deno.remove(tmpDir, { recursive: true });
+  });
+
+  await t.step("keeps previous config on validation failure", async () => {
+    const tmpDir = await Deno.makeTempDir();
+    const configPath = `${tmpDir}/config.yaml`;
+
+    // Write valid config
+    await Deno.writeTextFile(configPath, `
+persistence:
+  dataDir: ./valid-data
+  backupEnabled: false
+telemetry:
+  enabled: false
+  logLevel: info
+`);
+
+    const initialConfig = await loadConfig(tmpDir);
+    const watcher = new ConfigWatcher(tmpDir, initialConfig);
+
+    const received: AppConfig[] = [];
+    watcher.onChange((config) => {
+      received.push(config);
+    });
+
+    watcher.start();
+    await new Promise((r) => setTimeout(r, 200)); // real timer: watcher startup
+
+    // Write invalid config (bad telemetry.logLevel)
+    await Deno.writeTextFile(configPath, `
+persistence:
+  dataDir: ./invalid-data
+telemetry:
+  logLevel: invalid_level
+`);
+
+    // Wait for debounce + reload attempt
+    await new Promise((r) => setTimeout(r, 500)); // real timer: debounce + fs event
+
+    // Should NOT have received a new config (validation failed, kept previous)
+    assertEquals(received.length, 0);
+    assertEquals(watcher.config.persistence.dataDir, "./valid-data");
+
+    watcher.stop();
+    await Deno.remove(tmpDir, { recursive: true });
+  });
+
+  await t.step("unsubscribe stops notifications", async () => {
+    const watcher = new ConfigWatcher("/tmp/test-unsub", DEFAULT_CONFIG);
+
+    let callCount = 0;
+    const unsub = watcher.onChange(() => { callCount++; });
+
+    watcher.updateConfig(DEFAULT_CONFIG);
+    assertEquals(callCount, 1);
+
+    unsub();
+    watcher.updateConfig(DEFAULT_CONFIG);
+    assertEquals(callCount, 1); // Should not increment after unsub
+
+    watcher.stop();
+  });
+
+  await t.step("ignores non-yaml file changes", async () => {
+    const tmpDir = await Deno.makeTempDir();
+
+    const initialConfig = await loadConfig(tmpDir);
+    const watcher = new ConfigWatcher(tmpDir, initialConfig);
+
+    let called = false;
+    watcher.onChange(() => { called = true; });
+
+    watcher.start();
+    await new Promise((r) => setTimeout(r, 200)); // real timer: watcher startup
+
+    // Write a non-yaml file
+    await Deno.writeTextFile(`${tmpDir}/readme.txt`, "hello");
+
+    await new Promise((r) => setTimeout(r, 500)); // real timer: debounce + fs event
+
+    assertEquals(called, false);
+
+    watcher.stop();
+    await Deno.remove(tmpDir, { recursive: true });
   });
 });
