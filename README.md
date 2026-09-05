@@ -14,6 +14,7 @@ graph TB
         ES --- ESTORE["EventStore"]
         AR --- MP["ModelProvider"]
         AR --- MCP["MCP Module"]
+        MEM["Memory"]
         HR["HealthRegistry"] --- ES
         CFG["Config"] --- AR
     end
@@ -137,6 +138,17 @@ src/
 │   ├── events.ts           MCP event types and type guards
 │   ├── event-emitter.ts    Wires MCP events to event stream
 │   └── mod.ts              Module exports
+├── memory/                 Persistent memory subsystem
+│   ├── types.ts            Memory interfaces and type definitions
+│   ├── config.ts           Memory configuration and backend selection
+│   ├── provider.ts         MemoryProvider abstraction layer
+│   ├── storage.ts          Backend storage interface
+│   ├── retrieval.ts        Query and ranking of stored memories
+│   ├── search.ts           Full-text search across memory stores
+│   ├── shared.ts           SharedMemory for sub-agent context snapshots
+│   ├── update.ts           Atomic state transitions with event sourcing
+│   ├── emitter.ts          Memory event emission for observability
+│   └── mod.ts              Module exports
 ├── store/                  Event persistence and replay
 │   ├── event-store.ts      In-memory event store with snapshots and replay
 │   └── persistence.ts      PersistentEventStore with JSONL, snapshots, and recovery
@@ -235,6 +247,7 @@ This project uses [OpenSpec](https://github.com/allentv/openspec) for specificat
 | `code-quality-tooling` | Linting, formatting, pre-push checks |
 | `documentation-website` | VitePress documentation site |
 | `tool-calling` | Structured tool calling protocol with registry, authoring, and self-improvement |
+| `memory-support` | Persistent memory subsystem with 4 memory types, provider abstraction, storage, retrieval, search, and shared memory |
 
 ### Working with OpenSpec
 

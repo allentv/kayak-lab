@@ -1,6 +1,6 @@
 # Event Types
 
-kayak-lab defines 34 event types across 10 categories. Every event conforms to the `BaseEvent` interface.
+kayak-lab defines 48 event types across 11 categories. Every event conforms to the `BaseEvent` interface.
 
 ## BaseEvent
 
@@ -141,6 +141,21 @@ Automated tool optimization and improvement suggestions.
 | `tool.improvement.suggested` | `ToolImprovementPayload` | Improvement suggestion generated |
 | `tool.improvement.auto_created` | `ToolImprovementPayload` | Improvement auto-accepted and tool created |
 | `tool.improvement.auto_improved` | `ToolImprovementPayload` | Existing tool auto-improved |
+
+## MCP Events
+
+Model Context Protocol client and server lifecycle events.
+
+| Event | Payload | Description |
+|-------|---------|-------------|
+| `mcp.connected` | `{ server_name, transport_type }` | MCP server connection established |
+| `mcp.disconnected` | `{ server_name, reason? }` | MCP server disconnected |
+| `mcp.tools_discovered` | `{ server_name, tools: Tool[] }` | Tools discovered from MCP server |
+| `mcp.tool.invocation` | `{ tool_name, parameters, server_name }` | MCP tool invocation started |
+| `mcp.tool.result` | `{ tool_name, result, duration_ms, success }` | MCP tool invocation result |
+| `mcp.server.started` | `{ server_name, transport_type }` | MCP server started |
+| `mcp.server.stopped` | `{ server_name, reason? }` | MCP server stopped |
+| `mcp.error` | `{ error, server_name?, operation }` | MCP error occurred |
 
 ## Payload Interfaces
 

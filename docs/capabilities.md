@@ -132,6 +132,43 @@ const pods = await k8s.listPods("default");
 // Returns simulated: [{ name: "pod-1", status: "Running", ... }]
 ```
 
+### Memory
+
+Persistent memory subsystem for agent learning and context retention. Provides 4 memory types (episodic, semantic, procedural, working) with a provider abstraction supporting multiple storage backends.
+
+```typescript
+import { MemoryProvider } from "../src/memory/provider.ts";
+
+const memory = new MemoryProvider(config);
+await memory.initialize();
+
+// Store episodic memory
+await memory.store({ type: "episodic", content: "User prefers dark mode" });
+
+// Retrieve relevant memories
+const results = await memory.search({ query: "user preferences", type: "semantic" });
+```
+
+Key interfaces: MemoryProvider, MemoryStorage, MemoryRetrieval, MemorySearch, SharedMemory
+
+### MCP Integration
+
+Model Context Protocol client and server for external tool integration.
+
+```typescript
+import { MCPClient } from "../src/mcp/client.ts";
+import { MCPServer } from "../src/mcp/server.ts";
+
+const client = new MCPClient(transport);
+await client.connect();
+const tools = await client.discoverTools();
+
+const server = new MCPServer({ name: "my-server", tools: [...] });
+await server.start();
+```
+
+Key interfaces: MCPClient, MCPServer, MCPRegistry, MCPSearch
+
 ### Sandbox
 
 OS-level sandboxed execution for untrusted code. Runs commands inside Docker containers with hardened security flags. Supports Docker and gVisor (`runsc`) runtimes.

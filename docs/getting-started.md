@@ -30,7 +30,10 @@ src/
 ├── types/                  Event schema and type definitions
 ├── core/                   Event stream and session manager
 ├── runtime/                Agent runtime, model abstraction, tool registry
+├── tools/                  Structured tool calling protocol
 ├── capabilities/           External system interfaces (Shell, Git, GitHub, K8s)
+├── mcp/                    Model Context Protocol client, server, registry, search
+├── memory/                 Persistent memory subsystem (episodic, semantic, procedural, working)
 ├── store/                  Event persistence, replay, and file-based durability
 ├── projection/             UI projection protocol and terminal rendering
 └── __tests__/              End-to-end tests and benchmarks

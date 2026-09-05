@@ -52,6 +52,25 @@ This file captures patterns, decisions, and gotchas discovered during kayak-lab 
 - **ToolHandlerContext:** Provides tool authors with a standardized context (tool name, parameters, call ID) without requiring direct dependency on the event system
 - **Enable/disable lifecycle:** `ToolRegistry` supports runtime enable/disable of tools — useful for feature flags, A/B testing, and safe rollouts
 
+## Memory Subsystem Patterns
+
+- 4 memory types serve different retention needs: episodic for event logs, semantic for learned facts, procedural for patterns, working for active context
+- Provider abstraction decouples storage from logic — swap backends without changing consumers
+- SharedMemory enables sub-agents to share context snapshots without coupling to parent state
+- MemoryUpdate handles atomic state transitions with event sourcing
+
+## MCP Integration Patterns
+
+- Transport abstraction allows switching between stdio, SSE, and custom transports
+- MCPRegistry manages server lifecycle and tool discovery
+- Event wiring connects MCP events to the main event stream
+
+## Configuration Management Patterns
+
+- ConfigWatcher uses debounced file watching to prevent reload storms
+- Validation-on-reload ensures bad configs don't replace working ones
+- Previous config retention on failure enables automatic rollback
+
 ## Capabilities
 
 - Abstract interfaces enable testing with mocks
