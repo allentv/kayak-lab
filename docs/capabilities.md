@@ -201,6 +201,125 @@ const status = await runtime.healthCheck();
 console.log(status.healthy); // true if Docker + runtime working
 ```
 
+**Health check output (Docker):**
+
+| Check | Description |
+|-------|-------------|
+| `docker-installed` | Docker binary exists on PATH |
+| `docker-daemon` | Docker daemon is running |
+| `test-execution` | Test container executes successfully |
+| `network-isolation` | Network blocking works inside container |
+
+**Health check output (gVisor):**
+
+| Check | Description |
+|-------|-------------|
+| `docker-installed` | Docker binary exists on PATH |
+| `docker-daemon` | Docker daemon is running |
+| `runtime-available` | `runsc` runtime is registered with Docker |
+| `test-execution` | Test container executes with gVisor |
+| `network-isolation` | Network blocking works inside container |
+| `ptrace-blocked` | `ptrace` syscall is blocked (gVisor-specific) |
+
+**Shell script:** `scripts/sandbox-health-check.sh` runs all checks with pass/fail output.
+
+## Sandbox Usage Examples
+
+### Executing untrusted code
+
+```typescript
+import { GVisorRuntime } from "./src/capabilities/sandbox/gvisor-runtime.ts";
+import { SandboxedShellCapability } from "./src/capabilities/sandboxed-shell.ts";
+
+// Use gVisor for untrusted/LLM-generated code
+const runtime = new GVisorRuntime();
+const shell = new SandboxedShellCapability(runtime);
+await shell.initialize({ session_id: "untrusted-exec" });
+
+// Code runs with: no network, read-only rootfs, dropped capabilities, non-root user
+const result = await shell.exec("deno run untrusted-script.ts");
+```
+
+### Switching between runtimes
+
+```typescript
+import { DockerRuntime } from "./src/capabilities/sandbox/docker-runtime.ts";
+import { GVisorRuntime } from "./src/capabilities/sandbox/gvisor-runtime.ts";
+import { SandboxedShellCapability } from "./src/capabilities/sandboxed-shell.ts";
+
+// Trusted code — plain Docker (faster, no gVisor overhead)
+const trustedShell = new SandboxedShellCapability(new DockerRuntime());
+
+// Untrusted code — gVisor (stronger isolation)
+const untrustedShell = new SandboxedShellCapability(new GVisorRuntime());
+
+// Same API, different security posture
+await trustedShell.exec("echo safe-command");
+await untrustedShell.exec("deno run user-submitted.ts");
+```
+
+### Configuring resource limits
+
+```typescript
+const result = await shell.exec("heavy-computation", {
+  resource_limits: {
+    memory: "1g",        // 1GB memory cap
+    cpus: 2,             // 2 CPU cores
+    pids: 256,           // Max 256 processes
+    timeout_ms: 60_000,  // 60 second timeout
+  },
+});
+
+if (result.data.timed_out) {
+  console.log("Process exceeded time limit");
+}
+```
+
+### File transfer between host and sandbox
+
+```typescript
+// Mount input files read-only, capture output
+const result = await shell.exec("process-data", {
+  input_mounts: [
+    { host_path: "./data/input.csv", container_path: "/input/data.csv", read_only: true },
+  ],
+  output_mount: {
+    host_path: "./data/output",
+    container_path: "/output",
+  },
+});
+
+// Output files are extracted to host after execution
+```
+
+### Checking sandbox health
+
+```typescript
+import { GVisorRuntime } from "./src/capabilities/sandbox/gvisor-runtime.ts";
+
+const runtime = new GVisorRuntime();
+const status = await runtime.healthCheck();
+
+if (!status.healthy) {
+  const failed = status.checks.filter(c => !c.passed);
+  console.log("Sandbox unhealthy:", failed.map(c => `${c.name}: ${c.message}`));
+}
+```
+
+### Running the health check script
+
+```bash
+# Verify sandbox setup
+scripts/sandbox-health-check.sh
+
+# Output:
+# Docker installed: PASS
+# Docker daemon: PASS
+# gVisor runtime: PASS
+# Test execution: PASS
+# Network isolation: PASS
+```
+
 ## Capability Registry
 
 Capabilities are registered and managed through the `CapabilityRegistry`:

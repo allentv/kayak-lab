@@ -82,3 +82,20 @@ This file captures patterns, decisions, and gotchas discovered during kayak-lab 
 - `Deno.test` with async `t.step` for nested test organization
 - Mock providers implement `IModelProvider` with configurable responses and failure flags
 - Test context objects (`CapabilityContext`, `ToolContext`) provide minimal required fields
+
+## Sandbox Execution
+
+- gVisor (`runsc`) provides Level 3 isolation (userspace kernel) vs Docker's Level 1-2 (shared kernel)
+- gVisor setup requires: `apt install runsc`, `runsc install`, `systemctl restart docker`
+- Ubuntu's default `runsc` package may be outdated — use Google's official gVisor repo for latest
+- gVisor I/O overhead is ~18% for Deno workloads — well under the 30% threshold
+- `--network=none` is essential for untrusted code — prevents DNS exfiltration and network-based attacks
+- `--cap-drop=ALL` drops all Linux capabilities — stronger than Docker's default reduced set
+- `--user=65532:65532` runs as `nobody` — avoids root execution inside container
+- `--pids-limit=128` prevents fork bomb DoS attacks
+- `--tmpfs /tmp:rw,nosuid,nodev,size=64m` needed for Deno JIT — `noexec` breaks dynamic code execution
+- Deno permission flags (`--deny-net --deny-env --deny-run --deny-ffi`) provide defense-in-depth inside sandbox
+- `ISandboxRuntime` interface enables swapping between Docker and gVisor without caller changes
+- Health check verifies: Docker installed, daemon running, runtime registered, test execution, network isolation, ptrace blocking (gVisor)
+- File transfer via read-only bind mounts for input, tmpfs for output — zero-copy, automatically cleaned up
+- `SandboxedShellCapability` implements `IShellCapability` — drop-in replacement for trusted shell execution

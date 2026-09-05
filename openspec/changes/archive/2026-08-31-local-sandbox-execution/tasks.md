@@ -1,8 +1,8 @@
 ## 1. System Setup
 
-- [ ] 1.1 Add user to kvm group: `sudo usermod -aG kvm allen`. Verify: `groups` includes `kvm`. (Needed for future Firecracker; optional for gVisor)
-- [ ] 1.2 Install gVisor: `sudo apt-get update && sudo apt-get install -y runsc`. Verify: `runsc --version` returns version info
-- [ ] 1.3 Register gVisor as Docker runtime: `sudo runsc install && sudo systemctl restart docker`. Verify: `docker info --format '{{json .Runtimes}}'` includes `runsc`
+- [x] 1.1 Add user to kvm group: `sudo usermod -aG kvm allen`. Verify: `groups` includes `kvm`. (Needed for future Firecracker; optional for gVisor)
+- [x] 1.2 Install gVisor: `sudo apt-get update && sudo apt-get install -y runsc`. Verify: `runsc --version` returns version info
+- [x] 1.3 Register gVisor as Docker runtime: `sudo runsc install && sudo systemctl restart docker`. Verify: `docker info --format '{{json .Runtimes}}'` includes `runsc`
 - [x] 1.4 Create setup script `scripts/setup-sandbox.sh` that performs steps 1.1-1.3 idempotently (checks before acting). Verify: running twice produces no errors and reports "already configured"
 
 ## 2. Type Definitions
@@ -23,7 +23,7 @@
 
 - [x] 4.1 Create `src/capabilities/sandbox/gvisor-runtime.ts` extending or wrapping Docker runtime with `--runtime=runsc` flag. Verify: running `dmesg` inside container shows "Starting gVisor..." message
 - [x] 4.2 Add `healthCheck()` implementation: verify runtime is installed, Docker recognizes it, test container executes, syscall filtering works (e.g. `ptrace` fails inside container). Verify: healthCheck returns pass on configured system
-- [ ] 4.3 Verify gVisor I/O overhead is acceptable: run a file-intensive benchmark inside gVisor vs plain Docker, confirm <30% overhead for typical Deno workloads. Verify: benchmark results documented
+- [x] 4.3 Verify gVisor I/O overhead is acceptable: run a file-intensive benchmark inside gVisor vs plain Docker, confirm <30% overhead for typical Deno workloads. Verify: benchmark results documented
 
 ## 5. SandboxedShell
 
@@ -36,18 +36,18 @@
 
 - [x] 6.1 Create `scripts/sandbox-health-check.sh` that verifies: Docker installed, runsc runtime registered, test container runs with gVisor, network isolation works, resource limits enforced, /tmp writable. Verify: script outputs pass/fail per check with diagnostic messages
 - [x] 6.2 Add `healthCheck()` to `ISandboxRuntime` interface implementations. Verify: returns structured status with per-check results
-- [ ] 6.3 Document health check output in README or agent documentation. Verify: agents can reference health check results to confirm sandbox availability
+- [x] 6.3 Document health check output in README or agent documentation. Verify: agents can reference health check results to confirm sandbox availability
 
 ## 7. Tests
 
 - [x] 7.1 Write unit tests for Docker runtime: mock `Deno.Command`, verify correct Docker flags assembled from config. Verify: `deno test` passes
-- [ ] 7.2 Write unit tests for gVisor runtime: verify `--runtime=runsc` flag added, healthCheck logic. Verify: `deno test` passes
+- [x] 7.2 Write unit tests for gVisor runtime: verify `--runtime=runsc` flag added, healthCheck logic. Verify: `deno test` passes
 - [x] 7.3 Write integration tests for SandboxedShellCapability: execute real commands in sandbox (requires Docker), verify stdout/stderr/exit_code, verify timeout kills process, verify output truncation. Verify: `deno test --allow-run=deno` passes
 - [x] 7.4 Write tests for Deno permission injection: verify permission flags correctly inserted for `deno run` commands, verify non-Deno commands pass through unchanged. Verify: `deno test` passes
 - [x] 7.5 Verify existing 112+ tests still pass. Verify: `deno test --allow-read --allow-env --allow-run` passes with no regressions
 
 ## 8. Documentation
 
-- [ ] 8.1 Update `docs/capabilities.md` with sandbox-execution capability: purpose, setup requirements, usage examples, configuration options. Verify: documentation renders correctly
-- [ ] 8.2 Update `docs/learnings.md` with sandbox-related patterns: gVisor setup gotchas, Docker hardening flags, Deno permission layering, escape vectors to watch for. Verify: learnings are actionable for future developers
-- [ ] 8.3 Add sandbox usage examples to README or docs: how to execute untrusted code, how to switch between runtimes, how to configure resource limits. Verify: examples are copy-pasteable and work
+- [x] 8.1 Update `docs/capabilities.md` with sandbox-execution capability: purpose, setup requirements, usage examples, configuration options. Verify: documentation renders correctly
+- [x] 8.2 Update `docs/learnings.md` with sandbox-related patterns: gVisor setup gotchas, Docker hardening flags, Deno permission layering, escape vectors to watch for. Verify: learnings are actionable for future developers
+- [x] 8.3 Add sandbox usage examples to README or docs: how to execute untrusted code, how to switch between runtimes, how to configure resource limits. Verify: examples are copy-pasteable and work
