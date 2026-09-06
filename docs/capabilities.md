@@ -383,6 +383,63 @@ registry.isInitialized("shell"); // true
 await registry.disposeAll();
 ```
 
+### Review CLI
+
+Standalone code review tool that pre-filters hotspots before LLM review. Runs custom checks and delegates to external tools, producing prioritized findings grouped by file.
+
+```typescript
+// ReviewCheck interface (review/types.ts)
+interface ReviewCheck {
+  name: string;
+  description: string;
+  run(ctx: ReviewContext): Promise<Finding[]>;
+}
+```
+
+**CLI usage:**
+
+```bash
+deno task review                      # all checks
+deno task review --only file-size     # run one check
+deno task review --skip preflight     # skip preflight gate
+deno task review --fail-on 1          # CI: exit 1 on critical findings
+```
+
+**Check registry pattern:** Checks in `review/checks/` and delegates in `review/delegate/` are auto-discovered — drop a `.ts` file exporting a default `ReviewCheck` and it runs on the next invocation with zero wiring.
+
+| Directory | Purpose | Examples |
+|-----------|---------|---------|
+| `review/checks/` | Custom checks using shared `ReviewContext` | `file-size`, `test-pairing`, `reexports` |
+| `review/delegate/` | Wrappers around external CLI tools | `deno-lint`, `deno-check`, `knip`, `madge` |
+
+**Built-in checks:**
+
+| Check | Description |
+|-------|-------------|
+| `file-size` | Flags source files exceeding 400 lines as decomposition candidates |
+| `test-pairing` | Flags source files with no corresponding `__tests__/*.test.ts` |
+| `reexports` | Checks that `mod.ts` re-exports all public symbols from sibling files |
+
+**Delegates** (gracefully skipped if tool not installed):
+
+| Delegate | Tool | What it catches |
+|----------|------|-----------------|
+| `deno-lint` | `deno lint` | Lint warnings as findings |
+| `deno-check` | `deno check` | Type errors as findings |
+| `knip` | `npx knip` | Unused files, unused exports, unlisted dependencies |
+| `madge` | `npx madge` | Circular dependency cycles |
+
+**Key types:**
+
+| Type | Purpose |
+|------|---------|
+| `Finding` | A single review finding with priority, confidence, file path, and line range |
+| `ReviewCheck` | A check that produces findings from a shared context |
+| `ReviewContext` | Pre-computed file metadata (exports, imports, test pairing, dependency graph) |
+| `FileEntry` | Per-file metadata: content, line count, exports, imports |
+
+**Context building:** `buildContext()` scans `src/` once before any check runs — no file is read more than once. The context includes a source-to-test mapping and dependency graph.
+
 ## Adding a New Capability
 
 1. Create `src/capabilities/my-capability.ts`

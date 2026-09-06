@@ -45,11 +45,57 @@ test: add tests for V
 
 ## Code Review
 
-Run the code reviewer agent before merging:
+Run the review CLI before merging. It auto-discovers checks and tool delegates against `src/`, producing prioritized findings:
 
 ```bash
-# Ensure tests pass first
-deno test --allow-read --allow-env --allow-run
+# Run all checks
+deno task review
+
+# Run a specific check
+deno task review --only file-size
+
+# Skip the preflight gate
+deno task review --skip preflight
+
+# CI mode: exit 1 if any critical findings
+deno task review --fail-on 1
+```
+
+**Adding a custom check:** Drop a `.ts` file in `review/checks/` exporting a default `ReviewCheck`. It is auto-discovered on the next run — no wiring needed.
+
+```typescript
+import type { Finding, ReviewCheck, ReviewContext } from "../types.ts";
+
+const check: ReviewCheck = {
+  name: "my-check",
+  description: "What this check does",
+  async run(ctx: ReviewContext): Promise<Finding[]> {
+    const findings: Finding[] = [];
+    // scan ctx.files, produce findings
+    return findings;
+  },
+};
+
+export default check;
+```
+
+**Adding a tool delegate:** Same contract as checks but typically spawns a subprocess. Drop a `.ts` file in `review/delegate/`:
+
+```typescript
+import type { Finding, ReviewCheck } from "../types.ts";
+
+const check: ReviewCheck = {
+  name: "my-tool",
+  description: "Runs an external tool",
+  async run(): Promise<Finding[]> {
+    const cmd = new Deno.Command("my-tool", { args: [...], stdout: "piped" });
+    const output = await cmd.output();
+    // parse output into Finding[]
+    return findings;
+  },
+};
+
+export default check;
 ```
 
 ## OpenSpec Workflow

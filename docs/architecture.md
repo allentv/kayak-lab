@@ -545,6 +545,88 @@ await server.start();
 **Client messages:** `subscribe`, `unsubscribe`, `reconnect`, `pong`
 **Server messages:** `welcome`, `event`, `error`, `ping`
 
+## Review CLI
+
+Standalone code review tool in `review/`. Runs custom checks and delegates to external CLI tools, producing prioritized findings. Not part of the agent runtime — executes directly via `deno task review`.
+
+```mermaid
+graph LR
+    subgraph Review["review/"]
+        CLI["cli.ts"]
+        CTX["context.ts"]
+        REG["registry.ts"]
+        FMT["formatter.ts"]
+        CHK["checks/"]
+        DEL["delegate/"]
+    end
+
+    CLI --> CTX
+    CLI --> REG
+    CLI --> FMT
+    REG --> CHK
+    REG --> DEL
+```
+
+**Check registry pattern:** `registry.ts` scans `review/checks/` and `review/delegate/` at startup. Each file must export a default `ReviewCheck` object. No configuration or wiring required — add a file, it runs.
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| `Finding` | `types.ts` | A single finding: title, body, priority (1–3), confidence, file path, line range |
+| `ReviewCheck` | `types.ts` | Interface: `name`, `description`, `run(ctx)` → `Finding[]` |
+| `ReviewContext` | `types.ts` | Pre-computed file metadata shared across all checks |
+| `buildContext` | `context.ts` | Scans `src/` once; builds file map, test pairing, dependency graph |
+| `loadChecks` | `registry.ts` | Auto-discovers custom checks from `review/checks/` |
+| `loadDelegates` | `registry.ts` | Auto-discovers tool delegates from `review/delegate/` |
+| `formatFindings` | `formatter.ts` | Groups findings by file, renders with priority colors and summary |
+| `main` | `cli.ts` | Parses `--only`/`--skip`/`--fail-on`, runs preflight + checks, outputs results |
+
+**CLI flags:**
+
+| Flag | Effect |
+|------|--------|
+| `--only <name>` | Run only the named check(s) |
+| `--skip <name>` | Skip the named check(s) or `preflight` |
+| `--fail-on <priority>` | Exit 1 if any finding has priority ≤ threshold (CI gate) |
+
+**Custom check example:**
+
+```typescript
+import type { Finding, ReviewCheck, ReviewContext } from "../types.ts";
+
+const check: ReviewCheck = {
+  name: "my-check",
+  description: "What this check does",
+  async run(ctx: ReviewContext): Promise<Finding[]> {
+    const findings: Finding[] = [];
+    for (const [, entry] of ctx.files) {
+      // scan and produce findings
+    }
+    return findings;
+  },
+};
+
+export default check;
+```
+
+**Delegate example** (wraps an external CLI tool):
+
+```typescript
+import type { Finding, ReviewCheck } from "../types.ts";
+
+const check: ReviewCheck = {
+  name: "my-tool",
+  description: "Runs an external tool",
+  async run(): Promise<Finding[]> {
+    const cmd = new Deno.Command("my-tool", { args: [...], stdout: "piped" });
+    const output = await cmd.output();
+    // parse output into Finding[]
+    return findings;
+  },
+};
+
+export default check;
+```
+
 ## Data Flow
 
 ```mermaid

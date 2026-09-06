@@ -78,6 +78,16 @@ This file captures patterns, decisions, and gotchas discovered during kayak-lab 
 - Safety constraints (timeouts, output limits) are mandatory for shell execution
 - Shell capability has dual-layer safety: `BLOCKED_COMMANDS` always rejected; `DANGEROUS_COMMANDS` return 'requires approval'
 
+## Review CLI Patterns
+
+- **Convention-based auto-discovery:** Checks and delegates are discovered by scanning `review/checks/` and `review/delegate/` for `.ts` files exporting a default `ReviewCheck` — no manual registration or wiring needed
+- **Checks vs delegates separation:** Checks analyze pre-computed `ReviewContext` (file metadata, test pairing, dependency graph); delegates spawn external tools (deno-lint, knip, madge) and parse their output into `Finding[]`
+- **Context pre-computation:** `buildContext()` reads every source file once and builds `FileEntry` maps (exports, imports, lines, test pairing) — checks consume this without re-reading files
+- **Graceful degradation:** Delegate checks catch tool-not-found errors and skip silently — optional tools (knip, madge) don't block the review if uninstalled
+- **Priority/confidence model:** Findings use `priority` (1=critical, 2=important, 3=minor) for filtering and `confidence` (0-1) for reliability — `--fail-on` thresholds act on priority only
+- **Preflight gate:** Built-in preflight checks (format, lint, type-check) run before custom checks unless skipped with `--skip preflight` — ensures basic hygiene before deeper analysis
+- **Single shared formatter:** `formatFindings()` groups findings by file, sorts by priority, and renders ANSI-colored output — all checks produce the same `Finding` schema so formatting is centralized
+
 ## Deno / TypeScript Patterns
 
 - Deno.Command requires `--allow-run` permission — shell capability tests fail without it
@@ -98,6 +108,15 @@ This file captures patterns, decisions, and gotchas discovered during kayak-lab 
 - VitePress 1.6.x pins Vite to 5.4.x and esbuild to 0.21.x — overriding these for security patches breaks the build (Rolldown incompatibility, destructuring transform errors). Wait for VitePress 2.0.
 - GitHub Actions `actions/checkout@v4`, `upload-pages-artifact@v3`, `deploy-pages@v4` use Node 20 (deprecated) — update to v5+ for Node 24 compatibility
 - `pnpm/action-setup@v4` → `v6` for latest Node 24 support
+
+## Review CLI Patterns
+
+- **Auto-discovery over registration:** Checks and delegates are discovered by scanning directories at startup — no central config file, no manual wiring. Drop a file, it runs.
+- **Single-pass context building:** `buildContext()` scans `src/` once before any check runs — no file is read more than once. Checks consume the shared `ReviewContext` without redundant I/O.
+- **Graceful degradation:** Delegates catch errors and skip silently if external tools (knip, madge) aren't installed. Custom checks always run.
+- **Priority levels:** 1 = critical (blocks CI), 2 = warning (should fix), 3 = info (nice to have). `--fail-on` threshold maps directly to priority numbers.
+- **Preflight gate:** Runs `deno lint`, `deno check`, `deno test` before checks — catches basic failures before deeper analysis. Skip with `--skip preflight`.
+- **Convention over configuration:** Check files export a default `ReviewCheck` object. Registry uses `import()` dynamic imports — no barrel files, no explicit imports.
 
 ## Git Hooks
 

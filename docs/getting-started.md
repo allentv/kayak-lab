@@ -37,6 +37,50 @@ src/
 ├── store/                  Event persistence, replay, and file-based durability
 ├── projection/             UI projection protocol and terminal rendering
 └── __tests__/              End-to-end tests and benchmarks
+review/
+├── types.ts                Finding, ReviewCheck, ReviewContext
+├── cli.ts                  CLI entrypoint (--only, --skip, --fail-on)
+├── context.ts              Pre-computes file metadata and dependency graph
+├── registry.ts             Auto-discovers checks and delegates
+├── formatter.ts            Colored, grouped output
+├── checks/                 Custom checks (file-size, test-pairing, reexports)
+└── delegate/               Tool wrappers (deno-lint, deno-check, knip, madge)
+```
+
+## Code Review
+
+The review CLI runs auto-discovered checks and tool delegates against `src/`, producing prioritized findings.
+
+```bash
+# Run all checks
+deno task review
+
+# Run a specific check
+deno task review --only file-size
+
+# Skip the preflight gate
+deno task review --skip preflight
+
+# CI mode: exit 1 if any critical findings
+deno task review --fail-on 1
+```
+
+**Adding a custom check:** Drop a `.ts` file in `review/checks/` exporting a default `ReviewCheck`. It is auto-discovered on the next run — no wiring needed.
+
+```typescript
+import type { Finding, ReviewCheck, ReviewContext } from "../types.ts";
+
+const check: ReviewCheck = {
+  name: "my-check",
+  description: "What this check does",
+  async run(ctx: ReviewContext): Promise<Finding[]> {
+    const findings: Finding[] = [];
+    // scan ctx.files, produce findings
+    return findings;
+  },
+};
+
+export default check;
 ```
 
 ## Core Usage

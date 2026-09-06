@@ -42,6 +42,7 @@ All notable changes to kayak-lab will be documented in this file.
 - Setup script for sandbox runtime installation
 - Health check script for sandbox verification
 - Documentation freshness agent and skill
+- Code review CLI with auto-discovered checks, custom checks, and tool delegates (review-cli)
 - 140+ tests across 15 test suites
 - Performance benchmarks for critical paths
 - End-to-end session lifecycle tests
@@ -55,6 +56,7 @@ All notable changes to kayak-lab will be documented in this file.
 
 ### OpenSpec Changes (Archived)
 
+- `review-cli` — Code review CLI with auto-discovered checks, custom checks, and tool delegates
 - `persistence-layer` — File-based event persistence with JSONL, snapshots, and recovery
 - `testing-infrastructure` — Mocks, helpers, fixtures, harness
 - `health-checks-observability` — Health probes and component health
