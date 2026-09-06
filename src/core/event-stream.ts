@@ -85,6 +85,21 @@ export interface IEventStream {
 
   /** Get all session IDs. */
   getSessionIds(): string[];
+
+  /**
+   * Subscribe to new event appends.
+   * @param callback - Invoked for every new event appended to any session.
+   * @returns Unsubscribe function to stop receiving events.
+   */
+  onAppend(callback: (event: BaseEvent) => void): () => void;
+
+  /**
+   * Subscribe to new event appends for a specific session.
+   * @param sessionId - Only events for this session trigger the callback.
+   * @param callback - Invoked for each new event in the specified session.
+   * @returns Unsubscribe function to stop receiving events.
+   */
+  onAppend(sessionId: string, callback: (event: BaseEvent) => void): () => void;
 }
 
 // ============================================================================
@@ -106,6 +121,15 @@ export class EventStream implements IEventStream {
 
   /** Track the next expected sequence number for each session. */
   private readonly nextSequence = new Map<string, number>();
+
+  /** Global subscribers - invoked for every new event. */
+  private readonly globalSubscribers = new Set<(event: BaseEvent) => void>();
+
+  /** Session-scoped subscribers - keyed by session ID. */
+  private readonly sessionSubscribers = new Map<
+    string,
+    Set<(event: BaseEvent) => void>
+  >();
 
   /**
    * Append an event to a session's stream.
@@ -142,6 +166,9 @@ export class EventStream implements IEventStream {
     this.sessions.set(sessionId, events);
 
     this.nextSequence.set(sessionId, expectedSequence + 1);
+
+    // Notify all subscribers of the new event
+    this.notifySubscribers(completeEvent);
 
     return completeEvent;
   }
@@ -186,6 +213,68 @@ export class EventStream implements IEventStream {
   /** Get all session IDs. */
   getSessionIds(): string[] {
     return Array.from(this.sessions.keys());
+  }
+
+  /**
+   * Subscribe to new event appends.
+   * Supports both global and session-scoped subscriptions via overloads.
+   */
+  onAppend(callback: (event: BaseEvent) => void): () => void;
+  onAppend(
+    sessionId: string,
+    callback: (event: BaseEvent) => void,
+  ): () => void;
+  onAppend(
+    sessionIdOrCallback: string | ((event: BaseEvent) => void),
+    maybeCallback?: (event: BaseEvent) => void,
+  ): () => void {
+    // Determine if this is a global or session-scoped subscription
+    if (typeof sessionIdOrCallback === "function") {
+      // Global subscription
+      const callback = sessionIdOrCallback;
+      this.globalSubscribers.add(callback);
+      return () => {
+        this.globalSubscribers.delete(callback);
+      };
+    }
+
+    // Session-scoped subscription
+    const sessionId = sessionIdOrCallback;
+    const callback = maybeCallback!;
+
+    if (!this.sessionSubscribers.has(sessionId)) {
+      this.sessionSubscribers.set(sessionId, new Set());
+    }
+    this.sessionSubscribers.get(sessionId)!.add(callback);
+
+    return () => {
+      const subs = this.sessionSubscribers.get(sessionId);
+      if (subs) {
+        subs.delete(callback);
+        if (subs.size === 0) {
+          this.sessionSubscribers.delete(sessionId);
+        }
+      }
+    };
+  }
+
+  /**
+   * Notify all subscribers of a new event.
+   * Called internally after append().
+   */
+  private notifySubscribers(event: BaseEvent): void {
+    // Global subscribers
+    for (const callback of this.globalSubscribers) {
+      callback(event);
+    }
+
+    // Session-scoped subscribers
+    const sessionSubs = this.sessionSubscribers.get(event.session_id);
+    if (sessionSubs) {
+      for (const callback of sessionSubs) {
+        callback(event);
+      }
+    }
   }
 
   /** Get the total number of events across all sessions. */

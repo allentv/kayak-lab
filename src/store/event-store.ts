@@ -191,13 +191,10 @@ export class EventStoreBridge {
   }
 
   /**
-   * Connect the bridge: backfill existing events into the EventStore.
+   * Connect the bridge: backfill existing events into the EventStore
+   * and subscribe to new event appends.
    *
-   * NOTE: EventStream currently lacks a subscribe/observe API, so events
-   * appended after connect() are NOT automatically propagated. Use
-   * `storeEvent()` to manually bridge new events until EventStream gains
-   * subscription support. Returns an unsubscribe function (currently a
-   * no-op placeholder).
+   * Returns an unsubscribe function to stop receiving events and clean up.
    */
   connect(
     onEvent?: (event: BaseEvent) => void,
@@ -211,13 +208,11 @@ export class EventStoreBridge {
       }
     }
 
-    // TODO: EventStream has no subscribe/observe API, so we cannot react to
-    // new events. When EventStream gains a subscription mechanism (e.g.
-    // `onAppend(callback): unsubscribe`), wire it here to call
-    // `this.eventStore.store(event)` and `onEvent?.(event)` for each new event.
-    this.unsubscribe = () => {
-      this.unsubscribe = null;
-    };
+    // Subscribe to new event appends - auto-propagate to EventStore
+    this.unsubscribe = this.eventStream.onAppend((event) => {
+      this.eventStore.store(event);
+      onEvent?.(event);
+    });
 
     return () => {
       this.unsubscribe?.();

@@ -1,0 +1,397 @@
+/**
+ * Kayak-lab harness entry point.
+ *
+ * Initializes harness components (EventStream, SessionManager, Capabilities,
+ * EventStore, ProjectionProtocol) and starts HTTP/WebSocket server.
+ *
+ * Usage:
+ *   deno run -A src/main.ts --no-web --port 9001    # Headless mode
+ *   deno run -A src/main.ts --port 9001              # With embedded UI (default)
+ */
+
+import { EventStream } from "./core/event-stream.ts";
+import { SessionManager } from "./core/session-manager.ts";
+import { CapabilityRegistry } from "./capabilities/capability.ts";
+import { GitCapability } from "./capabilities/git.ts";
+import { ShellCapability } from "./capabilities/shell.ts";
+import { EventStore, EventStoreBridge } from "./store/event-store.ts";
+import { ProjectionProtocol } from "./projection/protocol.ts";
+import { loadConfig, DEFAULT_CONFIG } from "./core/config.ts";
+
+// ============================================================================
+// CLI Argument Parsing
+// ============================================================================
+
+interface CliArgs {
+  noWeb: boolean;
+  port: number;
+  configDir?: string;
+}
+
+function parseArgs(args: string[]): CliArgs {
+  const result: CliArgs = {
+    noWeb: false,
+    port: parseInt(Deno.env.get("PORT") ?? "9000", 10),
+  };
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === "--no-web") {
+      result.noWeb = true;
+    } else if (arg === "--port" && i + 1 < args.length) {
+      result.port = parseInt(args[++i], 10);
+    } else if (arg === "--config" && i + 1 < args.length) {
+      result.configDir = args[++i];
+    }
+  }
+
+  return result;
+}
+
+// ============================================================================
+// Harness Initialization
+// ============================================================================
+
+interface HarnessComponents {
+  eventStream: EventStream;
+  sessionManager: SessionManager;
+  capabilityRegistry: CapabilityRegistry;
+  eventStore: EventStore;
+  eventStoreBridge: EventStoreBridge;
+  projectionProtocol: ProjectionProtocol;
+}
+
+async function initializeHarness(configDir?: string): Promise<HarnessComponents> {
+  // Load configuration
+  const config = configDir
+    ? await loadConfig(configDir)
+    : DEFAULT_CONFIG;
+
+  // Initialize core components
+  const eventStream = new EventStream();
+  const sessionManager = new SessionManager(eventStream);
+
+  // Initialize capabilities
+  const capabilityRegistry = new CapabilityRegistry();
+
+  if (config.capabilities.git.enabled) {
+    capabilityRegistry.register(new GitCapability());
+  }
+  if (config.capabilities.shell.enabled) {
+    capabilityRegistry.register(new ShellCapability());
+  }
+
+  // Initialize event store and bridge
+  const eventStore = new EventStore();
+  const eventStoreBridge = new EventStoreBridge(eventStream, eventStore);
+
+  // Initialize projection protocol
+  const projectionProtocol = new ProjectionProtocol(eventStream);
+
+  return {
+    eventStream,
+    sessionManager,
+    capabilityRegistry,
+    eventStore,
+    eventStoreBridge,
+    projectionProtocol,
+  };
+}
+
+// ============================================================================
+// HTTP Server
+// ============================================================================
+
+function createRouter(components: HarnessComponents) {
+  return async (request: Request): Promise<Response> => {
+    const url = new URL(request.url);
+    const path = url.pathname;
+
+    // CORS headers for development
+    const corsHeaders: Record<string, string> = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    };
+
+    // Handle preflight
+    if (request.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: corsHeaders });
+    }
+
+    // API Routes
+    if (path === "/api/sessions") {
+      return handleGetSessions(components, corsHeaders);
+    }
+
+    if (path.startsWith("/api/sessions/") && path.endsWith("/events")) {
+      const segments = path.split("/");
+      const sessionId = segments[3];
+      return handleGetSessionEvents(components, sessionId, url, corsHeaders);
+    }
+
+    if (path.startsWith("/api/sessions/")) {
+      const segments = path.split("/");
+      const sessionId = segments[3];
+      return handleGetSession(components, sessionId, corsHeaders);
+    }
+
+    if (path === "/api/capabilities") {
+      return handleGetCapabilities(components, corsHeaders);
+    }
+
+    if (path === "/api/health") {
+      return handleGetHealth(components, corsHeaders);
+    }
+
+    // 404
+    return new Response("Not Found", { status: 404, headers: corsHeaders });
+  };
+}
+
+// ============================================================================
+// API Handlers
+// ============================================================================
+
+function handleGetSessions(
+  components: HarnessComponents,
+  headers: Record<string, string>,
+): Response {
+  const sessions = components.sessionManager.getSessions();
+  const sessionsWithCounts = sessions.map((session) => ({
+    ...session,
+    event_count: components.eventStream.getEvents(session.id).length,
+  }));
+
+  return Response.json(sessionsWithCounts, { headers });
+}
+
+function handleGetSession(
+  components: HarnessComponents,
+  sessionId: string,
+  headers: Record<string, string>,
+): Response {
+  const session = components.sessionManager.getSession(sessionId);
+  if (!session) {
+    return Response.json({ error: "Session not found" }, {
+      status: 404,
+      headers,
+    });
+  }
+
+  const events = components.eventStream.getEvents(sessionId);
+  return Response.json({ ...session, events }, { headers });
+}
+
+function handleGetSessionEvents(
+  components: HarnessComponents,
+  sessionId: string,
+  url: URL,
+  headers: Record<string, string>,
+): Response {
+  const typeFilter = url.searchParams.get("type");
+  const limit = parseInt(url.searchParams.get("limit") ?? "100", 10);
+
+  let events = components.eventStream.getEvents(sessionId);
+
+  // Apply type filter
+  if (typeFilter) {
+    events = events.filter((e) => e.event_type === typeFilter);
+  }
+
+  // Apply limit
+  events = events.slice(-limit);
+
+  return Response.json(events, { headers });
+}
+
+function handleGetCapabilities(
+  components: HarnessComponents,
+  headers: Record<string, string>,
+): Response {
+  const capabilities = components.capabilityRegistry.getAll().map((cap) => ({
+    name: cap.definition.name,
+    version: cap.definition.version,
+    initialized: components.capabilityRegistry.isInitialized(cap.definition.name),
+  }));
+
+  return Response.json(capabilities, { headers });
+}
+
+function handleGetHealth(
+  components: HarnessComponents,
+  headers: Record<string, string>,
+): Response {
+  return Response.json({
+    status: "ok",
+    uptime: Math.floor((Date.now() - startTime) / 1000),
+    session_count: components.sessionManager.getSessions().length,
+    event_count: components.eventStream.totalEvents,
+  }, { headers });
+}
+
+// ============================================================================
+// WebSocket Server
+// ============================================================================
+
+interface WebSocketClient {
+  id: string;
+  socket: WebSocket;
+  sessionId?: string;
+  eventTypes?: string[];
+  lastPong: number;
+}
+
+const wsClients = new Map<string, WebSocketClient>();
+let clientIdCounter = 0;
+
+function handleWebSocketUpgrade(
+  request: Request,
+  components: HarnessComponents,
+): Response {
+  const { socket, response } = Deno.upgradeWebSocket(request);
+
+  const clientId = `client-${++clientIdCounter}`;
+  const client: WebSocketClient = {
+    id: clientId,
+    socket,
+    lastPong: Date.now(),
+  };
+
+  socket.onopen = () => {
+    console.log(`[WS] Client connected: ${clientId}`);
+    wsClients.set(clientId, client);
+
+    // Send welcome message
+    socket.send(JSON.stringify({
+      type: "welcome",
+      version: "1.0.0",
+      capabilities: ["subscribe", "reconnect"],
+    }));
+
+    // Subscribe to event stream
+    components.eventStream.onAppend((event) => {
+      // Check if client is interested in this event
+      if (client.sessionId && event.session_id !== client.sessionId) {
+        return;
+      }
+      if (client.eventTypes && !client.eventTypes.includes(event.event_type)) {
+        return;
+      }
+
+      // Send event to client
+      try {
+        socket.send(JSON.stringify({ type: "event", event }));
+      } catch {
+        // Client disconnected
+      }
+    });
+  };
+
+  socket.onmessage = (event) => {
+    try {
+      const msg = JSON.parse(event.data);
+
+      if (msg.type === "subscribe") {
+        client.sessionId = msg.session_id;
+        client.eventTypes = msg.event_types;
+        console.log(`[WS] Client ${clientId} subscribed:`, {
+          sessionId: client.sessionId,
+          eventTypes: client.eventTypes,
+        });
+      } else if (msg.type === "unsubscribe") {
+        client.sessionId = undefined;
+        client.eventTypes = undefined;
+      } else if (msg.type === "pong") {
+        client.lastPong = Date.now();
+      }
+    } catch {
+      // Ignore malformed messages
+    }
+  };
+
+  socket.onclose = () => {
+    console.log(`[WS] Client disconnected: ${clientId}`);
+    wsClients.delete(clientId);
+  };
+
+  socket.onerror = (error) => {
+    console.error(`[WS] Client error: ${clientId}`, error);
+    wsClients.delete(clientId);
+  };
+
+  return response;
+}
+
+// Heartbeat timer - ping idle clients every 30s
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, client] of wsClients) {
+    if (now - client.lastPong > 35000) {
+      // Client hasn't ponged in 35s, disconnect
+      console.log(`[WS] Client ${id} timed out`);
+      client.socket.close();
+      wsClients.delete(id);
+    } else {
+      // Send ping
+      try {
+        client.socket.send(JSON.stringify({ type: "ping" }));
+      } catch {
+        wsClients.delete(id);
+      }
+    }
+  }
+}, 30000);
+
+// ============================================================================
+// Main
+// ============================================================================
+
+const startTime = Date.now();
+
+async function main() {
+  const args = parseArgs(Deno.args);
+
+  console.log("Starting kayak-lab harness...");
+  console.log(`  Port: ${args.port}`);
+  console.log(`  Mode: ${args.noWeb ? "headless" : "embedded"}`);
+
+  // Initialize harness components
+  const components = await initializeHarness(args.configDir);
+
+  // Connect event store bridge
+  components.eventStoreBridge.connect((_event) => {
+    // Events are now auto-propagated to EventStore
+  });
+
+  console.log("  EventStream: initialized");
+  console.log("  SessionManager: initialized");
+  console.log(`  Capabilities: ${components.capabilityRegistry.getAll().length} registered`);
+
+  // Start HTTP server
+  const router = createRouter(components);
+
+  Deno.serve({
+    port: args.port,
+    hostname: "0.0.0.0",
+  }, (request) => {
+    const url = new URL(request.url);
+
+    // Check for WebSocket upgrade
+    if (url.pathname === "/ws/events" && request.headers.get("upgrade") === "websocket") {
+      return handleWebSocketUpgrade(request, components);
+    }
+
+    return router(request);
+  });
+
+  console.log(`\nHarness running on http://localhost:${args.port}`);
+  console.log(`  API: http://localhost:${args.port}/api/`);
+  console.log(`  WebSocket: ws://localhost:${args.port}/ws/events`);
+  console.log("\nPress Ctrl+C to stop.");
+}
+
+main().catch((error) => {
+  console.error("Fatal error:", error);
+  Deno.exit(1);
+});
