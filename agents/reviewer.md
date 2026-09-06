@@ -129,6 +129,21 @@ interface ReviewFinding {
 }
 ```
 
+## Review CLI
+
+A standalone `deno task review` command pre-filters hotspots before LLM review:
+
+```bash
+deno task review                      # all checks
+deno task review --only file-size     # one check
+deno task review --skip preflight     # skip preflight
+deno task review --fail-on 1          # CI gate on critical findings
+```
+
+The CLI delegates to `deno lint`, `deno check`, `knip`, and `madge`, plus three custom checks: file-size decomposition, test-file pairing, and mod.ts re-export coverage.
+
+Findings follow the same `ReviewFinding` schema below — feed them directly into the LLM reviewer for targeted analysis.
+
 ## Tips
 
 - **Run pre-review checks first**: `deno task check`, `deno lint`, and `deno task test` must all pass before reviewing

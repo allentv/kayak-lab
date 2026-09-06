@@ -16,7 +16,8 @@
     "test:watch": "deno test --watch --allow-read --allow-env",
     "fmt": "deno fmt",
     "lint": "deno lint",
-    "check": "deno check src/**/*.ts"
+    "check": "deno check src/**/*.ts",
+    "review": "deno run -A review/cli.ts"
   },
   "lint": {
     "rules": {
