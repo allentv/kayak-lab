@@ -17,8 +17,8 @@
     "@preact/signals": "npm:@preact/signals@2"
   },
   "tasks": {
-    "test": "deno test --allow-read --allow-env",
-    "test:watch": "deno test --watch --allow-read --allow-env",
+    "test": "deno test --allow-read --allow-env --allow-write --allow-net --allow-run",
+    "test:watch": "deno test --watch --allow-read --allow-env --allow-write --allow-net --allow-run",
     "fmt": "deno fmt",
     "lint": "deno lint",
     "check": "deno check src/**/*.ts",
