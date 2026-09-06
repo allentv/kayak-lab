@@ -110,7 +110,7 @@ function createRouter(components: HarnessComponents) {
     // CORS headers for development
     const corsHeaders: Record<string, string> = {
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Methods": "GET, POST, PATCH, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
     };
 
@@ -218,77 +218,75 @@ function handleGetSessionEvents(
   return Response.json(events, { headers });
 }
 
-function handleCreateSession(
+async function handleCreateSession(
   request: Request,
   components: HarnessComponents,
   headers: Record<string, string>,
 ): Promise<Response> {
-  return request.json().then((body: { description?: string }) => {
+  try {
+    const body = await request.json() as { description?: string };
     const session = components.sessionManager.createSession({
       description: body.description,
     });
     return Response.json(session, { status: 201, headers });
-  }).catch(() => {
+  } catch {
     return Response.json({ error: "Invalid JSON body" }, {
       status: 400,
       headers,
     });
-  });
+  }
 }
 
-function handlePatchSession(
+async function handlePatchSession(
   request: Request,
   sessionId: string,
   components: HarnessComponents,
   headers: Record<string, string>,
 ): Promise<Response> {
-  return request.json().then(
-    (body: { action: string; error?: string }) => {
-      try {
-        let session;
-        switch (body.action) {
-          case "pause":
-            session = components.sessionManager.pauseSession(sessionId);
-            break;
-          case "resume":
-            session = components.sessionManager.resumeSession(sessionId);
-            break;
-          case "complete":
-            session = components.sessionManager.completeSession(sessionId);
-            break;
-          case "fail":
-            session = components.sessionManager.failSession(
-              sessionId,
-              body.error,
-            );
-            break;
-          case "cancel":
-            session = components.sessionManager.cancelSession(sessionId);
-            break;
-          default:
-            return Response.json(
-              { error: `Unknown action: ${body.action}` },
-              { status: 400, headers },
-            );
-        }
-        return Response.json(session, { headers });
-      } catch (error) {
-        const status = error instanceof Error &&
-            error.message.includes("not found")
-          ? 404
-          : 400;
+  try {
+    const body = await request.json() as { action: string; error?: string };
+
+    if (!sessionId) {
+      return Response.json({ error: "Session ID required" }, {
+        status: 400,
+        headers,
+      });
+    }
+
+    let session;
+    switch (body.action) {
+      case "pause":
+        session = components.sessionManager.pauseSession(sessionId);
+        break;
+      case "resume":
+        session = components.sessionManager.resumeSession(sessionId);
+        break;
+      case "complete":
+        session = components.sessionManager.completeSession(sessionId);
+        break;
+      case "fail":
+        session = components.sessionManager.failSession(sessionId, body.error);
+        break;
+      case "cancel":
+        session = components.sessionManager.cancelSession(sessionId);
+        break;
+      default:
         return Response.json(
-          { error: error instanceof Error ? error.message : "Unknown error" },
-          { status, headers },
+          { error: `Unknown action: ${body.action}` },
+          { status: 400, headers },
         );
-      }
-    },
-  ).catch(() => {
-    return Response.json({ error: "Invalid JSON body" }, {
-      status: 400,
-      headers,
-    });
-  });
+    }
+    return Response.json(session, { headers });
+  } catch (error) {
+    const status = error instanceof Error &&
+        error.message.includes("not found")
+      ? 404
+      : 400;
+    return Response.json(
+      { error: error instanceof Error ? error.message : "Unknown error" },
+      { status, headers },
+    );
+  }
 }
 
 function handleGetCapabilities(
