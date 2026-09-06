@@ -144,6 +144,7 @@ export class ProjectionProtocol implements IProjectionProtocol {
   private sessionSubscriptions: Map<string, Set<SubscriptionId>> = new Map();
   private errorCallback: DeliveryErrorCallback | null = null;
   private deliveryTimers: Map<SubscriptionId, number> = new Map();
+  private pendingDeliveries: Map<SubscriptionId, Promise<void>> = new Map();
 
   constructor(eventStream: IEventStream) {
     this.eventStream = eventStream;
@@ -162,7 +163,9 @@ export class ProjectionProtocol implements IProjectionProtocol {
       session_id,
       state: "active",
       filter,
-      last_sequence: filter?.from_sequence ?? 0,
+      last_sequence: filter?.from_sequence !== undefined
+        ? filter.from_sequence - 1
+        : 0,
       callback,
       buffer_size: options?.buffer_size ?? 1000,
       delivery_timeout: options?.delivery_timeout ?? 5000,
@@ -176,10 +179,13 @@ export class ProjectionProtocol implements IProjectionProtocol {
     }
     this.sessionSubscriptions.get(session_id)!.add(id);
 
-    // Deliver any existing events
-    this.deliverExistingEvents(state);
+    // Deliver existing events first, then start monitoring.
+    // The delivery promise ensures monitoring waits before its first poll.
+    const delivery = this.deliverExistingEvents(state);
+    this.pendingDeliveries.set(id, delivery);
+    delivery.finally(() => this.pendingDeliveries.delete(id));
 
-    // Start monitoring for new events
+    // Start monitoring for new events (waits for delivery to complete)
     this.startEventMonitoring(state);
 
     return {
@@ -203,6 +209,9 @@ export class ProjectionProtocol implements IProjectionProtocol {
       clearTimeout(timer);
       this.deliveryTimers.delete(subscription_id);
     }
+
+    // Clear pending delivery tracking
+    this.pendingDeliveries.delete(subscription_id);
 
     // Remove from session tracking
     const sessionSubs = this.sessionSubscriptions.get(state.session_id);
@@ -236,11 +245,13 @@ export class ProjectionProtocol implements IProjectionProtocol {
 
     state.state = "active";
 
-    // Resume monitoring
-    this.startEventMonitoring(state);
+    // Deliver events that arrived while paused first, then start monitoring.
+    const delivery = this.deliverExistingEvents(state);
+    this.pendingDeliveries.set(state.id, delivery);
+    delivery.finally(() => this.pendingDeliveries.delete(state.id));
 
-    // Deliver any events that arrived while paused
-    this.deliverExistingEvents(state);
+    // Resume monitoring (waits for delivery to complete)
+    this.startEventMonitoring(state);
   }
 
   getSubscription(subscription_id: SubscriptionId): Subscription | undefined {
@@ -294,6 +305,14 @@ export class ProjectionProtocol implements IProjectionProtocol {
       if (state.state !== "active") return;
 
       try {
+        // Wait for any pending initial delivery to complete before polling
+        const pending = this.pendingDeliveries.get(state.id);
+        if (pending) await pending;
+
+        // Re-check state after await — subscription may have been closed/paused
+        // while we were waiting for the initial delivery to complete.
+        if (state.state !== "active") return;
+
         const lastEvent = this.eventStream.getLastEvent(state.session_id);
         if (lastEvent && lastEvent.sequence_number > state.last_sequence) {
           // New events available - deliver them
