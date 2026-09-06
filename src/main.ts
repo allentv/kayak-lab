@@ -17,6 +17,7 @@ import { ShellCapability } from "./capabilities/shell.ts";
 import { EventStore, EventStoreBridge } from "./store/event-store.ts";
 import { ProjectionProtocol } from "./projection/protocol.ts";
 import { loadConfig, DEFAULT_CONFIG } from "./core/config.ts";
+import { SessionError } from "./core/session-manager.ts";
 
 // ============================================================================
 // CLI Argument Parsing
@@ -278,8 +279,8 @@ async function handlePatchSession(
     }
     return Response.json(session, { headers });
   } catch (error) {
-    const status = error instanceof Error &&
-        error.message.includes("not found")
+    const status = error instanceof SessionError &&
+        error.code === "SESSION_NOT_FOUND"
       ? 404
       : 400;
     return Response.json(

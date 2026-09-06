@@ -178,12 +178,16 @@ Deno.test("HTTP API E2E", async (t) => {
 
   // ── CORS ────────────────────────────────────────────────────────────
 
-  await t.step("CORS preflight returns 204", async () => {
+  await t.step("CORS preflight returns 204 for GET", async () => {
     const result = await client.options("/api/health");
     assertEquals(result.status, 204);
     assertEquals(
       result.headers["access-control-allow-origin"],
       "*",
+    );
+    assertEquals(
+      result.headers["access-control-allow-methods"]?.includes("PATCH"),
+      true,
     );
   });
 
