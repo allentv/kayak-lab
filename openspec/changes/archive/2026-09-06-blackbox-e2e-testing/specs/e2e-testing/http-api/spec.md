@@ -6,6 +6,8 @@ Blackbox E2E tests verifying the HTTP API surface of the harness — health, ses
 
 ### Requirement: Health endpoint behavior
 
+The harness SHALL expose a health endpoint that returns server status, uptime, and event statistics.
+
 #### Scenario: Health returns correct shape
 - **WHEN** `GET /api/health` is called on a freshly started harness
 - **THEN** the response is HTTP 200 with body `{ status: "ok", uptime: 0, session_count: 0, event_count: 0 }`
@@ -16,6 +18,8 @@ Blackbox E2E tests verifying the HTTP API surface of the harness — health, ses
 
 ### Requirement: Sessions list behavior
 
+The harness SHALL expose an endpoint that lists all active sessions with their event counts.
+
 #### Scenario: Empty session list
 - **WHEN** `GET /api/sessions` is called on a freshly started harness
 - **THEN** the response is HTTP 200 with body `[]`
@@ -25,6 +29,8 @@ Blackbox E2E tests verifying the HTTP API surface of the harness — health, ses
 - **THEN** the response contains one entry with `event_count >= 1`
 
 ### Requirement: Session lifecycle via API
+
+The harness SHALL support creating sessions and transitioning their state through the HTTP API, with full event history returned for each session.
 
 #### Scenario: Full lifecycle
 - **WHEN** a session is created, paused, resumed, and completed via the harness
@@ -40,6 +46,8 @@ Blackbox E2E tests verifying the HTTP API surface of the harness — health, ses
 
 ### Requirement: Session event queries
 
+The harness SHALL support querying session events with optional type filtering and result limiting.
+
 #### Scenario: Events with type filter
 - **WHEN** `GET /api/sessions/:id/events?type=session.created` is called
 - **THEN** only events of type `session.created` are returned
@@ -50,11 +58,15 @@ Blackbox E2E tests verifying the HTTP API surface of the harness — health, ses
 
 ### Requirement: Capabilities endpoint
 
+The harness SHALL expose an endpoint listing all registered capabilities with their initialization status.
+
 #### Scenario: Lists registered capabilities
 - **WHEN** `GET /api/capabilities` is called
 - **THEN** the response contains at least the Git and Shell capabilities with `initialized` status
 
 ### Requirement: CORS behavior
+
+The harness SHALL respond to CORS preflight requests and include appropriate CORS headers on all responses.
 
 #### Scenario: Preflight returns 204
 - **WHEN** `OPTIONS /api/health` is sent with `Origin` and `Access-Control-Request-Method` headers
