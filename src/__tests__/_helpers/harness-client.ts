@@ -68,6 +68,37 @@ export class HarnessClient {
 
   // -- Sessions --
 
+  async createSession(
+    description?: string,
+  ): Promise<SessionSummary> {
+    const res = await fetch(`${this.baseUrl}/api/sessions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ description }),
+    });
+    if (!res.ok) {
+      throw new Error(`POST /api/sessions returned ${res.status}`);
+    }
+    return res.json() as Promise<SessionSummary>;
+  }
+
+  async patchSession(
+    id: string,
+    action: string,
+    error?: string,
+  ): Promise<SessionSummary> {
+    const res = await fetch(`${this.baseUrl}/api/sessions/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, error }),
+    });
+    if (!res.ok) {
+      const body = await res.json() as { error?: string };
+      throw new HttpError(res.status, body.error ?? `PATCH returned ${res.status}`);
+    }
+    return res.json() as Promise<SessionSummary>;
+  }
+
   async getSessions(): Promise<SessionSummary[]> {
     const res = await fetch(`${this.baseUrl}/api/sessions`);
     if (!res.ok) {

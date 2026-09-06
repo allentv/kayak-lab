@@ -54,6 +54,92 @@ Deno.test("HTTP API E2E", async (t) => {
     assertEquals(sessions.length, 0);
   });
 
+  // ── Session Lifecycle ────────────────────────────────────────────────
+
+  await t.step("create session returns 201 with active state", async () => {
+    const session = await client.createSession("E2E lifecycle test");
+    assertEquals(session.state, "active");
+    assertEquals(session.description, "E2E lifecycle test");
+    assertExists(session.id);
+  });
+
+  await t.step("full lifecycle: create → pause → resume → complete", async () => {
+    const session = await client.createSession("full lifecycle");
+
+    // Pause
+    const paused = await client.patchSession(session.id, "pause");
+    assertEquals(paused.state, "paused");
+
+    // Resume
+    const resumed = await client.patchSession(session.id, "resume");
+    assertEquals(resumed.state, "active");
+
+    // Complete
+    const completed = await client.patchSession(session.id, "complete");
+    assertEquals(completed.state, "completed");
+  });
+
+  await t.step("session events reflect lifecycle transitions", async () => {
+    const session = await client.createSession("event history test");
+    await client.patchSession(session.id, "pause");
+    await client.patchSession(session.id, "resume");
+    await client.patchSession(session.id, "complete");
+
+    const events = await client.getSessionEvents(session.id);
+    const eventTypes = events.map((e) => e.event_type);
+
+    assertEquals(eventTypes, [
+      "session.created",
+      "session.paused",
+      "session.resumed",
+      "session.completed",
+    ]);
+
+    // Verify sequence numbers are ordered
+    for (let i = 0; i < events.length; i++) {
+      assertEquals(events[i].sequence_number, i + 1);
+    }
+  });
+
+  await t.step("sessions list reflects created sessions", async () => {
+    await client.createSession("list test");
+    const sessions = await client.getSessions();
+    assertEquals(sessions.length > 0, true);
+  });
+
+  await t.step("fail action transitions session to failed state", async () => {
+    const session = await client.createSession("fail test");
+    const failed = await client.patchSession(session.id, "fail", "test error");
+    assertEquals(failed.state, "failed");
+  });
+
+  await t.step("cancel action transitions session to cancelled state", async () => {
+    const session = await client.createSession("cancel test");
+    const cancelled = await client.patchSession(session.id, "cancel");
+    assertEquals(cancelled.state, "cancelled");
+  });
+
+  await t.step("invalid action returns 400", async () => {
+    const session = await client.createSession("invalid action test");
+    try {
+      await client.patchSession(session.id, "bogus");
+      throw new Error("Expected HttpError");
+    } catch (error) {
+      assertEquals(error instanceof HttpError, true);
+      assertEquals((error as HttpError).status, 400);
+    }
+  });
+
+  await t.step("patch non-existent session returns 404", async () => {
+    try {
+      await client.patchSession("nonexistent-id", "pause");
+      throw new Error("Expected HttpError");
+    } catch (error) {
+      assertEquals(error instanceof HttpError, true);
+      assertEquals((error as HttpError).status, 404);
+    }
+  });
+
   // ── Session 404 ─────────────────────────────────────────────────────
 
   await t.step("session not found returns 404", async () => {

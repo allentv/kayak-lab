@@ -120,8 +120,21 @@ function createRouter(components: HarnessComponents) {
     }
 
     // API Routes
-    if (path === "/api/sessions") {
+    if (path === "/api/sessions" && request.method === "GET") {
       return handleGetSessions(components, corsHeaders);
+    }
+
+    if (path === "/api/sessions" && request.method === "POST") {
+      return handleCreateSession(request, components, corsHeaders);
+    }
+
+    if (
+      path.startsWith("/api/sessions/") && request.method === "PATCH" &&
+      !path.endsWith("/events")
+    ) {
+      const segments = path.split("/");
+      const sessionId = segments[3];
+      return handlePatchSession(request, sessionId, components, corsHeaders);
     }
 
     if (path.startsWith("/api/sessions/") && path.endsWith("/events")) {
@@ -203,6 +216,79 @@ function handleGetSessionEvents(
   events = events.slice(-limit);
 
   return Response.json(events, { headers });
+}
+
+function handleCreateSession(
+  request: Request,
+  components: HarnessComponents,
+  headers: Record<string, string>,
+): Promise<Response> {
+  return request.json().then((body: { description?: string }) => {
+    const session = components.sessionManager.createSession({
+      description: body.description,
+    });
+    return Response.json(session, { status: 201, headers });
+  }).catch(() => {
+    return Response.json({ error: "Invalid JSON body" }, {
+      status: 400,
+      headers,
+    });
+  });
+}
+
+function handlePatchSession(
+  request: Request,
+  sessionId: string,
+  components: HarnessComponents,
+  headers: Record<string, string>,
+): Promise<Response> {
+  return request.json().then(
+    (body: { action: string; error?: string }) => {
+      try {
+        let session;
+        switch (body.action) {
+          case "pause":
+            session = components.sessionManager.pauseSession(sessionId);
+            break;
+          case "resume":
+            session = components.sessionManager.resumeSession(sessionId);
+            break;
+          case "complete":
+            session = components.sessionManager.completeSession(sessionId);
+            break;
+          case "fail":
+            session = components.sessionManager.failSession(
+              sessionId,
+              body.error,
+            );
+            break;
+          case "cancel":
+            session = components.sessionManager.cancelSession(sessionId);
+            break;
+          default:
+            return Response.json(
+              { error: `Unknown action: ${body.action}` },
+              { status: 400, headers },
+            );
+        }
+        return Response.json(session, { headers });
+      } catch (error) {
+        const status = error instanceof Error &&
+            error.message.includes("not found")
+          ? 404
+          : 400;
+        return Response.json(
+          { error: error instanceof Error ? error.message : "Unknown error" },
+          { status, headers },
+        );
+      }
+    },
+  ).catch(() => {
+    return Response.json({ error: "Invalid JSON body" }, {
+      status: 400,
+      headers,
+    });
+  });
 }
 
 function handleGetCapabilities(
