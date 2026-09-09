@@ -22,6 +22,7 @@
     "fmt": "deno fmt",
     "lint": "deno lint",
     "check": "deno check src/**/*.ts",
+    "verify": "deno task check && deno task lint && deno task test",
     "review": "deno run -A review/cli.ts"
   },
   "lint": {
