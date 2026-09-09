@@ -129,6 +129,107 @@ export class MockEventStore implements IEventStore {
     // No-op for mock
   }
 
+  buildCausalGraph(
+    sessionId: string,
+  ): Map<string, { event: BaseEvent; children: string[] }> {
+    this.calls.push({ method: "buildCausalGraph", args: [sessionId] });
+    const sessionEvents = this.events.filter((e) => e.session_id === sessionId);
+    const graph = new Map<string, { event: BaseEvent; children: string[] }>();
+
+    for (const event of sessionEvents) {
+      graph.set(event.event_id, { event, children: [] });
+    }
+
+    for (const event of sessionEvents) {
+      const parents = (event.causal_parents as string[] | undefined) ?? [];
+      for (const parentId of parents) {
+        const parent = graph.get(parentId);
+        if (parent) {
+          parent.children.push(event.event_id);
+        }
+      }
+    }
+
+    return graph;
+  }
+
+  findDownstream(eventId: string): BaseEvent[] {
+    this.calls.push({ method: "findDownstream", args: [eventId] });
+    const event = this.events.find((e) => e.event_id === eventId);
+    if (!event) return [];
+
+    const graph = this.buildCausalGraph(event.session_id);
+    const downstream: BaseEvent[] = [];
+    const visited = new Set<string>();
+    const queue = [eventId];
+
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      if (visited.has(current)) continue;
+      visited.add(current);
+
+      const node = graph.get(current);
+      if (!node) continue;
+
+      if (current !== eventId) {
+        downstream.push(node.event);
+      }
+
+      for (const childId of node.children) {
+        if (!visited.has(childId)) {
+          queue.push(childId);
+        }
+      }
+    }
+
+    return downstream;
+  }
+
+  findIndependentChains(sessionId: string): string[][] {
+    this.calls.push({ method: "findIndependentChains", args: [sessionId] });
+    const sessionEvents = this.events.filter((e) => e.session_id === sessionId);
+    if (sessionEvents.length === 0) return [];
+
+    const graph = this.buildCausalGraph(sessionId);
+
+    const roots: string[] = [];
+    for (const event of sessionEvents) {
+      const parents = (event.causal_parents as string[] | undefined) ?? [];
+      const hasGraphParent = parents.some((p) => graph.has(p));
+      if (!hasGraphParent) {
+        roots.push(event.event_id);
+      }
+    }
+
+    const visited = new Set<string>();
+    const chains: string[][] = [];
+
+    for (const root of roots) {
+      if (visited.has(root)) continue;
+
+      const chain: string[] = [];
+      const queue = [root];
+      while (queue.length > 0) {
+        const current = queue.shift()!;
+        if (visited.has(current)) continue;
+        visited.add(current);
+        chain.push(current);
+
+        const node = graph.get(current);
+        if (node) {
+          for (const childId of node.children) {
+            if (!visited.has(childId)) {
+              queue.push(childId);
+            }
+          }
+        }
+      }
+      chains.push(chain);
+    }
+
+    return chains;
+  }
+
   reset(): void {
     this.events = [];
     this.snapshots.clear();
