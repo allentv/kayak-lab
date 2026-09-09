@@ -9,6 +9,11 @@ import { BaseEvent, CURRENT_SCHEMA_VERSION } from "../types/events.ts";
 import { EventStream } from "../core/event-stream.ts";
 import { SchemaRegistry, migrate } from "../core/schema-registry.ts";
 import { PersistenceConfig, PersistentEventStore } from "./persistence.ts";
+import {
+  buildCausalGraph as buildGraph,
+  findDownstream as findDown,
+  findIndependentChains as findChains,
+} from "./causal-graph.ts";
 
 // ============================================================================
 // Snapshot Types
@@ -47,6 +52,17 @@ export interface IEventStore {
     snapshot: Snapshot,
   ): readonly BaseEvent[];
   flush(): void;
+
+  /** Build a causal graph for a session from event causal_parents fields. */
+  buildCausalGraph(
+    sessionId: string,
+  ): Map<string, { event: BaseEvent; children: string[] }>;
+
+  /** Find all events downstream of a given event (transitive closure). */
+  findDownstream(eventId: string): BaseEvent[];
+
+  /** Find independent (causally disconnected) event chains in a session. */
+  findIndependentChains(sessionId: string): string[][];
 }
 
 // ============================================================================
@@ -146,6 +162,28 @@ export class EventStore implements IEventStore {
 
   flush(): void {
     // No-op for in-memory store
+  }
+
+  buildCausalGraph(
+    sessionId: string,
+  ): Map<string, { event: BaseEvent; children: string[] }> {
+    const events = this.events.get(sessionId) ?? [];
+    return buildGraph(events);
+  }
+
+  findDownstream(eventId: string): BaseEvent[] {
+    // Find which session this event belongs to
+    for (const [, events] of this.events) {
+      if (events.some((e) => e.event_id === eventId)) {
+        return findDown(eventId, events);
+      }
+    }
+    return [];
+  }
+
+  findIndependentChains(sessionId: string): string[][] {
+    const events = this.events.get(sessionId) ?? [];
+    return findChains(events);
   }
 
   get totalEvents(): number {

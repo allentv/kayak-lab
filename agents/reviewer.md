@@ -5,15 +5,19 @@ Reviews code for quality, simplified abstractions, file decomposition needs, and
 ## Usage
 
 ```
-Use the Code Reviewer agent to review src/
+Use the Code Reviewer agent to review specific files
 ```
 
-## Quick Spawn
+## Quick Spawn (Targeted)
 
 ```typescript
 const result = await task({
   agent: "reviewer",
-  task: `Review the kayak-lab codebase. See agents/reviewer.md for checklist and output schema.`,
+  task: `Review these files for code quality issues:
+- src/provenance/types.ts
+- src/provenance/graph.ts
+- src/provenance/classifier.ts
+Focus on: correctness, duplication, type safety, test gaps.`,
 });
 ```
 
@@ -24,18 +28,7 @@ const result = await task({
   agent: "reviewer",
   context: `Project: kayak-lab — an event-sourced agent interaction platform in TypeScript (Deno).
 Source root: src/
-Test root: src/*/__tests__/
-
-Completed phases so far:
-- Core Event Stream (src/core/event-stream.ts, src/types/events.ts)
-- Session Manager (src/core/session-manager.ts)
-- Agent Runtime (src/runtime/agent-runtime.ts)
-- Model Abstraction (src/runtime/model-provider.ts)
-- Tool Registry (src/runtime/tool-registry.ts)
-- Capabilities (src/capabilities/capability.ts, git.ts, shell.ts)
-- Event Store (src/store/event-store.ts)
-
-All tests pass: 112 tests across 10 suites.`,
+Test root: src/*/__tests__/`,
   outputSchema: {
     type: "object",
     properties: {
@@ -59,30 +52,23 @@ All tests pass: 112 tests across 10 suites.`,
     },
     required: ["findings", "summary"],
   },
-  task: `Review the kayak-lab codebase for code quality, file decomposition needs, simplified abstractions, and test improvements. Follow the review checklist.
+  task: `Review the specified files for code quality issues.
 
-## Pre-Review Steps
-1. Run \`deno task check\` — ensure no type errors
-2. Run \`deno lint\` — ensure no lint errors
-3. Run \`deno task test\` — ensure all tests pass
-
-Only proceed with code review if all three pass.
-
-## Review Checklist
-1. **File Decomposition** — Files exceeding ~400 lines should be decomposed. Identify cohesive groups that can be extracted. Prefer splitting by responsibility (types, implementation, errors, utilities).
-2. **Abstraction Quality** — Unnecessary abstractions, over-engineering, leaky abstractions, missing abstractions.
-3. **Correctness** — Bugs, edge cases, type safety, error handling.
-4. **Test Coverage** — Missing tests, tests that don't verify payload/state, uncovered edge cases.
-5. **Simplification** — Inlineable code, dead code, unused exports, redundant logic.
+## Review Focus (in order of priority)
+1. **Correctness** — Bugs, edge cases, type safety, error handling
+2. **Duplication** — Repeated logic that should be extracted
+3. **Type Safety** — Unchecked casts, `as any`, missing validation
+4. **Simplification** — Inlineable code, dead code, unused exports
 
 ## Files to review
-Read ALL source files and test files under src/.
+Read ONLY the files listed in the task. Do NOT scan the entire codebase.
 
-Pay special attention to:
-- Files over 400 lines that should be decomposed
-- The mod.ts index files — do they re-export everything needed?
-- Unused imports or parameters
-- Consistency of error handling patterns across modules`,
+For each finding:
+- Quote the exact code snippet
+- Explain the issue
+- Suggest a concrete fix
+
+Skip style issues, naming conventions, and documentation gaps — focus on correctness and maintainability.`,
 });
 ```
 

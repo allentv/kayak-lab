@@ -32,6 +32,10 @@ import type { AnyMemory, CreateMemoryInput, UpdateMemoryInput } from "../memory/
 import type { RetrievalOptions } from "../memory/mod.ts";
 import type { SnapshotOptions, MemorySnapshot } from "../memory/mod.ts";
 
+import { ProvenanceGraph } from "../provenance/graph.ts";
+import { classifyToolCall } from "../provenance/classifier.ts";
+import { ProvenanceNodeType } from "../provenance/types.ts";
+
 // ============================================================================
 // Agent Types
 // ============================================================================
@@ -186,6 +190,11 @@ export class AgentRuntime {
   private memoryUpdate: IMemoryUpdate | null = null;
   private sharedMemory: ISharedMemory | null = null;
 
+  // Provenance tracking (optional)
+  private provenanceGraph: ProvenanceGraph | null = null;
+  private dataDir: string | null = null;
+  private turnNumber = 0;
+
   constructor(
     eventStream: IEventStream,
     sessionManager: ISessionManager,
@@ -201,6 +210,9 @@ export class AgentRuntime {
       update?: IMemoryUpdate;
       shared?: ISharedMemory;
     },
+    provenanceOptions?: {
+      dataDir?: string;
+    },
   ) {
     this.eventStream = eventStream;
     this.sessionManager = sessionManager;
@@ -215,6 +227,9 @@ export class AgentRuntime {
       this.memoryRetrieval = memoryComponents.retrieval ?? null;
       this.memoryUpdate = memoryComponents.update ?? null;
       this.sharedMemory = memoryComponents.shared ?? null;
+    }
+    if (provenanceOptions?.dataDir) {
+      this.dataDir = provenanceOptions.dataDir;
     }
   }
 
@@ -237,6 +252,18 @@ export class AgentRuntime {
       this.config.max_context_messages,
     );
 
+    // Initialize provenance graph
+    this.provenanceGraph = new ProvenanceGraph(session.id);
+    this.turnNumber = 0;
+
+    // Try to load existing provenance graph from disk
+    if (this.dataDir) {
+      const loaded = await ProvenanceGraph.loadFromDisk(this.dataDir, session.id);
+      if (loaded) {
+        this.provenanceGraph = loaded;
+      }
+    }
+
     return session.id;
   }
 
@@ -248,10 +275,16 @@ export class AgentRuntime {
       throw new AgentNotRunningError();
     }
 
+    // Persist provenance graph before stopping
+    if (this.provenanceGraph && this.dataDir) {
+      await this.provenanceGraph.writeToDisk(this.dataDir);
+    }
+
     this.sessionManager.completeSession(this.state.session_id);
     this.state.is_running = false;
     this.state = null;
     this.contextManager = null;
+    this.provenanceGraph = null;
   }
 
   /**
@@ -268,6 +301,19 @@ export class AgentRuntime {
       timestamp: Date.now(),
     });
 
+    // Create Goal node in provenance graph
+    let goalNodeId: string | undefined;
+    if (this.provenanceGraph) {
+      this.turnNumber++;
+      const goalNode = this.provenanceGraph.addNode({
+        node_type: ProvenanceNodeType.Goal,
+        session_id: this.state.session_id,
+        causal_parents: [],
+        metadata: { request_text: input },
+      });
+      goalNodeId = goalNode.node_id;
+    }
+
     // Add user message to context
     this.contextManager.add({
       role: "user",
@@ -275,7 +321,7 @@ export class AgentRuntime {
     });
 
     // Run agent loop
-    return await this.runLoop();
+    return await this.runLoop(goalNodeId);
   }
 
   /**
@@ -294,6 +340,19 @@ export class AgentRuntime {
       timestamp: Date.now(),
     });
 
+    // Create Goal node in provenance graph
+    let goalNodeId: string | undefined;
+    if (this.provenanceGraph) {
+      this.turnNumber++;
+      const goalNode = this.provenanceGraph.addNode({
+        node_type: ProvenanceNodeType.Goal,
+        session_id: this.state.session_id,
+        causal_parents: [],
+        metadata: { request_text: input },
+      });
+      goalNodeId = goalNode.node_id;
+    }
+
     // Add user message to context
     this.contextManager.add({
       role: "user",
@@ -301,7 +360,7 @@ export class AgentRuntime {
     });
 
     // Run agent loop with streaming
-    yield* this.runLoopStreaming();
+    yield* this.runLoopStreaming(goalNodeId);
   }
 
   /**
@@ -325,10 +384,11 @@ export class AgentRuntime {
   /**
    * Main agent loop.
    */
-  private async runLoop(): Promise<string> {
+  private async runLoop(goalNodeId?: string): Promise<string> {
     let iterations = 0;
     const maxIterations = 10; // Safety limit
     let observationContext: ObservationContext | undefined;
+    let lastGoalOrCommitmentId = goalNodeId;
 
     while (iterations < maxIterations) {
       iterations++;
@@ -380,6 +440,57 @@ export class AgentRuntime {
           response.tool_calls,
         );
 
+        // Create provenance nodes for each tool call
+        if (this.provenanceGraph) {
+          const turnCommitmentIds: string[] = [];
+
+          for (let i = 0; i < response.tool_calls.length; i++) {
+            const toolCall = response.tool_calls[i];
+            const classification = classifyToolCall(toolCall.name, toolCall.arguments);
+
+            const parentId = lastGoalOrCommitmentId ?? goalNodeId;
+            const node = this.provenanceGraph.addNode({
+              node_type: classification,
+              session_id: this.state!.session_id,
+              causal_parents: parentId ? [parentId] : [],
+              metadata: {
+                tool_name: toolCall.name,
+                tool_parameters: toolCall.arguments,
+                tool_call_id: toolCall.id,
+              },
+            });
+
+            if (parentId) {
+              this.provenanceGraph.addEdge(parentId, node.node_id);
+            }
+
+            if (classification === ProvenanceNodeType.Commitment || classification === ProvenanceNodeType.Verification) {
+              turnCommitmentIds.push(node.node_id);
+              lastGoalOrCommitmentId = node.node_id;
+            }
+          }
+
+          // Create PatchProposal at turn end (when we have commitments/verifications)
+          if (turnCommitmentIds.length > 0) {
+            const patchNode = this.provenanceGraph.addNode({
+              node_type: ProvenanceNodeType.PatchProposal,
+              session_id: this.state!.session_id,
+              causal_parents: turnCommitmentIds,
+              metadata: {
+                files_changed: turnCommitmentIds.length,
+                tool_calls_made: response.tool_calls.length,
+                turn_number: this.turnNumber,
+              },
+            });
+
+            for (const commitId of turnCommitmentIds) {
+              this.provenanceGraph.addEdge(commitId, patchNode.node_id);
+            }
+
+            lastGoalOrCommitmentId = patchNode.node_id;
+          }
+        }
+
         // Add tool results to context
         for (const result of toolResults) {
           this.contextManager!.add({
@@ -405,10 +516,11 @@ export class AgentRuntime {
   /**
    * Agent loop with streaming.
    */
-  private async *runLoopStreaming(): AsyncIterable<string | StreamDelta> {
+  private async *runLoopStreaming(goalNodeId?: string): AsyncIterable<string | StreamDelta> {
     let iterations = 0;
     const maxIterations = 10;
     let observationContext: ObservationContext | undefined;
+    let lastGoalOrCommitmentId = goalNodeId;
 
     while (iterations < maxIterations) {
       iterations++;
@@ -503,6 +615,57 @@ export class AgentRuntime {
         const toolResults = await this.executeToolCalls(
           response.tool_calls,
         );
+
+        // Create provenance nodes for each tool call
+        if (this.provenanceGraph) {
+          const turnCommitmentIds: string[] = [];
+
+          for (let i = 0; i < response.tool_calls.length; i++) {
+            const toolCall = response.tool_calls[i];
+            const classification = classifyToolCall(toolCall.name, toolCall.arguments);
+
+            const parentId = lastGoalOrCommitmentId ?? goalNodeId;
+            const node = this.provenanceGraph.addNode({
+              node_type: classification,
+              session_id: this.state!.session_id,
+              causal_parents: parentId ? [parentId] : [],
+              metadata: {
+                tool_name: toolCall.name,
+                tool_parameters: toolCall.arguments,
+                tool_call_id: toolCall.id,
+              },
+            });
+
+            if (parentId) {
+              this.provenanceGraph.addEdge(parentId, node.node_id);
+            }
+
+            if (classification === ProvenanceNodeType.Commitment || classification === ProvenanceNodeType.Verification) {
+              turnCommitmentIds.push(node.node_id);
+              lastGoalOrCommitmentId = node.node_id;
+            }
+          }
+
+          // Create PatchProposal at turn end (when we have commitments/verifications)
+          if (turnCommitmentIds.length > 0) {
+            const patchNode = this.provenanceGraph.addNode({
+              node_type: ProvenanceNodeType.PatchProposal,
+              session_id: this.state!.session_id,
+              causal_parents: turnCommitmentIds,
+              metadata: {
+                files_changed: turnCommitmentIds.length,
+                tool_calls_made: response.tool_calls.length,
+                turn_number: this.turnNumber,
+              },
+            });
+
+            for (const commitId of turnCommitmentIds) {
+              this.provenanceGraph.addEdge(commitId, patchNode.node_id);
+            }
+
+            lastGoalOrCommitmentId = patchNode.node_id;
+          }
+        }
 
         // Add tool results to context
         for (const result of toolResults) {

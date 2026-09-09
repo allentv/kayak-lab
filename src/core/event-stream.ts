@@ -62,7 +62,10 @@ export class SessionNotFoundError extends EventStreamError {
  */
 export interface IEventStream {
   /** Append an event to a session's stream. */
-  append(event: AppendEventInput): BaseEvent;
+  append(
+    event: AppendEventInput,
+    options?: { causal_parents?: string[] },
+  ): BaseEvent;
 
   /** Get all events for a session. */
   getEvents(sessionId: string): readonly BaseEvent[];
@@ -139,7 +142,10 @@ export class EventStream implements IEventStream {
    * - Sequence number must be exactly one greater than the last event
    * - Session ID must match
    */
-  append(event: AppendEventInput): BaseEvent {
+  append(
+    event: AppendEventInput,
+    options?: { causal_parents?: string[] },
+  ): BaseEvent {
     if (!isValidEventType(event.event_type)) {
       throw new ValidationError(`Invalid event type: ${event.event_type}`, {
         event_type: event.event_type,
@@ -159,6 +165,7 @@ export class EventStream implements IEventStream {
       event_id: crypto.randomUUID(),
       timestamp: new Date().toISOString(),
       schema_version: CURRENT_SCHEMA_VERSION,
+      causal_parents: options?.causal_parents ?? [],
     };
 
     const events = this.sessions.get(sessionId) ?? [];

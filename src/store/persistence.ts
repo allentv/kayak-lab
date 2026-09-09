@@ -7,6 +7,11 @@
 
 import { BaseEvent } from "../types/events.ts";
 import { Snapshot } from "./event-store.ts";
+import {
+  buildCausalGraph as buildGraph,
+  findDownstream as findDown,
+  findIndependentChains as findChains,
+} from "./causal-graph.ts";
 
 // ============================================================================
 // Persistence Backend Interface
@@ -243,6 +248,27 @@ export class PersistentEventStore {
 
   flush(): void {
     // Synchronous writes already guarantee durability
+  }
+
+  buildCausalGraph(
+    sessionId: string,
+  ): Map<string, { event: BaseEvent; children: string[] }> {
+    const events = this.eventCache.get(sessionId) ?? [];
+    return buildGraph(events);
+  }
+
+  findDownstream(eventId: string): BaseEvent[] {
+    for (const [, events] of this.eventCache) {
+      if (events.some((e) => e.event_id === eventId)) {
+        return findDown(eventId, events);
+      }
+    }
+    return [];
+  }
+
+  findIndependentChains(sessionId: string): string[][] {
+    const events = this.eventCache.get(sessionId) ?? [];
+    return findChains(events);
   }
 
   recover(): void {

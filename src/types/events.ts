@@ -131,6 +131,9 @@ export interface BaseEvent {
 
   /** Optional metadata (source, correlation IDs, etc.) */
   metadata: EventMetadata;
+
+  /** Optional causal parent event IDs for event lineage tracking */
+  causal_parents?: string[];
 }
 
 /**
