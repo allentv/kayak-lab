@@ -452,7 +452,7 @@ export class AgentRuntime {
       await this.hookRegistry.dispatch(HookPoint.BeforeModelCall, beforeModelContext, this.state!.session_id);
 
       // Use potentially modified context from hooks
-      request.messages = beforeModelContext.messages;
+      request.messages = beforeModelContext.messages as Message[];
 
       // Emit model request event
       await this.appendEvent("model.request", {
@@ -618,7 +618,7 @@ export class AgentRuntime {
       await this.hookRegistry.dispatch(HookPoint.BeforeModelCall, beforeModelContext, this.state!.session_id);
 
       // Use potentially modified context from hooks
-      request.messages = beforeModelContext.messages;
+      request.messages = beforeModelContext.messages as Message[];
 
       // Emit model request event
       await this.appendEvent("model.request", {

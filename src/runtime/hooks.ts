@@ -22,8 +22,8 @@ export enum HookPoint {
 export interface BeforeModelCallContext {
   sessionId: string;
   messages: Array<{ role: string; content: string; tool_call_id?: string }>;
-  model: string;
-  tools: unknown[];
+  model?: string;
+  tools?: unknown[];
 }
 
 /** Context passed to after_tool_execution hooks. */

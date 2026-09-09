@@ -484,9 +484,9 @@ export class RestApiProjection {
     const url = new URL(request.url);
     const type = url.searchParams.get("type");
 
-    let nodes = graph.getNodes();
+    let nodes = graph.toJSON().nodes;
     if (type) {
-      nodes = nodes.filter((n) => n.node_type === type);
+      nodes = nodes.filter((n: { node_type: string }) => n.node_type === type);
     }
 
     return Response.json(nodes);
@@ -499,8 +499,9 @@ export class RestApiProjection {
       return Response.json({ error: "Provenance graph not found", code: "NOT_FOUND" }, { status: 404 });
     }
 
-    const chain = graph.getChain(params.nodeId);
-    if (!chain) {
+    // Use getReachable to get the chain from the node
+    const chain = graph.getReachable(params.nodeId);
+    if (!chain || chain.length === 0) {
       return Response.json({ error: "Chain not found", code: "NOT_FOUND" }, { status: 404 });
     }
 
