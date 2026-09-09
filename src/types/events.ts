@@ -5,6 +5,8 @@
  * for all agent interactions.
  */
 
+import type { AttestationEvent } from "./attestations.ts";
+
 // ============================================================================
 // Event Type Registry
 // ============================================================================
@@ -21,6 +23,7 @@ export const EventTypes = {
   SESSION_COMPLETED: "session.completed",
   SESSION_FAILED: "session.failed",
   SESSION_CANCELLED: "session.cancelled",
+  SESSION_ATTESTATION: "session.attestation",
 
   // Agent events
   AGENT_THINKING: "agent.thinking",
@@ -341,6 +344,15 @@ export interface ToolImprovementPayload {
   [key: string]: unknown;
 }
 
+/**
+ * Session attestation event payload.
+ * Uses AttestationEvent from attestations.ts for type consistency.
+ */
+export type AttestationEventPayload = AttestationEvent & {
+  /** Index signature for Record<string, unknown> compatibility */
+  [key: string]: unknown;
+};
+
 // ============================================================================
 // Event Creation Helpers
 // ============================================================================
@@ -371,7 +383,7 @@ export function isValidEventType(type: string): type is EventType {
  */
 export function isSessionEvent(
   event: BaseEvent,
-): event is BaseEvent & { event_type: "session.created" | "session.resumed" | "session.paused" | "session.completed" | "session.failed" | "session.cancelled" } {
+): event is BaseEvent & { event_type: "session.created" | "session.resumed" | "session.paused" | "session.completed" | "session.failed" | "session.cancelled" | "session.attestation" } {
   return event.event_type.startsWith("session.");
 }
 

@@ -36,6 +36,16 @@ import { ProvenanceGraph } from "../provenance/graph.ts";
 import { classifyToolCall } from "../provenance/classifier.ts";
 import { ProvenanceNodeType } from "../provenance/types.ts";
 
+import {
+  HookRegistry,
+  HookPoint,
+  BeforeModelCallContext,
+  AfterToolExecutionContext,
+  TurnEndContext,
+  SessionStartContext,
+  SessionEndContext,
+} from "./hooks.ts";
+
 // ============================================================================
 // Agent Types
 // ============================================================================
@@ -195,6 +205,10 @@ export class AgentRuntime {
   private dataDir: string | null = null;
   private turnNumber = 0;
 
+  // Hook system
+  private hookRegistry: HookRegistry;
+  private sessionStartTime: number = 0;
+
   constructor(
     eventStream: IEventStream,
     sessionManager: ISessionManager,
@@ -213,6 +227,7 @@ export class AgentRuntime {
     provenanceOptions?: {
       dataDir?: string;
     },
+    hookRegistry?: HookRegistry,
   ) {
     this.eventStream = eventStream;
     this.sessionManager = sessionManager;
@@ -222,6 +237,7 @@ export class AgentRuntime {
     this.config = config;
     this.events = events;
     this.selfObservation = selfObservation ?? null;
+    this.hookRegistry = hookRegistry ?? new HookRegistry();
     if (memoryComponents) {
       this.memoryProvider = memoryComponents.provider ?? null;
       this.memoryRetrieval = memoryComponents.retrieval ?? null;
@@ -255,6 +271,7 @@ export class AgentRuntime {
     // Initialize provenance graph
     this.provenanceGraph = new ProvenanceGraph(session.id);
     this.turnNumber = 0;
+    this.sessionStartTime = Date.now();
 
     // Try to load existing provenance graph from disk
     if (this.dataDir) {
@@ -263,6 +280,13 @@ export class AgentRuntime {
         this.provenanceGraph = loaded;
       }
     }
+
+    // Dispatch session_start hooks
+    const startContext: SessionStartContext = {
+      sessionId: session.id,
+      config: this.config as Record<string, unknown>,
+    };
+    await this.hookRegistry.dispatch(HookPoint.SessionStart, startContext, session.id);
 
     return session.id;
   }
@@ -274,6 +298,15 @@ export class AgentRuntime {
     if (!this.state) {
       throw new AgentNotRunningError();
     }
+
+    // Dispatch session_end hooks
+    const durationMs = Date.now() - this.sessionStartTime;
+    const endContext: SessionEndContext = {
+      sessionId: this.state.session_id,
+      state: "completed",
+      durationMs,
+    };
+    await this.hookRegistry.dispatch(HookPoint.SessionEnd, endContext, this.state.session_id);
 
     // Persist provenance graph before stopping
     if (this.provenanceGraph && this.dataDir) {
@@ -377,6 +410,13 @@ export class AgentRuntime {
     return this.contextManager?.getAll() ?? [];
   }
 
+  /**
+   * Get the hook registry for registering lifecycle hooks.
+   */
+  getHookRegistry(): HookRegistry {
+    return this.hookRegistry;
+  }
+
   // ==========================================================================
   // Private Methods
   // ==========================================================================
@@ -401,6 +441,18 @@ export class AgentRuntime {
       // Build model request
       const request = this.buildModelRequest();
       this.events.onModelRequest?.(request);
+
+      // Dispatch before_model_call hooks with mutable context
+      const beforeModelContext: BeforeModelCallContext = {
+        sessionId: this.state!.session_id,
+        messages: [...request.messages],
+        model: request.model,
+        tools: request.tools,
+      };
+      await this.hookRegistry.dispatch(HookPoint.BeforeModelCall, beforeModelContext, this.state!.session_id);
+
+      // Use potentially modified context from hooks
+      request.messages = beforeModelContext.messages;
 
       // Emit model request event
       await this.appendEvent("model.request", {
@@ -441,9 +493,8 @@ export class AgentRuntime {
         );
 
         // Create provenance nodes for each tool call
+        const turnCommitmentIds: string[] = [];
         if (this.provenanceGraph) {
-          const turnCommitmentIds: string[] = [];
-
           for (let i = 0; i < response.tool_calls.length; i++) {
             const toolCall = response.tool_calls[i];
             const classification = classifyToolCall(toolCall.name, toolCall.arguments);
@@ -491,8 +542,9 @@ export class AgentRuntime {
           }
         }
 
-        // Add tool results to context
-        for (const result of toolResults) {
+        // Add tool results to context and dispatch after_tool_execution hooks
+        for (let i = 0; i < toolResults.length; i++) {
+          const result = toolResults[i];
           this.contextManager!.add({
             role: "tool",
             content: result.success
@@ -500,7 +552,28 @@ export class AgentRuntime {
               : `Error: ${result.error}`,
             tool_call_id: result.tool_call_id,
           });
+
+          // Dispatch after_tool_execution hook
+          const toolCall = response.tool_calls[i];
+          const afterToolContext: AfterToolExecutionContext = {
+            sessionId: this.state!.session_id,
+            toolName: toolCall.name,
+            toolParams: toolCall.arguments,
+            result: result.result,
+            success: result.success,
+            error: result.error,
+          };
+          await this.hookRegistry.dispatch(HookPoint.AfterToolExecution, afterToolContext, this.state!.session_id);
         }
+
+        // Dispatch turn_end hook
+        const turnEndContext: TurnEndContext = {
+          sessionId: this.state!.session_id,
+          turnNumber: this.turnNumber,
+          response: response.content || "",
+          provenanceNodes: turnCommitmentIds,
+        };
+        await this.hookRegistry.dispatch(HookPoint.TurnEnd, turnEndContext, this.state!.session_id);
 
         // Continue loop to process tool results
         continue;
@@ -534,6 +607,18 @@ export class AgentRuntime {
       const request = this.buildModelRequest();
       request.stream = true;
       this.events.onModelRequest?.(request);
+
+      // Dispatch before_model_call hooks with mutable context
+      const beforeModelContext: BeforeModelCallContext = {
+        sessionId: this.state!.session_id,
+        messages: [...request.messages],
+        model: request.model,
+        tools: request.tools,
+      };
+      await this.hookRegistry.dispatch(HookPoint.BeforeModelCall, beforeModelContext, this.state!.session_id);
+
+      // Use potentially modified context from hooks
+      request.messages = beforeModelContext.messages;
 
       // Emit model request event
       await this.appendEvent("model.request", {
@@ -617,9 +702,8 @@ export class AgentRuntime {
         );
 
         // Create provenance nodes for each tool call
+        const turnCommitmentIds: string[] = [];
         if (this.provenanceGraph) {
-          const turnCommitmentIds: string[] = [];
-
           for (let i = 0; i < response.tool_calls.length; i++) {
             const toolCall = response.tool_calls[i];
             const classification = classifyToolCall(toolCall.name, toolCall.arguments);
@@ -667,8 +751,9 @@ export class AgentRuntime {
           }
         }
 
-        // Add tool results to context
-        for (const result of toolResults) {
+        // Add tool results to context and dispatch after_tool_execution hooks
+        for (let i = 0; i < toolResults.length; i++) {
+          const result = toolResults[i];
           this.contextManager!.add({
             role: "tool",
             content: result.success
@@ -676,7 +761,28 @@ export class AgentRuntime {
               : `Error: ${result.error}`,
             tool_call_id: result.tool_call_id,
           });
+
+          // Dispatch after_tool_execution hook
+          const toolCall = response.tool_calls[i];
+          const afterToolContext: AfterToolExecutionContext = {
+            sessionId: this.state!.session_id,
+            toolName: toolCall.name,
+            toolParams: toolCall.arguments,
+            result: result.result,
+            success: result.success,
+            error: result.error,
+          };
+          await this.hookRegistry.dispatch(HookPoint.AfterToolExecution, afterToolContext, this.state!.session_id);
         }
+
+        // Dispatch turn_end hook
+        const turnEndContext: TurnEndContext = {
+          sessionId: this.state!.session_id,
+          turnNumber: this.turnNumber,
+          response: response.content || "",
+          provenanceNodes: turnCommitmentIds,
+        };
+        await this.hookRegistry.dispatch(HookPoint.TurnEnd, turnEndContext, this.state!.session_id);
 
         // Continue loop to process tool results
         continue;

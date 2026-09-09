@@ -8,6 +8,8 @@
 import { BaseEvent, EventTypes } from "../types/events.ts";
 import type { SessionState, ISessionManager } from "../core/session-manager.ts";
 import type { IEventStore } from "../store/event-store.ts";
+import type { AttestationService } from "../session/attestation-service.ts";
+import type { ProvenanceGraph } from "../provenance/graph.ts";
 
 // ============================================================================
 // REST API Types
@@ -214,16 +216,26 @@ export class RestApiProjection {
   private router: RestApiRouter;
   private sessionManager: ISessionManager;
   private eventStore: IEventStore;
+  private attestationService: AttestationService | null;
+  private provenanceGraphs: Map<string, ProvenanceGraph>;
 
   constructor(
     sessionManager: ISessionManager,
     eventStore: IEventStore,
     config: RestApiConfig,
+    attestationService?: AttestationService,
   ) {
     this.sessionManager = sessionManager;
     this.eventStore = eventStore;
+    this.attestationService = attestationService ?? null;
+    this.provenanceGraphs = new Map();
     this.router = new RestApiRouter(config);
     this.registerRoutes();
+  }
+
+  /** Set a provenance graph for a session. */
+  setProvenanceGraph(sessionId: string, graph: ProvenanceGraph): void {
+    this.provenanceGraphs.set(sessionId, graph);
   }
 
   /** Handle an HTTP request. */
@@ -244,6 +256,15 @@ export class RestApiProjection {
 
     // Messages
     this.router.route("POST", "/api/sessions/:id/messages", this.sendMessage.bind(this));
+
+    // Attestations
+    this.router.route("GET", "/api/sessions/:id/attestation", this.getAttestation.bind(this));
+    this.router.route("GET", "/api/attestations", this.listAttestations.bind(this));
+
+    // Provenance
+    this.router.route("GET", "/api/sessions/:id/provenance", this.getProvenance.bind(this));
+    this.router.route("GET", "/api/sessions/:id/provenance/nodes", this.getProvenanceNodes.bind(this));
+    this.router.route("GET", "/api/sessions/:id/provenance/chain/:nodeId", this.getProvenanceChain.bind(this));
   }
 
   /** List all sessions. */
@@ -400,5 +421,89 @@ export class RestApiProjection {
       const message = error instanceof Error ? error.message : "Failed to send message";
       return Response.json({ error: message, code: "MESSAGE_FAILED" }, { status: 400 });
     }
+  }
+
+  /** Get attestation for a session. */
+  private async getAttestation(_request: Request, params: Record<string, string>): Promise<Response> {
+    if (!this.attestationService) {
+      return Response.json({ error: "Attestation service not available", code: "SERVICE_UNAVAILABLE" }, { status: 503 });
+    }
+
+    const session = this.sessionManager.getSession(params.id);
+    if (!session) {
+      return Response.json({ error: "Session not found", code: "NOT_FOUND" }, { status: 404 });
+    }
+
+    const attestation = await this.attestationService.getAttestation(params.id);
+    if (!attestation) {
+      return Response.json({ error: "Attestation not found", code: "NOT_FOUND" }, { status: 404 });
+    }
+
+    return Response.json(attestation);
+  }
+
+  /** List attestations across sessions. */
+  private async listAttestations(request: Request, _params: Record<string, string>): Promise<Response> {
+    if (!this.attestationService) {
+      return Response.json({ error: "Attestation service not available", code: "SERVICE_UNAVAILABLE" }, { status: 503 });
+    }
+
+    const url = new URL(request.url);
+    const sortBy = url.searchParams.get("sortBy") as "cost" | "duration" | "date" | null;
+    const sortOrder = url.searchParams.get("sortOrder") as "asc" | "desc" | null;
+    const limit = parseInt(url.searchParams.get("limit") || "100", 10);
+    const offset = parseInt(url.searchParams.get("offset") || "0", 10);
+
+    const attestations = await this.attestationService.getAttestations({
+      sortBy: sortBy ?? undefined,
+      sortOrder: sortOrder ?? undefined,
+      limit,
+      offset,
+    });
+
+    return Response.json(attestations);
+  }
+
+  /** Get provenance graph for a session. */
+  private getProvenance(_request: Request, params: Record<string, string>): Response {
+    const graph = this.provenanceGraphs.get(params.id);
+    if (!graph) {
+      return Response.json({ error: "Provenance graph not found", code: "NOT_FOUND" }, { status: 404 });
+    }
+
+    return Response.json(graph.toJSON());
+  }
+
+  /** Get provenance nodes with optional type filter. */
+  private getProvenanceNodes(request: Request, params: Record<string, string>): Response {
+    const graph = this.provenanceGraphs.get(params.id);
+    if (!graph) {
+      return Response.json({ error: "Provenance graph not found", code: "NOT_FOUND" }, { status: 404 });
+    }
+
+    const url = new URL(request.url);
+    const type = url.searchParams.get("type");
+
+    let nodes = graph.getNodes();
+    if (type) {
+      nodes = nodes.filter((n) => n.node_type === type);
+    }
+
+    return Response.json(nodes);
+  }
+
+  /** Get provenance chain from a node to its origin. */
+  private getProvenanceChain(_request: Request, params: Record<string, string>): Response {
+    const graph = this.provenanceGraphs.get(params.id);
+    if (!graph) {
+      return Response.json({ error: "Provenance graph not found", code: "NOT_FOUND" }, { status: 404 });
+    }
+
+    const chain = graph.getChain(params.nodeId);
+    if (!chain) {
+      return Response.json({ error: "Chain not found", code: "NOT_FOUND" }, { status: 404 });
+    }
+
+    return Response.json(chain);
   }
 }
