@@ -4,7 +4,7 @@
  * Tests scoring formula, compression logic, budget allocation, and memory scoring.
  */
 
-import { assertEquals, assertExists, assertNotEquals } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assertEquals, assertExists, assertNotEquals } from "@std/assert";
 import {
   ProvenanceContextManager,
 } from "../provenance-context.ts";
