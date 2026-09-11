@@ -14,7 +14,6 @@ See proposal.md for motivation.
 - Fixture format for replaying user-reported bugs
 
 **Non-Goals (this change):**
-- WebSocket E2E tests (deferred to follow-up)
 - Event history replay tests (deferred to follow-up)
 - CI integration (tests exist; CI wiring is separate)
 - Performance/benchmark E2E tests
@@ -54,13 +53,14 @@ See proposal.md for motivation.
 src/__tests__/_helpers/
   harness-process.ts    ← start/stop/wait
   harness-client.ts     ← typed HTTP client
-  ws-client.ts          ← WebSocket client (later)
+  ws-client.ts          ← WebSocket client
 
 src/__tests__/
   e2e-http-api.test.ts  ← HTTP API tests (this change)
+  e2e-websocket.test.ts ← WebSocket tests (this change)
 ```
 
-**Rationale:** `_helpers/` directory with underscore prefix signals internal test utilities (Deno test runner convention). Each helper has a single responsibility. `ws-client.ts` stubbed but not implemented until WebSocket tests.
+**Rationale:** `_helpers/` directory with underscore prefix signals internal test utilities (Deno test runner convention). Each helper has a single responsibility. WebSocket client is now in scope.
 
 ### D5: Fixtures in `fixtures/sessions/`
 

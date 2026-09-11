@@ -37,12 +37,31 @@
 
 - [ ] 6.1 Create `src/__tests__/_helpers/ws-client.ts` with connect, subscribe, collectEvents, and close methods. Verify: connects to `/ws/events` and receives welcome message.
 - [ ] 6.2 Add WebSocket E2E test file `src/__tests__/e2e-websocket.test.ts` that verifies: subscribe to session events, receive events in real time, disconnect cleanly. Verify: test passes.
+- [ ] 6.3 Add WebSocket reconnection test: send `from_sequence` message, verify missed events are replayed. Verify: test passes.
+- [ ] 6.4 Add WebSocket heartbeat test: verify server sends ping, client responds with pong, timeout disconnects idle clients. Verify: test passes.
+- [ ] 6.5 Add WebSocket session filtering test: subscribe to specific session, verify only that session's events are received. Verify: test passes.
+- [ ] 6.6 Add WebSocket event type filtering test: subscribe with `event_types` filter, verify only matching events are received. Verify: test passes.
+- [ ] 6.7 Add WebSocket unsubscribe test: send unsubscribe message, verify no further events. Verify: test passes.
+- [ ] 6.8 Add WebSocket malformed message test: send invalid JSON, verify server does not disconnect. Verify: test passes.
 
-## 7. Event History Replay Tests (not started)
+## 7. HTTP API E2E Tests — Additional Scenarios
 
-- [ ] 7.1 Create replay test helper that loads fixture JSON and replays events through the HTTP API. Verify: helper can load `fixtures/sessions/basic.json` and validate structure.
-- [ ] 7.2 Add replay test that creates a session from fixture data and verifies event history matches. Verify: test passes.
+- [ ] 7.1 Add invalid state transition test: pause a completed session returns 400. Verify: test passes.
+- [ ] 7.2 Add invalid state transition test: resume a failed session returns 400. Verify: test passes.
+- [ ] 7.3 Add invalid state transition test: complete a paused session returns 400. Verify: test passes.
+- [ ] 7.4 Add message sending test: `POST /api/sessions/:id/messages` returns 200 with event id. Verify: test passes.
+- [ ] 7.5 Add async message test: `POST /api/sessions/:id/messages` with `async: true` returns 202 with polling URL. Verify: test passes.
+- [ ] 7.6 Add message to non-existent session test: returns 404. Verify: test passes.
+- [ ] 7.7 Add event pagination test: `offset` and `limit` parameters return correct subset. Verify: test passes.
+- [ ] 7.8 Add event pagination default limit test: 150 events returns at most 100. Verify: test passes.
+- [ ] 7.9 Add health state change test: session_count and event_count update after operations. Verify: test passes.
+- [ ] 7.10 Add concurrent session isolation test: two sessions, different states, independent event histories. Verify: test passes.
 
-## 8. CI Integration (not started)
+## 8. Event History Replay Tests (not started)
 
-- [ ] 8.1 Add E2E test job to CI workflow that runs `deno test src/__tests__/e2e-*.test.ts` with required permissions. Verify: CI passes on main.
+- [ ] 8.1 Create replay test helper that loads fixture JSON and replays events through the HTTP API. Verify: helper can load `fixtures/sessions/basic.json` and validate structure.
+- [ ] 8.2 Add replay test that creates a session from fixture data and verifies event history matches. Verify: test passes.
+
+## 9. CI Integration (not started)
+
+- [ ] 9.1 Add E2E test job to CI workflow that runs `deno test src/__tests__/e2e-*.test.ts` with required permissions. Verify: CI passes on main.
