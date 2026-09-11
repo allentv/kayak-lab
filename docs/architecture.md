@@ -315,6 +315,28 @@ interface IPersistenceBackend {
 
 The default `FilePersistenceBackend` uses synchronous Deno file I/O for guaranteed durability per write. Implement this interface for SQLite, PostgreSQL, or other backends.
 
+**DuckDB backend:** The `DuckDBPersistenceBackend` provides columnar analytics, native JSON ingestion, and SQL-based multi-dimensional queries while remaining embedded (no server process). It implements both `IPersistenceBackend` and `IMemoryStorage` interfaces.
+
+```typescript
+import { DuckDBPersistenceBackend } from "./src/store/duckdb-backend.ts";
+
+const backend = new DuckDBPersistenceBackend({ dbPath: "./kayak.db" });
+const store = new PersistentEventStore({
+  dataDir: "./data/events",
+  backend,
+});
+```
+
+**DuckDB query engine:** The `DuckDBQueryEngine` replaces hand-rolled JavaScript aggregation with SQL-based queries on the DuckDB database.
+
+```typescript
+import { DuckDBQueryEngine } from "./src/store/duckdb-query-engine.ts";
+
+const engine = new DuckDBQueryEngine(db);
+const metrics = engine.getToolPerformance();
+const summary = engine.getSessionSummary("session-1");
+```
+
 ### Schema Registry
 
 Event schema versioning and migration. Registers schema versions per event type and migrates events on read.

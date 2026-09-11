@@ -1,8 +1,8 @@
 /**
  * Aggregation Layer
  *
- * Merges sessions, events, and capabilities from all harnesses
- * into a unified state for the web UI.
+ * SQL-backed aggregation for the web UI.
+ * Replaces in-memory aggregation with DuckDB-backed queries.
  */
 
 // ============================================================================
@@ -47,18 +47,28 @@ export interface HarnessStatus {
 }
 
 // ============================================================================
-// State
+// State (minimal in-memory for harness status only)
 // ============================================================================
 
 const state = {
-  sessions: new Map<string, AggregatedSession[]>(),
-  events: new Map<string, AggregatedEvent[]>(),
-  capabilities: new Map<string, AggregatedCapability[]>(),
   harnessStatus: new Map<string, HarnessStatus>(),
   listeners: new Set<(state: AggregatedState) => void>(),
 };
 
-const MAX_EVENTS = 1000;
+// ============================================================================
+// SQL-backed queries via /api/query endpoint
+// ============================================================================
+
+const API_BASE = "";
+
+async function querySql<T>(sql: string): Promise<T[]> {
+  const res = await fetch(`${API_BASE}/api/query?sql=${encodeURIComponent(sql)}`);
+  if (!res.ok) {
+    throw new Error(`Query failed: ${res.status}`);
+  }
+  const data = await res.json();
+  return (data as { results: T[] }).results ?? [];
+}
 
 // ============================================================================
 // Public API
@@ -66,84 +76,17 @@ const MAX_EVENTS = 1000;
 
 /**
  * Handle event from a harness.
+ * Events are now persisted to DuckDB; this function only notifies listeners.
  */
-export function onHarnessEvent(harnessUrl: string, event: unknown): void {
-  const e = event as { type?: string; session_id?: string; sequence_number?: number; timestamp?: string; event_type?: string; payload?: unknown };
-
-  // Track event
-  if (!state.events.has(harnessUrl)) {
-    state.events.set(harnessUrl, []);
-  }
-
-  const events = state.events.get(harnessUrl)!;
-  events.push({
-    harness: harnessUrl,
-    sequence: e.sequence_number ?? 0,
-    timestamp: e.timestamp ?? new Date().toISOString(),
-    type: e.event_type ?? "unknown",
-    payload: e.payload ?? {},
-  });
-
-  // Keep only last MAX_EVENTS per harness
-  if (events.length > MAX_EVENTS) {
-    events.splice(0, events.length - MAX_EVENTS);
-  }
-
-  // Update session if needed
-  if (e.session_id) {
-    updateSession(harnessUrl, e.session_id, e.type ?? "unknown");
-  }
-
+export function onHarnessEvent(_harnessUrl: string, _event: unknown): void {
   notifyListeners();
 }
 
 /**
- * Update session state from harness.
- */
-function updateSession(harnessUrl: string, sessionId: string, eventType: string): void {
-  if (!state.sessions.has(harnessUrl)) {
-    state.sessions.set(harnessUrl, []);
-  }
-
-  const sessions = state.sessions.get(harnessUrl)!;
-  const existing = sessions.find((s) => s.id === sessionId);
-
-  if (existing) {
-    // Update event count
-    existing.event_count++;
-
-    // Update state based on event type
-    if (eventType.startsWith("session.")) {
-      existing.state = eventType.split(".")[1] ?? existing.state;
-    }
-  } else {
-    // Create new session
-    sessions.push({
-      harness: harnessUrl,
-      id: sessionId,
-      state: eventType.startsWith("session.") ? eventType.split(".")[1] ?? "created" : "created",
-      created_at: new Date().toISOString(),
-      event_count: 1,
-    });
-  }
-}
-
-/**
  * Update capabilities from harness.
+ * Capabilities are now persisted to DuckDB; this function only notifies listeners.
  */
-export function updateCapabilities(harnessUrl: string, capabilities: unknown[]): void {
-  state.capabilities.set(
-    harnessUrl,
-    capabilities.map((cap) => {
-      const c = cap as { name?: string; version?: string; initialized?: boolean };
-      return {
-        harness: harnessUrl,
-        name: c.name ?? "unknown",
-        version: c.version ?? "0.0.0",
-        initialized: c.initialized ?? false,
-      };
-    }),
-  );
+export function updateCapabilities(_harnessUrl: string, _capabilities: unknown[]): void {
   notifyListeners();
 }
 
@@ -154,40 +97,81 @@ export function updateHarnessStatus(
   url: string,
   status: "connected" | "disconnected",
 ): void {
+  const existing = state.harnessStatus.get(url);
   state.harnessStatus.set(url, {
     url,
     status,
-    session_count: state.sessions.get(url)?.length ?? 0,
-    event_count: state.events.get(url)?.length ?? 0,
+    session_count: existing?.session_count ?? 0,
+    event_count: existing?.event_count ?? 0,
   });
   notifyListeners();
 }
 
 /**
- * Get aggregated state.
+ * Get aggregated state from DuckDB via SQL queries.
  */
-export function getAggregatedState(): AggregatedState {
-  const allSessions: AggregatedSession[] = [];
-  for (const sessions of state.sessions.values()) {
-    allSessions.push(...sessions);
-  }
-
-  const allEvents: AggregatedEvent[] = [];
-  for (const events of state.events.values()) {
-    allEvents.push(...events);
-  }
-
-  // Sort events by timestamp descending (most recent first)
-  allEvents.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
+export async function getAggregatedState(): Promise<AggregatedState> {
+  let allSessions: AggregatedSession[] = [];
+  let allEvents: AggregatedEvent[] = [];
   const allCapabilities: AggregatedCapability[] = [];
-  for (const capabilities of state.capabilities.values()) {
-    allCapabilities.push(...capabilities);
+
+  try {
+    // Query sessions from DuckDB
+    const sessions = await querySql<{
+      session_id: string;
+      total_events: number;
+      created_at: string;
+    }>(`
+      SELECT
+        session_id,
+        COUNT(*) as total_events,
+        MIN(timestamp) as created_at
+      FROM events
+      GROUP BY session_id
+      ORDER BY created_at DESC
+    `);
+
+    allSessions = sessions.map((s) => ({
+      harness: "duckdb",
+      id: s.session_id,
+      state: "created",
+      created_at: s.created_at ?? new Date().toISOString(),
+      event_count: s.total_events,
+    }));
+
+    // Query recent events from DuckDB
+    const events = await querySql<{
+      session_id: string;
+      sequence: number;
+      timestamp: string;
+      event_type: string;
+      payload: string;
+    }>(`
+      SELECT
+        session_id,
+        sequence_number as sequence,
+        timestamp,
+        event_type,
+        payload::VARCHAR as payload
+      FROM events
+      ORDER BY timestamp DESC
+      LIMIT 50
+    `);
+
+    allEvents = events.map((e) => ({
+      harness: "duckdb",
+      sequence: e.sequence,
+      timestamp: e.timestamp,
+      type: e.event_type,
+      payload: (() => { try { return JSON.parse(e.payload); } catch { return {}; } })(),
+    }));
+  } catch {
+    // DuckDB not available, return empty state
   }
 
   return {
     sessions: allSessions,
-    events: allEvents.slice(0, 50), // Last 50 events
+    events: allEvents,
     capabilities: allCapabilities,
     harnesses: Array.from(state.harnessStatus.values()),
   };
@@ -209,8 +193,9 @@ export function onStateChange(
  * Notify listeners of state changes.
  */
 function notifyListeners(): void {
-  const aggregated = getAggregatedState();
-  for (const listener of state.listeners) {
-    listener(aggregated);
-  }
+  getAggregatedState().then((aggregated) => {
+    for (const listener of state.listeners) {
+      listener(aggregated);
+    }
+  });
 }

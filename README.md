@@ -192,6 +192,18 @@ scripts/setup-sandbox.sh
 scripts/sandbox-health-check.sh
 ```
 
+### DuckDB Setup
+
+For DuckDB persistence backend:
+
+```bash
+# Install npm dependencies and setup native binding
+scripts/setup-duckdb.sh
+
+# Verify DuckDB is working
+deno run -A -e "import duckdb from 'duckdb'; const db = new duckdb.Database(':memory:'); console.log('DuckDB OK');"
+```
+
 ### Running Benchmarks
 
 ```bash

@@ -13,11 +13,11 @@ export const config: RouteConfig = {
   layout: "default",
 };
 
-export default function Dashboard() {
+export default async function Dashboard() {
   // Connect to harnesses on first render
   connectFromEnv();
 
-  const state = getAggregatedState();
+  const state = await getAggregatedState();
 
   return (
     <div class="dashboard">

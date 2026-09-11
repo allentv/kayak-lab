@@ -50,57 +50,43 @@ export function DashboardIsland(props: Props) {
   const capabilities = useSignal(props.initialCapabilities);
 
   useEffect(() => {
-    // Connect to harnesses via WebSocket
-    const wsUrls = harnesses.value.map((h) => h.url.replace(/^http/, "ws"));
-    const connections: WebSocket[] = [];
-
-    for (const url of wsUrls) {
+    // Poll for updates from SQL-backed API
+    const pollInterval = setInterval(async () => {
       try {
-        const ws = new WebSocket(`${url}/ws/events`);
+        const res = await fetch("/api/query?sql=" + encodeURIComponent(`
+          SELECT
+            session_id,
+            COUNT(*) as total_events,
+            MIN(timestamp) as created_at
+          FROM events
+          GROUP BY session_id
+          ORDER BY created_at DESC
+        `));
 
-        ws.onopen = () => {
-          console.log(`Connected to ${url}`);
-          // Subscribe to all events
-          ws.send(JSON.stringify({ type: "subscribe" }));
-        };
+        if (res.ok) {
+          const data = await res.json();
+          const results = (data as { results: Array<{
+            session_id: string;
+            total_events: number;
+            created_at: string;
+          }> }).results ?? [];
 
-        ws.onmessage = (event) => {
-          try {
-            const msg = JSON.parse(event.data);
-            if (msg.type === "event") {
-              // Update events list
-              events.value = [msg.event, ...events.value].slice(0, 50);
-            }
-          } catch {
-            // Ignore malformed messages
-          }
-        };
-
-        ws.onerror = (error) => {
-          console.error(`Error connecting to ${url}:`, error);
-        };
-
-        ws.onclose = () => {
-          console.log(`Disconnected from ${url}`);
-          // Update harness status
-          harnesses.value = harnesses.value.map((h) =>
-            h.url === url.replace(/^ws/, "http")
-              ? { ...h, status: "disconnected" }
-              : h
-          );
-        };
-
-        connections.push(ws);
-      } catch (error) {
-        console.error(`Failed to connect to ${url}:`, error);
+          sessions.value = results.map((s) => ({
+            harness: "duckdb",
+            id: s.session_id,
+            state: "created",
+            created_at: s.created_at ?? new Date().toISOString(),
+            event_count: s.total_events,
+          }));
+        }
+      } catch {
+        // API not available, keep current state
       }
-    }
+    }, 5000); // Poll every 5 seconds
 
     // Cleanup on unmount
     return () => {
-      for (const ws of connections) {
-        ws.close();
-      }
+      clearInterval(pollInterval);
     };
   }, []);
 

@@ -39,7 +39,7 @@ export interface MemoryStorageEvents {
 // ============================================================================
 
 /** Storage backend identifiers. */
-export type StorageBackend = "in_memory" | "persistent" | "distributed";
+export type StorageBackend = "in_memory" | "persistent" | "distributed" | "duckdb";
 
 /** Storage configuration. */
 export interface MemoryStorageConfig {

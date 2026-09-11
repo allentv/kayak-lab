@@ -8,8 +8,8 @@ import type { RouteHandler } from "fresh";
 import { getAggregatedState } from "../../lib/aggregation.ts";
 
 export const handler: RouteHandler<unknown, unknown> = {
-  GET() {
-    const state = getAggregatedState();
+  async GET() {
+    const state = await getAggregatedState();
     return Response.json(state.sessions);
   },
 };

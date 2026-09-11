@@ -151,6 +151,62 @@ const results = await memory.search({ query: "user preferences", type: "semantic
 
 Key interfaces: MemoryProvider, MemoryStorage, MemoryRetrieval, MemorySearch, SharedMemory
 
+### DuckDB Query Engine
+
+SQL-based analytical query layer replacing hand-rolled JavaScript aggregation. Supports dashboard queries, time-series analysis, and cross-session joins via DuckDB's columnar engine.
+
+```typescript
+import { DuckDBQueryEngine } from "../src/store/duckdb-query-engine.ts";
+
+const engine = new DuckDBQueryEngine(db);
+
+// Tool performance metrics
+const metrics = engine.getToolPerformance();
+// Returns: { toolName, totalInvocations, successCount, failureCount, successRate, averageDurationMs }
+
+// Session summary
+const summary = engine.getSessionSummary("session-1");
+// Returns: { sessionId, totalEvents, durationMs, toolCallCount, modelInvocationCount, completionStatus }
+
+// Event type distribution
+const distribution = engine.getEventTypeDistribution();
+// Returns: { eventType, count, percentage }
+
+// Error pattern analysis
+const errors = engine.getErrorPatterns();
+// Returns: { errorType, toolName, count, lastOccurrence }
+
+// Time-series aggregation
+const timeSeries = engine.getTimeSeriesAggregation("hour");
+// Returns: { timestamp, event_count, error_count }
+
+// Cross-table join (events × memories)
+const sessions = engine.getSessionWithMemories();
+// Returns: { sessionId, eventCount, memoryCount, memoryTypes }
+
+// Pivot table (tool usage by session)
+const pivot = engine.getToolUsageBySession();
+// Returns: { sessionId, toolCounts: Record<string, number> }
+
+// Window function analytics (rolling error rate)
+const rolling = engine.getRollingErrorRate("session-1", 10);
+// Returns: { eventNum, isError, rollingErrorRate }
+```
+
+**API endpoint:**
+
+```bash
+# POST request
+curl -X POST http://localhost:8080/api/query \
+  -H "Content-Type: application/json" \
+  -d '{"sql": "SELECT COUNT(*) FROM events"}'
+
+# GET request
+curl "http://localhost:8080/api/query?sql=SELECT+COUNT(*)+FROM+events"
+```
+
+Key interfaces: DuckDBQueryEngine, DuckDBPersistenceBackend
+
 ### MCP Integration
 
 Model Context Protocol client and server for external tool integration.

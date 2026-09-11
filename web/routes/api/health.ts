@@ -9,8 +9,8 @@ import { getAggregatedState } from "../../lib/aggregation.ts";
 import { getHarnessConnections } from "../../lib/harness-connection.ts";
 
 export const handler: RouteHandler<unknown, unknown> = {
-  GET() {
-    const state = getAggregatedState();
+  async GET() {
+    const state = await getAggregatedState();
     const connections = getHarnessConnections();
 
     const harnessStatus = Array.from(connections.values()).map((conn) => ({
