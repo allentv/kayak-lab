@@ -2,6 +2,7 @@
  * Tests for DuckDB query engine.
  */
 
+import "../../__test-utils__/duckdb-setup.ts";
 import { DuckDBPersistenceBackend } from "../duckdb-backend.ts";
 import { EventTypes } from "../../types/events.ts";
 

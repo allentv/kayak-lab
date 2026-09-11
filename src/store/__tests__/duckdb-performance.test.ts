@@ -3,6 +3,7 @@
  */
 
 import { assertEquals } from "@std/assert";
+import "../../__test-utils__/duckdb-setup.ts";
 import { DuckDBPersistenceBackend } from "../duckdb-backend.ts";
 import { EventTypes } from "../../types/events.ts";
 
