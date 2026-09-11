@@ -151,14 +151,14 @@ const results = await memory.search({ query: "user preferences", type: "semantic
 
 Key interfaces: MemoryProvider, MemoryStorage, MemoryRetrieval, MemorySearch, SharedMemory
 
-### DuckDB Query Engine
+### SQLite Query Engine
 
-SQL-based analytical query layer replacing hand-rolled JavaScript aggregation. Supports dashboard queries, time-series analysis, and cross-session joins via DuckDB's columnar engine.
+SQL-based analytical query layer replacing hand-rolled JavaScript aggregation. Supports dashboard queries, time-series analysis, and cross-session joins via SQLite's embedded engine.
 
 ```typescript
-import { DuckDBQueryEngine } from "../src/store/duckdb-query-engine.ts";
+import { SQLiteQueryEngine } from "../src/store/sqlite-query-engine.ts";
 
-const engine = new DuckDBQueryEngine(db);
+const engine = new SQLiteQueryEngine(db);
 
 // Tool performance metrics
 const metrics = engine.getToolPerformance();
@@ -205,7 +205,7 @@ curl -X POST http://localhost:8080/api/query \
 curl "http://localhost:8080/api/query?sql=SELECT+COUNT(*)+FROM+events"
 ```
 
-Key interfaces: DuckDBQueryEngine, DuckDBPersistenceBackend
+Key interfaces: SQLiteQueryEngine, SQLitePersistenceBackend
 
 ### MCP Integration
 
@@ -224,6 +224,88 @@ await server.start();
 ```
 
 Key interfaces: MCPClient, MCPServer, MCPRegistry, MCPSearch
+
+### Provenance
+
+Provenance-aware context management for reducing token usage by 50-80% while preserving critical context. Tracks DAG-based causality for agent actions.
+
+```typescript
+import { ProvenanceContextManager } from "../src/memory/provenance-context.ts";
+import { MessageClassifier } from "../src/memory/message-classifier.ts";
+
+const manager = new ProvenanceContextManager(config);
+
+// Classify and score messages based on provenance
+const classifier = new MessageClassifier(provenanceGraph);
+const scored = classifier.classifyMessage(message);
+```
+
+**Key types:**
+
+|Type|Purpose|
+|---|---|
+|`MessagePriority`|Enum: SYSTEM(1000), GOAL(900), COMMITMENT(800), VERIFICATION(700), EXPLORATION(500), OTHER(300)|
+|`OutcomeScore`|Enum: SUCCESS(200), FAILURE(-100), DEAD_END(-200), NO_LINK(0)|
+|`TokenBudget`|Budget allocation: system, goal%, summary%, history%, memories%|
+|`CompressionResult`|Compressed content with token counts|
+
+### Hooks
+
+Lifecycle hook system for intercepting model calls, tool executions, and session events. Hooks are isolated — errors in one hook don't affect others.
+
+```typescript
+import { hookRegistry, HookPoint } from "../src/runtime/hooks.ts";
+
+// Register a hook
+hookRegistry.register(HookPoint.BEFORE_MODEL_CALL, async (ctx) => {
+  console.log("About to call model:", ctx.messages.length, "messages");
+});
+
+// Hooks are dispatched automatically by AgentRuntime
+// Error isolation: failed hooks don't block execution
+// Timeout support: hooks have configurable timeouts
+```
+
+**Hook points:**
+
+|HookPoint|When|Context Type|
+|---|---|---|
+|`BEFORE_MODEL_CALL`|Before model invocation|`BeforeModelCallContext`|
+|`AFTER_TOOL_EXECUTION`|After tool completes|`AfterToolExecutionContext`|
+|`TURN_END`|End of agent turn|`TurnEndContext`|
+|`SESSION_START`|Session created|`SessionStartContext`|
+|`SESSION_END`|Session completed/failed|`SessionEndContext`|
+
+### Attestations
+
+Session attestation service for cost tracking and performance auditing. Aggregates model usage events and emits `session.attestation` events on completion.
+
+```typescript
+import { AttestationService } from "../src/session/attestation-service.ts";
+
+const service = new AttestationService(eventStream, eventStore);
+
+// Load pricing configuration
+service.loadPricing([
+  { model_name: "gpt-4", provider: "openai", input_price_per_token: 0.00003, output_price_per_token: 0.00006, cache_read_price_per_token: 0.000015, cache_write_price_per_token: 0.00003 },
+]);
+
+// Create attestation for completed session
+const attestation = await service.createAttestation("session-1");
+// Returns: { session_id, duration_ms, models: [...], total_cost_usd, provenance_summary: {...} }
+
+// Query attestations
+const attestations = await service.getAttestations({ sortBy: "cost", sortOrder: "desc", limit: 10 });
+```
+
+**Key types:**
+
+|Type|Purpose|
+|---|---|
+|`AttestationEvent`|Session attestation with cost, duration, provenance summary|
+|`ModelMetrics`|Per-model token counts and cost|
+|`ProvenanceSummary`|Goal/exploration/commitment/verification counts|
+|`ModelPricing`|Per-model pricing configuration|
 
 ### Sandbox
 

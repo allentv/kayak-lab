@@ -146,3 +146,34 @@ This file captures patterns, decisions, and gotchas discovered during kayak-lab 
 - Health check verifies: Docker installed, daemon running, runtime registered, test execution, network isolation, ptrace blocking (gVisor)
 - File transfer via read-only bind mounts for input, tmpfs for output — zero-copy, automatically cleaned up
 - `SandboxedShellCapability` implements `IShellCapability` — drop-in replacement for trusted shell execution
+
+## SQLite Patterns
+
+- WAL mode enabled by default — allows concurrent reads while writing
+- `StorageBackend` type includes "sqlite" — use this for new code (not "duckdb")
+- SQLitePersistenceBackend implements both IPersistenceBackend and IMemoryStorage — single class for dual interface
+- SQLite schema uses foreign keys and autoincrement IDs — same table structure as DuckDB for migration compatibility
+
+## Provenance Context Patterns
+
+- ProvenanceContextManager extends ContextManager — drop-in replacement with provenance weighting
+- Token budget defaults: 25% goal, 15% summary, 40% history, 20% memories
+- Tool result compression threshold: 2000 tokens — above this, results are compressed with references
+- Provenance weight default: 0.3 — controls how much provenance score affects memory ranking
+- MessageClassifier is pure — no I/O, no side effects, holds reference to graph but doesn't own it
+- First-match-wins classification: messages classified by first matching rule, not best match
+
+## Hook System Patterns
+
+- HookRegistry isolates hook errors — one failing hook doesn't block others
+- hookRegistry is a global singleton — import and use directly
+- HookPoint enum covers all lifecycle stages: BEFORE_MODEL_CALL, AFTER_TOOL_EXECUTION, TURN_END, SESSION_START, SESSION_END
+- Hooks can be sync or async — HookFunction type accepts both
+- Timeout support built-in — prevents slow hooks from blocking the runtime
+
+## Attestation Patterns
+
+- AttestationService.loadPricing() configures per-model cost — must be called before createAttestation()
+- session.attestation emitted on session completion — includes full cost breakdown and provenance summary
+- AttestationEvent.previous_attestation links resumed sessions — enables cost accumulation across pauses
+- ProvenanceSummary tracks exploration-to-commitment ratio — higher ratio indicates more exploration before committing

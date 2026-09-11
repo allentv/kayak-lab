@@ -11,6 +11,8 @@ graph TB
         ES --- ESTORE["EventStore<br/>(in-memory + persistent)"]
         AR --- MP["ModelProvider<br/>(OpenAI, Anthropic, local)"]
         MEM["Memory<br/>(episodic, semantic,<br/>procedural, working)"]
+        PROV["Provenance<br/>(DAG causality)"]
+        HR["HookRegistry<br/>(lifecycle hooks)"]
     end
 
     subgraph Capabilities["Capability Layer"]
@@ -233,6 +235,178 @@ const results = await memory.search({ query: "user preferences", type: "semantic
 
 **Provider abstraction:** The `MemoryProvider` decouples storage logic from consumers. Swap between in-memory, file-based, or database-backed storage without changing application code. `SharedMemory` enables sub-agents to share context snapshots without coupling to parent state.
 
+### Provenance Module
+
+Provenance-aware context management for intelligent token reduction. Extends `ContextManager` with provenance-weighted pruning, tool result compression, and hook-driven context assembly.
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| `ProvenanceContextManager` | `provenance-context.ts` | Provenance-weighted pruning and context assembly |
+| `MessageClassifier` | `message-classifier.ts` | Pure message classification and scoring |
+| Types | `provenance-context-types.ts` | Enums, config, and defaults |
+| `MemoryRetrieval` | `retrieval.ts` | On-demand retrieval with provenance scoring |
+
+```typescript
+import { ProvenanceContextManager } from "./src/memory/provenance-context.ts";
+
+const ctx = new ProvenanceContextManager({ maxTokens: 8000 });
+ctx.setProvenanceGraph(graph); // ProvenanceGraphData from provenance module
+
+// Provenance-weighted pruning happens automatically on add()
+ctx.add(message);
+
+// Tool result compression — references only lines used downstream
+const compressed = ctx.compressToolResult(result, toolCallId, eventId);
+
+// Hook-driven context assembly
+const hook = ctx.createBeforeModelCallHook();
+```
+
+**Token reduction:** When a provenance graph is available, messages are scored by role priority and provenance outcome (success/failure/dead-end). The lowest-scoring messages are pruned first, reducing token usage by 50–80% while preserving goal, commitment, and verification context. Falls back to positional pruning when the graph is unavailable or has fewer than 3 nodes.
+
+**Tool result compression:** Large tool outputs are compressed to only the lines referenced by downstream provenance nodes. The full output is preserved via an event ID reference for audit.
+
+**Context assembly:** The `createBeforeModelCallHook()` returns a hook handler that assembles a token-budgeted context window from system prompt, goal, provenance summary, retrieved memories, and current input.
+
+### Message Classifier
+
+Pure-function message classification and scoring for provenance-aware context management. No I/O, no side effects — all methods are pure.
+
+```typescript
+import { MessageClassifier } from "./src/memory/message-classifier.ts";
+
+const classifier = new MessageClassifier();
+classifier.setProvenanceGraph(graph);
+
+const score = classifier.scoreMessage(message); // base priority + outcome bonus
+const priority = classifier.getBasePriority(message);
+```
+
+**MessagePriority** (base scoring by role/content heuristics):
+
+| Priority | Value | Heuristic |
+|----------|-------|-----------|
+| `SYSTEM` | 1000 | System role messages |
+| `GOAL` | 900 | User messages starting with `goal:`, `task:`, or `request:` |
+| `COMMITMENT` | 800 | Tool results containing write/edit/create keywords |
+| `VERIFICATION` | 700 | Tool results with exit codes, test output, pass/fail |
+| `EXPLORATION` | 500 | Tool results from read-only operations |
+| `OTHER` | 300 | Everything else |
+
+**OutcomeScore** (provenance graph bonus):
+
+| Score | Value | Meaning |
+|-------|-------|---------|
+| `SUCCESS` | 200 | Linked to verification with exit code 0 |
+| `FAILURE` | -100 | Linked to verification with non-zero exit code |
+| `DEAD_END` | -200 | No downstream commitments or verifications |
+| `NO_LINK` | 0 | No provenance node linked, or graph unavailable |
+
+### Memory Retrieval
+
+On-demand memory retrieval with provenance scoring. Retrieves relevant memories from storage and ranks them by relevance.
+
+```typescript
+import { MemoryRetrieval } from "./src/memory/retrieval.ts";
+
+const retrieval = new MemoryRetrieval(storage, config);
+const results = await retrieval.retrieve({
+  query: "user preferences",
+  max_results: 10,
+  type: "semantic",
+});
+// Each result includes: memory, relevance_score, final_score
+```
+
+### HookRegistry
+
+Lifecycle hook system for `AgentRuntime`. Dispatches hooks at defined lifecycle points with timeout enforcement and error isolation.
+
+```typescript
+import { hookRegistry, HookPoint } from "./src/runtime/hooks.ts";
+
+// Register a global hook
+const hookId = hookRegistry.register(HookPoint.BEFORE_MODEL_CALL, async (ctx) => {
+  // Modify ctx.messages before model call
+}, { timeoutMs: 3000 });
+
+// Register a session-scoped hook
+hookRegistry.register(HookPoint.AFTER_TOOL_EXECUTION, (ctx) => {
+  console.log(`Tool ${ctx.toolName} completed: ${ctx.success}`);
+}, { sessionId: "session-1" });
+
+// Dispatch — called by AgentRuntime at each lifecycle point
+await hookRegistry.dispatch(HookPoint.TURN_END, context, sessionId);
+
+// Unregister
+hookRegistry.unregister(hookId);
+```
+
+**HookPoint enum:**
+
+| Hook Point | When Fired | Context Type |
+|------------|------------|--------------|
+| `BEFORE_MODEL_CALL` | Before each LLM request | `BeforeModelCallContext` — messages, model, tools |
+| `AFTER_TOOL_EXECUTION` | After each tool invocation | `AfterToolExecutionContext` — tool name, params, result |
+| `TURN_END` | After each agent turn | `TurnEndContext` — turn number, response, provenance nodes |
+| `SESSION_START` | When a session begins | `SessionStartContext` — session ID, config |
+| `SESSION_END` | When a session completes | `SessionEndContext` — state, duration, attestation |
+
+**Error isolation:** Each hook is executed with a timeout (default 5s). If a hook throws or times out, the error is logged and execution continues to the next hook. Hooks never propagate failures to the caller.
+
+**Singleton:** `hookRegistry` is the global instance. Session-scoped hooks are filtered by `sessionId` during dispatch.
+
+### AttestationService
+
+Aggregates model usage events and emits `session.attestation` events on session completion. Tracks costs, token usage, and provenance summaries.
+
+```typescript
+import { AttestationService } from "./src/session/attestation-service.ts";
+
+const attestation = new AttestationService(eventStream, eventStore);
+
+// Load pricing for cost calculation
+attestation.loadPricing([
+  { provider: "openai", model_name: "gpt-4", input_price_per_token: 0.00003, output_price_per_token: 0.00006, cache_read_price_per_token: 0.000015, cache_write_price_per_token: 0.00003 },
+]);
+
+// Create attestation for a completed session
+const report = await attestation.createAttestation("session-1");
+// report.total_cost_usd, report.models, report.provenance_summary
+
+// Query attestations
+const attestations = await attestation.getAttestations({
+  sortBy: "cost",
+  sortOrder: "desc",
+  limit: 10,
+});
+```
+
+**ModelMetrics** per model: input/output tokens, cache read/write tokens, estimated cost in USD.
+
+**ProvenanceSummary:** total goals, explorations, commitments, verifications, and exploration-to-commitment ratio.
+
+### Causal Graph
+
+Utility functions for building and traversing event causality graphs. Used by `EventStore`, `PersistentEventStore`, and the provenance system.
+
+```typescript
+import { buildCausalGraph, findDownstream, findIndependentChains } from "./src/store/causal-graph.ts";
+
+// Build adjacency list from events using causal_parents fields
+const graph = buildCausalGraph(events); // Map<string, CausalGraphNode>
+
+// Find all events downstream of a given event (transitive closure, BFS)
+const downstream = findDownstream(eventId, events); // BaseEvent[]
+
+// Find independent (causally disconnected) chains in a session
+const chains = findIndependentChains(events); // string[][] (event IDs)
+```
+
+**CausalGraphNode** contains the event and its children (events that list it as a causal parent). Events without `causal_parents` are treated as graph roots.
+
+**Usage in EventStore:** `IEventStore` exposes `buildCausalGraph`, `findDownstream`, and `findIndependentChains` as interface methods, implemented by both in-memory and persistent backends.
+
 ### EventStore
 
 In-memory event persistence with snapshot support. Stores events per session with range queries and replay capabilities. Can be used as a fast/ephemeral store, or swapped with the persistent store for durability.
@@ -315,26 +489,68 @@ interface IPersistenceBackend {
 
 The default `FilePersistenceBackend` uses synchronous Deno file I/O for guaranteed durability per write. Implement this interface for SQLite, PostgreSQL, or other backends.
 
-**DuckDB backend:** The `DuckDBPersistenceBackend` provides columnar analytics, native JSON ingestion, and SQL-based multi-dimensional queries while remaining embedded (no server process). It implements both `IPersistenceBackend` and `IMemoryStorage` interfaces.
+**SQLite backend:** The `SQLitePersistenceBackend` provides embedded SQL storage with WAL mode for concurrent reads and SQL-based analytics queries. It implements both `IPersistenceBackend` and `IMemoryStorage` interfaces.
 
 ```typescript
-import { DuckDBPersistenceBackend } from "./src/store/duckdb-backend.ts";
+import { SQLitePersistenceBackend } from "./src/store/sqlite-backend.ts";
 
-const backend = new DuckDBPersistenceBackend({ dbPath: "./kayak.db" });
+const backend = new SQLitePersistenceBackend({ dbPath: "./kayak.db" });
 const store = new PersistentEventStore({
   dataDir: "./data/events",
   backend,
 });
 ```
 
-**DuckDB query engine:** The `DuckDBQueryEngine` replaces hand-rolled JavaScript aggregation with SQL-based queries on the DuckDB database.
+**SQLite query engine:** The `SQLiteQueryEngine` replaces hand-rolled JavaScript aggregation with SQL-based queries on the SQLite database.
 
 ```typescript
-import { DuckDBQueryEngine } from "./src/store/duckdb-query-engine.ts";
+import { SQLiteQueryEngine } from "./src/store/sqlite-query-engine.ts";
 
-const engine = new DuckDBQueryEngine(db);
+const engine = new SQLiteQueryEngine(db);
 const metrics = engine.getToolPerformance();
 const summary = engine.getSessionSummary("session-1");
+```
+
+### SQLite Storage
+
+SQLite-backed persistence and analytics. The `SQLitePersistenceBackend` implements both `IPersistenceBackend` (event storage) and `IMemoryStorage` (memory storage) using a single embedded database file. WAL mode enables concurrent reads while a single writer serializes mutations.
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| `SQLitePersistenceBackend` | `sqlite-backend.ts` | Event + memory storage with WAL mode |
+| `SQLiteQueryEngine` | `sqlite-query-engine.ts` | SQL-based analytics and aggregation |
+
+**Schema:** Three tables — `events` (event payloads with session/sequence indexing), `memories` (typed memory storage), and `snapshots` (session snapshot persistence).
+
+**Query capabilities** via `SQLiteQueryEngine`:
+
+| Method | Purpose |
+|--------|---------|
+| `getToolPerformance()` | Success rate, average duration per tool |
+| `getErrorPatterns()` | Error frequency by type and tool |
+| `getSessionSummary()` | Event counts, duration, tool/model invocations |
+| `getRecentSessions()` | Latest sessions with aggregate metrics |
+| `getEventTypeDistribution()` | Event type frequency and percentages |
+| `getAggregateToolUsage()` | Total invocations, unique tool count |
+| `getSessionDurationTrends()` | Average/min/max session durations |
+| `getTimeSeriesAggregation()` | Time-bucketed event and error counts |
+| `getSessionWithMemories()` | Cross-table join: sessions × memories |
+| `getToolUsageBySession()` | Pivot table: tool counts per session |
+| `getRollingErrorRate()` | Window function: rolling error rate over events |
+
+```typescript
+import { SQLitePersistenceBackend } from "./src/store/sqlite-backend.ts";
+import { SQLiteQueryEngine } from "./src/store/sqlite-query-engine.ts";
+
+const backend = new SQLitePersistenceBackend({ dbPath: "./data/kayak.db" });
+const db = backend.getDatabase();
+const engine = new SQLiteQueryEngine(db);
+
+// Analytics
+const performance = engine.getToolPerformance("shell");
+const errors = engine.getErrorPatterns();
+const trends = engine.getSessionDurationTrends();
+const timeSeries = engine.getTimeSeriesAggregation("hour");
 ```
 
 ### Schema Registry

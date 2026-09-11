@@ -28,13 +28,21 @@ deno lint
 ```
 src/
 ├── types/                  Event schema and type definitions
+│   └── attestations.ts         Attestation event types and metrics
 ├── core/                   Event stream and session manager
 ├── runtime/                Agent runtime, model abstraction, tool registry
+│   └── hooks.ts                Runtime hook system with lifecycle hooks
 ├── tools/                  Structured tool calling protocol
 ├── capabilities/           External system interfaces (Shell, Git, GitHub, K8s)
 ├── mcp/                    Model Context Protocol client, server, registry, search
 ├── memory/                 Persistent memory subsystem (episodic, semantic, procedural, working)
+│   ├── provenance-context.ts    Provenance-aware context management
+│   ├── provenance-context-types.ts  Provenance context type definitions
+│   ├── message-classifier.ts    Provenance-weighted message classification
+│   └── retrieval.ts             Memory retrieval with provenance scoring
 ├── store/                  Event persistence, replay, and file-based durability
+│   ├── sqlite-backend.ts       SQLite persistence backend
+│   └── sqlite-query-engine.ts  SQL-based analytics engine
 ├── projection/             UI projection protocol and terminal rendering
 └── __tests__/              End-to-end tests and benchmarks
 review/
@@ -187,10 +195,14 @@ const toolSub = protocol.subscribe(session.id, (event) => {
 For durable sessions that survive restarts, use the `PersistentEventStore`:
 
 ```typescript
+import { SQLitePersistenceBackend } from "./src/store/sqlite-backend.ts";
 import { PersistentEventStore } from "./src/store/persistence.ts";
 
-// Writes events to ./data/events/<session_id>.jsonl
-const store = new PersistentEventStore({ dataDir: "./data/events" });
+const backend = new SQLitePersistenceBackend({ dbPath: "./kayak.db" });
+const store = new PersistentEventStore({
+  dataDir: "./data/events",
+  backend,
+});
 
 // Store events — written synchronously to disk
 store.store(event);
@@ -218,6 +230,6 @@ Benchmarks measure:
 ## Next Steps
 
 - [Architecture](/architecture) — Understand the three-layer design
-- [Event Types](/event-types) — All 25 event types across 7 categories
+- [Event Types](/event-types) — All 58 event types across 13 categories
 - [Sessions](/sessions) — Session lifecycle state machine
 - [Capabilities](/capabilities) — Pluggable external system interfaces

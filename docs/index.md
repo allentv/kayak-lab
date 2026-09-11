@@ -26,4 +26,10 @@ features:
     details: Full session state machine — create, pause, resume, complete, fail, cancel. Sessions are recoverable from event streams after crashes.
   - title: Replay & Recovery
     details: Reconstruct any session state from events. Snapshots for fast recovery. Event schema versioning for forward compatibility.
+  - title: Provenance Tracking
+    details: DAG-based causality tracking for agent actions. Classifies messages by type and scores them based on provenance outcomes, reducing token usage by 50-80% while preserving critical context.
+  - title: Runtime Hooks
+    details: Lifecycle hook system for intercepting model calls, tool executions, and session events. Error-isolated hooks with timeout support enable observability and customization without modifying the runtime.
+  - title: Session Attestations
+    details: Cost tracking and performance auditing with per-model token metrics. Aggregates model usage and emits attestation events on session completion with full provenance summaries.
 ---

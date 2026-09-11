@@ -33,7 +33,7 @@ export interface SQLiteConfig {
  * Embedded database with WAL mode for concurrent reads and SQL-based queries.
  */
 export class SQLitePersistenceBackend implements IPersistenceBackend, IMemoryStorage {
-  readonly backend: StorageBackend = "duckdb";
+  readonly backend: StorageBackend = "sqlite";
   private db: Database;
   private closed = false;
 

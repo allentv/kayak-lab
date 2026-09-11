@@ -46,6 +46,18 @@ All notable changes to kayak-lab will be documented in this file.
 - 140+ tests across 15 test suites
 - Performance benchmarks for critical paths
 - End-to-end session lifecycle tests
+- SQLite persistence backend (SQLitePersistenceBackend) replacing DuckDB for single-binary compatibility (duckdb-persistence)
+- SQLite query engine (SQLiteQueryEngine) with SQL-based analytics (duckdb-persistence)
+- Provenance-aware context management (ProvenanceContextManager) reducing token usage 50-80% (context-assembly)
+- Message classifier (MessageClassifier) for provenance-weighted message scoring (context-assembly)
+- Memory retrieval with provenance scoring (MemoryRetrieval) (context-assembly)
+- Runtime hook system (HookRegistry) with lifecycle hooks for model calls, tool executions, and session events (hooks-attestations)
+- Session attestation service (AttestationService) for cost tracking and performance auditing (hooks-attestations)
+- Attestation types (AttestationEvent, ModelMetrics, ProvenanceSummary, ModelPricing) (hooks-attestations)
+- session.attestation event type for session completion metrics (hooks-attestations)
+- SQLite backend type added to StorageBackend union type
+- Embedded Fresh UI mode and WebSocket reconnection (web-monitoring-ui)
+- Expand E2E test specs for unarchive, HTTP, and WebSocket requirements
 
 ### OpenSpec Changes (Planned)
 
@@ -70,3 +82,6 @@ All notable changes to kayak-lab will be documented in this file.
 - `documentation-website` — VitePress documentation site
 - `tool-calling` — Structured tool calling protocol with registry, authoring, and self-improvement
 - `memory-support` — Persistent memory subsystem with 4 memory types, provider abstraction, storage, retrieval, search, and shared memory
+- `context-assembly` — Provenance-aware context management with message classification and token reduction
+- `hooks-attestations` — Runtime hooks and session attestation service for cost tracking
+- `duckdb-persistence` — DuckDB persistence backend (replaced by SQLite)

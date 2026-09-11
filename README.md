@@ -15,6 +15,8 @@ graph TB
         AR --- MP["ModelProvider"]
         AR --- MCP["MCP Module"]
         MEM["Memory"]
+        PROV["Provenance"]
+        HR2["HookRegistry"]
         HR["HealthRegistry"] --- ES
         CFG["Config"] --- AR
     end
@@ -80,6 +82,18 @@ Abstract interfaces for external systems. Capabilities are pluggable — swap im
 | GitHub | Stubbed | Interface defined, returns simulated data |
 | Kubernetes | Stubbed | Interface defined, returns simulated data |
 
+### Provenance Tracking
+
+DAG-based causality tracking for agent actions. Every action records its provenance — which prior actions caused it — enabling causal replay, debugging, and context assembly from the action graph.
+
+### Runtime Hooks
+
+Lifecycle hook system for intercepting model calls, tool executions, and session events. Hooks enable cross-cutting concerns like logging, metrics, policy enforcement, and cost tracking without modifying the core runtime.
+
+### Session Attestations
+
+Cost tracking and performance auditing with per-model token metrics. Each session produces an attestation summarizing total tokens, cost, latency, and model usage — providing an auditable record of agent resource consumption.
+
 ### Projections
 
 UI surfaces subscribe to the event stream and render events appropriately. Each projection is independent — multiple projections can run simultaneously on the same event stream.
@@ -95,7 +109,8 @@ UI surfaces subscribe to the event stream and render events appropriately. Each 
 ```
 src/
 ├── types/                  Event schema and type definitions
-│   └── events.ts           BaseEvent, EventTypes registry, type guards
+│   ├── events.ts           BaseEvent, EventTypes registry, type guards
+│   └── attestations.ts     Session attestation and cost tracking types
 ├── core/                   Core infrastructure
 │   ├── event-stream.ts     Immutable, ordered event stream with session isolation
 │   ├── session-manager.ts  Session lifecycle state machine
@@ -112,6 +127,7 @@ src/
 ├── runtime/                Agent execution
 │   ├── agent-runtime.ts    Agent loop: input → model → tool cycle
 │   ├── model-provider.ts   Provider-agnostic model interface
+│   ├── hooks.ts            Runtime lifecycle hooks for intercepting calls
 │   └── tool-registry.ts    Typed tool registration and invocation
 ├── tools/                  Structured tool calling protocol
 │   ├── types.ts            ToolHandlerContext, ToolDefinition interfaces
@@ -148,13 +164,21 @@ src/
 │   ├── shared.ts           SharedMemory for sub-agent context snapshots
 │   ├── update.ts           Atomic state transitions with event sourcing
 │   ├── emitter.ts          Memory event emission for observability
+│   ├── provenance-context.ts    DAG-based causality tracking for context
+│   ├── provenance-context-types.ts Provenance context type definitions
+│   ├── message-classifier.ts    Message classification for memory routing
 │   └── mod.ts              Module exports
 ├── store/                  Event persistence and replay
 │   ├── event-store.ts      In-memory event store with snapshots and replay
-│   └── persistence.ts      PersistentEventStore with JSONL, snapshots, and recovery
+│   ├── persistence.ts      PersistentEventStore with JSONL, snapshots, and recovery
+│   ├── sqlite-backend.ts   SQLite-backed event persistence
+│   └── sqlite-query-engine.ts SQL query engine for stored events
+├── session/                Session management and attestation
+│   └── attestation-service.ts Cost tracking and performance auditing
 ├── projection/             UI projection layer
 │   ├── protocol.ts         Subscription protocol with filtering
 │   ├── terminal.ts         Terminal/CLI event rendering
+│   ├── rest-api.ts         REST API projection for external clients
 │   └── websocket-server.ts WebSocket server for real-time delivery
 ├── __test-utils__/         Shared test infrastructure
 │   ├── mocks/              Mock implementations for all interfaces
@@ -192,16 +216,12 @@ scripts/setup-sandbox.sh
 scripts/sandbox-health-check.sh
 ```
 
-### DuckDB Setup
+### SQLite Setup
 
-For DuckDB persistence backend:
+SQLite is embedded — no setup needed. To verify it works:
 
 ```bash
-# Install npm dependencies and setup native binding
-scripts/setup-duckdb.sh
-
-# Verify DuckDB is working
-deno run -A -e "import duckdb from 'duckdb'; const db = new duckdb.Database(':memory:'); console.log('DuckDB OK');"
+deno run -A -e "import { Database } from '@db/sqlite'; const db = new Database(':memory:'); console.log('SQLite OK');"
 ```
 
 ### Running Benchmarks
@@ -212,11 +232,12 @@ deno test src/__tests__/benchmarks.test.ts --allow-read --allow-env
 
 ## Event Types
 
-48 event types across 11 categories:
+58 event types across 13 categories:
 
 | Event | Events | Purpose |
 |----------|--------|---------|
-| Session | `session.created`, `.resumed`, `.paused`, `.completed`, `.failed`, `.cancelled` | Lifecycle management |
+| Session | `session.created`, `.resumed`, `.paused`, `.completed`, `.failed`, `.cancelled`, `.attestation` | Lifecycle management |
+| Memory | `memory.operation`, `.stored`, `.fallback`, `.retrieved`, `.updated`, `.type`, `.shared`, `.search`, `.search.result` | Memory subsystem operations |
 | Agent | `agent.thinking`, `.decision`, `.tool_invocation` | Agent loop state |
 | Tool | `tool.execution.started`, `.completed`, `.failed` | Tool invocation tracking |
 | Model | `model.request`, `.response`, `.stream.delta` | Model provider interaction |
@@ -237,16 +258,19 @@ This project uses [OpenSpec](https://github.com/allentv/openspec) for specificat
 
 | Change | Focus | Status |
 |--------|-------|--------|
-| `persistence-layer` | File-based event persistence (JSONL, snapshots, recovery) | ✅ Done |
 | `real-capabilities` | Real Git/GitHub/K8s execution replacing stubs | In progress |
 | `additional-projections` | VS Code, Web, Desktop, REST API projections | In progress |
 | `cross-cutting-concerns` | Identity, policy, telemetry, evaluation | In progress |
-| `web-monitoring-ui` | Fresh-based monitoring dashboard | In progress |
 
 ### Archived Changes
 
 | Change | Focus |
 |--------|-------|
+| `persistence-layer` | File-based event persistence (JSONL, snapshots, recovery) |
+| `web-monitoring-ui` | Fresh-based monitoring dashboard |
+| `context-assembly` | Provenance-aware context management |
+| `hooks-attestations` | Runtime hooks and session attestations |
+| `duckdb-persistence` | DuckDB persistence backend (now replaced by SQLite) |
 | `mcp-servers` | MCP client, server, registry, search with transport abstraction |
 | `testing-infrastructure` | Mock registry, test helpers, fixtures, harness |
 | `health-checks-observability` | Health probes, component health checks |

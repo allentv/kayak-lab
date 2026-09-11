@@ -1,6 +1,6 @@
 # Event Types
 
-kayak-lab defines 48 event types across 11 categories. Every event conforms to the `BaseEvent` interface.
+kayak-lab defines 58 event types across 13 categories. Every event conforms to the `BaseEvent` interface.
 
 ## BaseEvent
 
@@ -10,7 +10,7 @@ interface BaseEvent {
   session_id: string;         // Session this event belongs to
   sequence_number: number;    // Monotonically increasing within session
   timestamp: string;          // ISO 8601
-  event_type: EventType;      // One of the 25 event types
+  event_type: EventType;      // One of the 58 event types
   schema_version: number;     // Schema version for migration
   payload: Record<string, unknown>;  // Event-specific data
   metadata: {
@@ -33,6 +33,7 @@ Lifecycle events for agent sessions.
 | `session.completed` | `{ state: "completed" }` | Session finished successfully |
 | `session.failed` | `{ state: "failed", error? }` | Session failed with error |
 | `session.cancelled` | `{ state: "cancelled" }` | Session cancelled by user |
+| `session.attestation` | `{ session_id, timestamp, duration_ms, models, total_cost_usd, ... }` | Session attestation with cost tracking and performance metrics |
 
 ### State Transitions
 
@@ -155,7 +156,30 @@ Model Context Protocol client and server lifecycle events.
 | `mcp.tool.result` | `{ tool_name, result, duration_ms, success }` | MCP tool invocation result |
 | `mcp.server.started` | `{ server_name, transport_type }` | MCP server started |
 | `mcp.server.stopped` | `{ server_name, reason? }` | MCP server stopped |
+| `mcp.server.tool.invocation` | `{ tool_name, parameters, server_name }` | MCP server-side tool invocation |
+| `mcp.server.tool.result` | `{ tool_name, result, duration_ms, success }` | MCP server-side tool result |
+| `mcp.tool.registered` | `{ tool_name, server_name }` | MCP tool registered in registry |
+| `mcp.tool.unregistered` | `{ tool_name, server_name }` | MCP tool unregistered from registry |
+| `mcp.tool.state_changed` | `{ tool_name, old_state, new_state }` | MCP tool state changed |
+| `mcp.search` | `{ query, filters }` | MCP tool search initiated |
+| `mcp.search.result` | `{ query, results }` | MCP tool search results returned |
 | `mcp.error` | `{ error, server_name?, operation }` | MCP error occurred |
+
+## Memory Events
+
+Memory subsystem operations and retrieval events.
+
+| Event | Payload | Description |
+|-------|---------|-------------|
+| `memory.operation` | `{ operation, memory_id?, backend }` | Memory operation initiated |
+| `memory.stored` | `{ memory_id, backend, timestamp }` | Memory stored successfully |
+| `memory.fallback` | `{ memory_id, primary_backend, fallback_backend }` | Memory fell back to secondary backend |
+| `memory.retrieved` | `{ memory_id, query, score }` | Memory retrieved by query |
+| `memory.updated` | `{ memory_id, field, old_value, new_value }` | Memory updated |
+| `memory.type` | `{ memory_id, memory_type }` | Memory type classified |
+| `memory.shared` | `{ memory_id, from_session, to_session }` | Memory shared between sessions |
+| `memory.search` | `{ query, filters }` | Memory search initiated |
+| `memory.search.result` | `{ query, results_count }` | Memory search results returned |
 
 ## Payload Interfaces
 
