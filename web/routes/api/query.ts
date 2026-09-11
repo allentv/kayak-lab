@@ -2,30 +2,14 @@
  * POST /api/query
  * GET /api/query?sql=...
  *
- * Execute SQL queries against DuckDB and return JSON results.
+ * Execute SQL queries against SQLite and return JSON results.
  * Supports both POST (body) and GET (query parameter) methods.
  *
  * Input validation prevents destructive operations (DROP, DELETE, TRUNCATE).
  */
 
 import type { RouteHandler } from "fresh";
-
-// ============================================================================
-// DuckDB Types
-// ============================================================================
-
-interface DuckDBDatabase {
-  connect(): DuckDBConnection;
-  close(): void;
-}
-
-interface DuckDBConnection {
-  exec(sql: string, ...params: unknown[]): void;
-  all(sql: string, params?: unknown[]): DuckDBRow[];
-  close(): void;
-}
-
-type DuckDBRow = Record<string, unknown>;
+import { Database } from "@db/sqlite";
 
 // ============================================================================
 // Configuration
@@ -43,12 +27,8 @@ function isDestructiveSql(sql: string): boolean {
   return BLOCKED_KEYWORDS.some((keyword) => upperSql.startsWith(keyword));
 }
 
-function getDatabase(): DuckDBDatabase {
-  const duckdbModule = (globalThis as unknown as { __duckdb?: unknown }).__duckdb;
-  if (!duckdbModule) {
-    throw new Error("DuckDB not available. Run scripts/setup-duckdb.sh first.");
-  }
-  return new (duckdbModule as new (path: string) => DuckDBDatabase)(DB_PATH);
+function getDatabase(): Database {
+  return new Database(DB_PATH);
 }
 
 // ============================================================================
@@ -70,11 +50,8 @@ export const handler: RouteHandler<unknown, unknown> = {
 
     try {
       const db = getDatabase();
-      const conn = db.connect();
-      const results = conn.all(sql);
-      conn.close();
+      const results = db.prepare(sql).all();
       db.close();
-
       return Response.json({ results });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -102,11 +79,8 @@ export const handler: RouteHandler<unknown, unknown> = {
 
     try {
       const db = getDatabase();
-      const conn = db.connect();
-      const results = conn.all(sql);
-      conn.close();
+      const results = db.prepare(sql).all();
       db.close();
-
       return Response.json({ results });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);

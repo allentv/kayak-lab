@@ -1,10 +1,11 @@
 /**
- * DuckDB persistence backend for event store and memory storage.
+ * SQLite persistence backend for event store and memory storage.
  *
- * Implements IPersistenceBackend and IMemoryStorage interfaces using DuckDB
- * embedded database with columnar analytics and SQL-based queries.
+ * Implements IPersistenceBackend and IMemoryStorage interfaces using SQLite
+ * embedded database. Replaces the DuckDB backend for single-binary compatibility.
  */
 
+import { Database } from "@db/sqlite";
 import { Snapshot } from "./event-store.ts";
 import { IPersistenceBackend } from "./persistence.ts";
 import {
@@ -15,53 +16,31 @@ import {
 import type { AnyMemory, MemoryType } from "../memory/types.ts";
 
 // ============================================================================
-// DuckDB Types (minimal, matching duckdb npm package API)
+// SQLite Configuration
 // ============================================================================
 
-interface DuckDBDatabase {
-  connect(): DuckDBConnection;
-  close(): void;
-}
-
-interface DuckDBConnection {
-  exec(sql: string, ...params: unknown[]): void;
-  all(sql: string, params?: unknown[]): DuckDBRow[];
-  close(): void;
-}
-
-type DuckDBRow = Record<string, unknown>;
-
-// ============================================================================
-// DuckDB Configuration
-// ============================================================================
-
-export interface DuckDBConfig {
-  /** Path to the DuckDB database file. Defaults to 'kayak.db' */
+export interface SQLiteConfig {
+  /** Path to the SQLite database file. Use ':memory:' for in-memory. */
   dbPath: string;
 }
 
 // ============================================================================
-// DuckDB Persistence Backend
+// SQLite Persistence Backend
 // ============================================================================
 
 /**
- * DuckDB persistence backend implementing both IPersistenceBackend and IMemoryStorage.
- * Provides columnar analytics, native JSON ingestion, and SQL-based multi-dimensional queries.
+ * SQLite persistence backend implementing both IPersistenceBackend and IMemoryStorage.
+ * Embedded database with WAL mode for concurrent reads and SQL-based queries.
  */
-export class DuckDBPersistenceBackend implements IPersistenceBackend, IMemoryStorage {
+export class SQLitePersistenceBackend implements IPersistenceBackend, IMemoryStorage {
   readonly backend: StorageBackend = "duckdb";
-  private db: DuckDBDatabase;
-  private conn: DuckDBConnection;
+  private db: Database;
   private closed = false;
 
-  constructor(config: DuckDBConfig) {
-    const duckdbModule = (globalThis as unknown as { __duckdb?: unknown }).__duckdb;
-    if (!duckdbModule) {
-      throw new Error("DuckDB not available. Run scripts/setup-duckdb.sh first.");
-    }
-
-    this.db = new (duckdbModule as new (path: string) => DuckDBDatabase)(config.dbPath);
-    this.conn = this.db.connect();
+  constructor(config: SQLiteConfig) {
+    this.db = new Database(config.dbPath);
+    this.db.exec("PRAGMA journal_mode = WAL");
+    this.db.exec("PRAGMA foreign_keys = ON");
     this.initSchema();
   }
 
@@ -70,30 +49,30 @@ export class DuckDBPersistenceBackend implements IPersistenceBackend, IMemorySto
   // --------------------------------------------------------------------------
 
   private initSchema(): void {
-    this.conn.exec(`
+    this.db.exec(`
       CREATE TABLE IF NOT EXISTS events (
-        id VARCHAR DEFAULT (uuid()),
-        session_id VARCHAR NOT NULL,
+        id TEXT PRIMARY KEY,
+        session_id TEXT NOT NULL,
         sequence INTEGER NOT NULL,
-        event_type VARCHAR NOT NULL,
-        payload JSON,
-        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        metadata JSON
+        event_type TEXT NOT NULL,
+        payload TEXT,
+        timestamp TEXT DEFAULT (datetime('now')),
+        metadata TEXT
       );
 
       CREATE TABLE IF NOT EXISTS memories (
-        id VARCHAR DEFAULT (uuid()),
-        type VARCHAR NOT NULL,
-        session_id VARCHAR,
-        content VARCHAR NOT NULL,
-        metadata JSON,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        id TEXT PRIMARY KEY,
+        type TEXT NOT NULL,
+        session_id TEXT,
+        content TEXT NOT NULL,
+        metadata TEXT,
+        created_at TEXT DEFAULT (datetime('now'))
       );
 
       CREATE TABLE IF NOT EXISTS snapshots (
-        session_id VARCHAR PRIMARY KEY,
-        data JSON NOT NULL,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        session_id TEXT PRIMARY KEY,
+        data TEXT NOT NULL,
+        updated_at TEXT DEFAULT (datetime('now'))
       );
     `);
   }
@@ -106,48 +85,45 @@ export class DuckDBPersistenceBackend implements IPersistenceBackend, IMemorySto
     if (this.closed) throw new Error("Backend is closed");
 
     const event = JSON.parse(line) as Record<string, unknown>;
-    this.conn.exec(
-      `INSERT INTO events (id, session_id, sequence, event_type, payload, timestamp, metadata)
+    this.db.exec(
+      `INSERT OR REPLACE INTO events (id, session_id, sequence, event_type, payload, timestamp, metadata)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [
-        (event.event_id as string) || crypto.randomUUID(),
-        sessionId,
-        (event.sequence_number as number) || 0,
-        (event.event_type as string) || "unknown",
-        JSON.stringify(event),
-        (event.timestamp as string) || new Date().toISOString(),
-        JSON.stringify(event.metadata || {}),
-      ]
+      (event.event_id as string) || crypto.randomUUID(),
+      sessionId,
+      (event.sequence_number as number) || 0,
+      (event.event_type as string) || "unknown",
+      JSON.stringify(event),
+      (event.timestamp as string) || new Date().toISOString(),
+      JSON.stringify(event.metadata || {}),
     );
   }
 
   readLines(sessionId: string): string[] {
     if (this.closed) throw new Error("Backend is closed");
 
-    const rows = this.conn.all(
+    return this.db.prepare(
       `SELECT payload FROM events WHERE session_id = ? ORDER BY sequence`,
-      [sessionId]
-    );
-    return rows.map((row) => row.payload as string);
+    ).all(sessionId).map((row) => row.payload as string);
   }
 
   writeSnapshot(sessionId: string, data: Snapshot): void {
     if (this.closed) throw new Error("Backend is closed");
 
-    this.conn.exec(
+    this.db.exec(
       `INSERT OR REPLACE INTO snapshots (session_id, data, updated_at)
        VALUES (?, ?, ?)`,
-      [sessionId, JSON.stringify(data), new Date().toISOString()]
+      sessionId,
+      JSON.stringify(data),
+      new Date().toISOString(),
     );
   }
 
   readSnapshot(sessionId: string): Snapshot | undefined {
     if (this.closed) throw new Error("Backend is closed");
 
-    const rows = this.conn.all(
+    const rows = this.db.prepare(
       `SELECT data FROM snapshots WHERE session_id = ?`,
-      [sessionId]
-    );
+    ).all(sessionId);
     if (rows.length === 0) return undefined;
     return JSON.parse(rows[0].data as string) as Snapshot;
   }
@@ -155,20 +131,18 @@ export class DuckDBPersistenceBackend implements IPersistenceBackend, IMemorySto
   listSessions(): string[] {
     if (this.closed) throw new Error("Backend is closed");
 
-    const rows = this.conn.all(
-      `SELECT DISTINCT session_id FROM events`
-    );
-    return rows.map((row) => row.session_id as string);
+    return this.db.prepare(
+      `SELECT DISTINCT session_id FROM events`,
+    ).all().map((row) => row.session_id as string);
   }
 
   exists(sessionId: string): boolean {
     if (this.closed) throw new Error("Backend is closed");
 
-    const rows = this.conn.all(
+    const row = this.db.prepare(
       `SELECT COUNT(*) as cnt FROM events WHERE session_id = ?`,
-      [sessionId]
-    );
-    return (rows[0].cnt as number) > 0;
+    ).get(sessionId) as { cnt: number } | undefined;
+    return (row?.cnt ?? 0) > 0;
   }
 
   // --------------------------------------------------------------------------
@@ -178,30 +152,26 @@ export class DuckDBPersistenceBackend implements IPersistenceBackend, IMemorySto
   async store(memory: AnyMemory): Promise<void> {
     if (this.closed) throw new Error("Backend is closed");
 
-    this.conn.exec(
+    this.db.exec(
       `INSERT INTO memories (id, type, session_id, content, metadata, created_at)
        VALUES (?, ?, ?, ?, ?, ?)`,
-      [
-        memory.id,
-        memory.type,
-        memory.session_id || null,
-        JSON.stringify(memory.content),
-        JSON.stringify(memory.metadata || {}),
-        memory.created_at || new Date().toISOString(),
-      ]
+      memory.id,
+      memory.type,
+      memory.session_id || null,
+      JSON.stringify(memory.content),
+      JSON.stringify(memory.metadata || {}),
+      memory.created_at || new Date().toISOString(),
     );
   }
 
   async retrieve(id: string): Promise<AnyMemory | null> {
     if (this.closed) throw new Error("Backend is closed");
 
-    const rows = this.conn.all(
+    const row = this.db.prepare(
       `SELECT * FROM memories WHERE id = ?`,
-      [id]
-    );
-    if (rows.length === 0) return null;
+    ).get(id) as Record<string, unknown> | undefined;
+    if (!row) return null;
 
-    const row = rows[0];
     return {
       id: row.id as string,
       type: row.type as MemoryType,
@@ -215,16 +185,12 @@ export class DuckDBPersistenceBackend implements IPersistenceBackend, IMemorySto
   async delete(id: string): Promise<boolean> {
     if (this.closed) throw new Error("Backend is closed");
 
-    const rows = this.conn.all(
+    const row = this.db.prepare(
       `SELECT COUNT(*) as cnt FROM memories WHERE id = ?`,
-      [id]
-    );
-    if ((rows[0].cnt as number) === 0) return false;
+    ).get(id) as { cnt: number } | undefined;
+    if ((row?.cnt ?? 0) === 0) return false;
 
-    this.conn.exec(
-      `DELETE FROM memories WHERE id = ?`,
-      [id]
-    );
+    this.db.exec(`DELETE FROM memories WHERE id = ?`, id);
     return true;
   }
 
@@ -232,7 +198,7 @@ export class DuckDBPersistenceBackend implements IPersistenceBackend, IMemorySto
     if (this.closed) throw new Error("Backend is closed");
 
     let sql = `SELECT * FROM memories WHERE 1=1`;
-    const params: unknown[] = [];
+    const params: (string | number | null)[] = [];
 
     if (options?.type) {
       sql += ` AND type = ?`;
@@ -250,8 +216,7 @@ export class DuckDBPersistenceBackend implements IPersistenceBackend, IMemorySto
       params.push(options.max_results);
     }
 
-    const rows = this.conn.all(sql, params);
-    return rows.map((row) => ({
+    return this.db.prepare(sql).all(...params).map((row) => ({
       id: row.id as string,
       type: row.type as MemoryType,
       session_id: row.session_id as string,
@@ -269,10 +234,13 @@ export class DuckDBPersistenceBackend implements IPersistenceBackend, IMemorySto
   // Connection Management
   // --------------------------------------------------------------------------
 
+  getDatabase(): Database {
+    return this.db;
+  }
+
   close(): void {
     if (this.closed) return;
     this.closed = true;
-    this.conn.close();
     this.db.close();
   }
 }

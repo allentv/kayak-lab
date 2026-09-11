@@ -1,5 +1,4 @@
 {
-  "nodeModulesDir": "auto",
   "compilerOptions": {
     "strict": true,
     "noUnusedLocals": true,
@@ -19,11 +18,11 @@
     "preact": "npm:preact@10",
     "preact/hooks": "npm:preact@10/hooks",
     "@preact/signals": "npm:@preact/signals@2",
-    "duckdb": "npm:duckdb@1.4.4"
+    "@db/sqlite": "jsr:@db/sqlite@0.12"
   },
   "tasks": {
-    "test": "deno test --allow-read --allow-env --allow-write --allow-net --allow-run",
-    "test:watch": "deno test --watch --allow-read --allow-env --allow-write --allow-net --allow-run",
+    "test": "deno test --allow-read --allow-env --allow-write --allow-net --allow-run --allow-ffi",
+    "test:watch": "deno test --watch --allow-read --allow-env --allow-write --allow-net --allow-run --allow-ffi",
     "fmt": "deno fmt",
     "lint": "deno lint",
     "check": "deno check src/**/*.ts",

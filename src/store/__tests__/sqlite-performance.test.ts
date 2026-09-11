@@ -1,10 +1,9 @@
 /**
- * Performance benchmark tests for DuckDB backend.
+ * Performance benchmark tests for SQLite backend.
  */
 
 import { assertEquals } from "@std/assert";
-import "../../__test-utils__/duckdb-setup.ts";
-import { DuckDBPersistenceBackend } from "../duckdb-backend.ts";
+import { SQLitePersistenceBackend } from "../sqlite-backend.ts";
 import { EventTypes } from "../../types/events.ts";
 
 // ============================================================================
@@ -13,7 +12,7 @@ import { EventTypes } from "../../types/events.ts";
 
 function createTestEvent(sessionId: string, sequenceNumber: number) {
   return {
-    event_id: `event-${sequenceNumber}`,
+    event_id: `${sessionId}-event-${sequenceNumber}`,
     session_id: sessionId,
     sequence_number: sequenceNumber,
     timestamp: new Date().toISOString(),
@@ -28,9 +27,8 @@ function createTestEvent(sessionId: string, sequenceNumber: number) {
 // Performance Benchmarks
 // ============================================================================
 
-Deno.test("Performance - bulk insert rate (target: 20k+ events/sec)", async () => {
-  const dbPath = `/tmp/test-duckdb-perf-${Date.now()}.db`;
-  const backend = new DuckDBPersistenceBackend({ dbPath });
+Deno.test("Performance - bulk insert rate (target: 10k+ events/sec)", () => {
+  const backend = new SQLitePersistenceBackend({ dbPath: ":memory:" });
 
   const eventCount = 1000;
   const startTime = performance.now();
@@ -46,16 +44,14 @@ Deno.test("Performance - bulk insert rate (target: 20k+ events/sec)", async () =
   console.log(`Inserted ${eventCount} events in ${durationMs.toFixed(2)}ms`);
   console.log(`Rate: ${eventsPerSecond.toFixed(0)} events/sec`);
 
-  // Verify insert rate
-  assertEquals(eventsPerSecond >= 20000, true, `Insert rate ${eventsPerSecond.toFixed(0)} events/sec below target of 20k`);
+  // SQLite target: 10k+ events/sec (lower than DuckDB's 20k due to WAL overhead)
+  assertEquals(eventsPerSecond >= 10000, true, `Insert rate ${eventsPerSecond.toFixed(0)} events/sec below target of 10k`);
 
   backend.close();
-  Deno.removeSync(dbPath, { recursive: true });
 });
 
-Deno.test("Performance - aggregation query latency (target: <100ms)", async () => {
-  const dbPath = `/tmp/test-duckdb-perf-agg-${Date.now()}.db`;
-  const backend = new DuckDBPersistenceBackend({ dbPath });
+Deno.test("Performance - aggregation query latency (target: <100ms)", () => {
+  const backend = new SQLitePersistenceBackend({ dbPath: ":memory:" });
 
   // Insert test data
   const eventCount = 1000;
@@ -66,18 +62,16 @@ Deno.test("Performance - aggregation query latency (target: <100ms)", async () =
   const startTime = performance.now();
 
   // Run aggregation query
-  const conn = (backend as unknown as { conn: { all: (sql: string) => unknown[] } }).conn;
-  const _rows = conn.all(`SELECT COUNT(*) as cnt FROM events`);
-  void _rows;
+  const db = backend.getDatabase();
+  const _row = db.prepare(`SELECT COUNT(*) as cnt FROM events`).get();
+  void _row;
 
   const endTime = performance.now();
   const durationMs = endTime - startTime;
 
   console.log(`Aggregation query took ${durationMs.toFixed(2)}ms`);
 
-  // Verify query latency
   assertEquals(durationMs < 100, true, `Query latency ${durationMs.toFixed(2)}ms exceeds target of 100ms`);
 
   backend.close();
-  Deno.removeSync(dbPath, { recursive: true });
 });

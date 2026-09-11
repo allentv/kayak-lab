@@ -1,10 +1,9 @@
 /**
- * Tests for DuckDB persistence backend.
+ * Tests for SQLite persistence backend.
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import "../../__test-utils__/duckdb-setup.ts";
-import { DuckDBPersistenceBackend } from "../duckdb-backend.ts";
+import { SQLitePersistenceBackend } from "../sqlite-backend.ts";
 import { BaseEvent, EventTypes } from "../../types/events.ts";
 
 // ============================================================================
@@ -13,7 +12,7 @@ import { BaseEvent, EventTypes } from "../../types/events.ts";
 
 function createTestEvent(sessionId: string, sequenceNumber: number): BaseEvent {
   return {
-    event_id: `event-${sequenceNumber}`,
+    event_id: `${sessionId}-event-${sequenceNumber}`,
     session_id: sessionId,
     sequence_number: sequenceNumber,
     timestamp: new Date().toISOString(),
@@ -34,12 +33,12 @@ function createTestSnapshot(sessionId: string, sequenceNumber: number) {
 }
 
 // ============================================================================
-// DuckDB Backend Tests
+// SQLite Backend Tests
 // ============================================================================
 
-Deno.test("DuckDBPersistenceBackend - write and read events", async () => {
-  const dbPath = `/tmp/test-duckdb-${Date.now()}.db`;
-  const backend = new DuckDBPersistenceBackend({ dbPath });
+Deno.test("SQLitePersistenceBackend - write and read events", () => {
+  const dbPath = `:memory:`;
+  const backend = new SQLitePersistenceBackend({ dbPath });
 
   const sessionId = "session-1";
   const event1 = createTestEvent(sessionId, 1);
@@ -53,16 +52,14 @@ Deno.test("DuckDBPersistenceBackend - write and read events", async () => {
 
   const parsed1 = JSON.parse(lines[0]);
   const parsed2 = JSON.parse(lines[1]);
-  assertEquals(parsed1.event_id, "event-1");
-  assertEquals(parsed2.event_id, "event-2");
+  assertEquals(parsed1.event_id, "session-1-event-1");
+  assertEquals(parsed2.event_id, "session-1-event-2");
 
   backend.close();
-  Deno.removeSync(dbPath, { recursive: true });
 });
 
-Deno.test("DuckDBPersistenceBackend - writeSnapshot and readSnapshot", () => {
-  const dbPath = `/tmp/test-duckdb-snapshot-${Date.now()}.db`;
-  const backend = new DuckDBPersistenceBackend({ dbPath });
+Deno.test("SQLitePersistenceBackend - writeSnapshot and readSnapshot", () => {
+  const backend = new SQLitePersistenceBackend({ dbPath: ":memory:" });
 
   const sessionId = "session-1";
   const snapshot = createTestSnapshot(sessionId, 5);
@@ -75,12 +72,10 @@ Deno.test("DuckDBPersistenceBackend - writeSnapshot and readSnapshot", () => {
   assertEquals(readSnapshot.sequence_number, 5);
 
   backend.close();
-  Deno.removeSync(dbPath, { recursive: true });
 });
 
-Deno.test("DuckDBPersistenceBackend - listSessions and exists", () => {
-  const dbPath = `/tmp/test-duckdb-sessions-${Date.now()}.db`;
-  const backend = new DuckDBPersistenceBackend({ dbPath });
+Deno.test("SQLitePersistenceBackend - listSessions and exists", () => {
+  const backend = new SQLitePersistenceBackend({ dbPath: ":memory:" });
 
   const sessionId1 = "session-1";
   const sessionId2 = "session-2";
@@ -98,23 +93,19 @@ Deno.test("DuckDBPersistenceBackend - listSessions and exists", () => {
   assertEquals(backend.exists("nonexistent"), false);
 
   backend.close();
-  Deno.removeSync(dbPath, { recursive: true });
 });
 
-Deno.test("DuckDBPersistenceBackend - readLines returns empty for non-existent session", () => {
-  const dbPath = `/tmp/test-duckdb-empty-${Date.now()}.db`;
-  const backend = new DuckDBPersistenceBackend({ dbPath });
+Deno.test("SQLitePersistenceBackend - readLines returns empty for non-existent session", () => {
+  const backend = new SQLitePersistenceBackend({ dbPath: ":memory:" });
 
   const lines = backend.readLines("nonexistent");
   assertEquals(lines.length, 0);
 
   backend.close();
-  Deno.removeSync(dbPath, { recursive: true });
 });
 
-Deno.test("DuckDBPersistenceBackend - memory storage CRUD", async () => {
-  const dbPath = `/tmp/test-duckdb-memory-${Date.now()}.db`;
-  const backend = new DuckDBPersistenceBackend({ dbPath });
+Deno.test("SQLitePersistenceBackend - memory storage CRUD", async () => {
+  const backend = new SQLitePersistenceBackend({ dbPath: ":memory:" });
 
   const memory = {
     id: "memory-1",
@@ -142,34 +133,26 @@ Deno.test("DuckDBPersistenceBackend - memory storage CRUD", async () => {
   assertEquals(notFound, null);
 
   backend.close();
-  Deno.removeSync(dbPath, { recursive: true });
 });
 
-Deno.test("DuckDBPersistenceBackend - isAvailable", async () => {
-  const dbPath = `/tmp/test-duckdb-available-${Date.now()}.db`;
-  const backend = new DuckDBPersistenceBackend({ dbPath });
+Deno.test("SQLitePersistenceBackend - isAvailable", async () => {
+  const backend = new SQLitePersistenceBackend({ dbPath: ":memory:" });
 
   assertEquals(await backend.isAvailable(), true);
 
   backend.close();
   assertEquals(await backend.isAvailable(), false);
-
-  Deno.removeSync(dbPath, { recursive: true });
 });
 
-Deno.test("DuckDBPersistenceBackend - close is idempotent", () => {
-  const dbPath = `/tmp/test-duckdb-close-${Date.now()}.db`;
-  const backend = new DuckDBPersistenceBackend({ dbPath });
+Deno.test("SQLitePersistenceBackend - close is idempotent", () => {
+  const backend = new SQLitePersistenceBackend({ dbPath: ":memory:" });
 
   backend.close();
   backend.close(); // Should not throw
-
-  Deno.removeSync(dbPath, { recursive: true });
 });
 
-Deno.test("DuckDBPersistenceBackend - throws after close", () => {
-  const dbPath = `/tmp/test-duckdb-throws-${Date.now()}.db`;
-  const backend = new DuckDBPersistenceBackend({ dbPath });
+Deno.test("SQLitePersistenceBackend - throws after close", () => {
+  const backend = new SQLitePersistenceBackend({ dbPath: ":memory:" });
 
   backend.close();
 
@@ -180,6 +163,4 @@ Deno.test("DuckDBPersistenceBackend - throws after close", () => {
     threw = true;
   }
   assertEquals(threw, true);
-
-  Deno.removeSync(dbPath, { recursive: true });
 });

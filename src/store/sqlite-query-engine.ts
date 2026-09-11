@@ -1,84 +1,112 @@
 /**
- * DuckDB-based query engine for analytics and self-observation.
+ * SQLite-based query engine for analytics and self-observation.
  *
- * Replaces hand-rolled JavaScript aggregation with SQL-based queries
- * on the DuckDB event store. Provides tool performance metrics,
- * session summaries, event type distributions, error patterns,
- * time-series aggregation, cross-table joins, pivot tables, and
- * window function analytics.
+ * SQL-based queries on the SQLite event store. Provides tool performance metrics,
+ * session summaries, event type distributions, error patterns, time-series
+ * aggregation, cross-table joins, pivot tables, and window function analytics.
  */
 
+import { Database } from "@db/sqlite";
 import { EventTypes } from "../types/events.ts";
-import { IEventQueryEngine, TimeRange, ToolPerformanceMetrics, ErrorPattern, SessionSummary, EventTypeDistribution, AggregateToolUsage, SessionDurationTrends } from "./query-engine.ts";
+import {
+  IEventQueryEngine,
+  TimeRange,
+  ToolPerformanceMetrics,
+  ErrorPattern,
+  SessionSummary,
+  EventTypeDistribution,
+  AggregateToolUsage,
+  SessionDurationTrends,
+} from "./query-engine.ts";
 
 // ============================================================================
-// DuckDB Types
-// ============================================================================
-
-interface DuckDBDatabase {
-  connect(): DuckDBConnection;
-  close(): void;
-}
-
-interface DuckDBConnection {
-  exec(sql: string, ...params: unknown[]): void;
-  all(sql: string, params?: unknown[]): DuckDBRow[];
-  close(): void;
-}
-
-type DuckDBRow = Record<string, unknown>;
-
-// ============================================================================
-// DuckDB Query Engine
+// SQLite Query Engine
 // ============================================================================
 
 /**
- * DuckDB-based query engine implementing IEventQueryEngine.
- * All queries are executed as SQL against the DuckDB database.
+ * SQLite query engine implementing IEventQueryEngine.
+ * All queries are executed as SQL against the SQLite database.
  */
-export class DuckDBQueryEngine implements IEventQueryEngine {
-  private conn: DuckDBConnection;
+export class SQLiteQueryEngine implements IEventQueryEngine {
+  private db: Database;
 
-  constructor(db: DuckDBDatabase) {
-    this.conn = db.connect();
+  constructor(db: Database) {
+    this.db = db;
+  }
+
+  // --------------------------------------------------------------------------
+  // Helper: Build time range WHERE clause
+  // --------------------------------------------------------------------------
+
+  private buildTimeRange(
+    range?: TimeRange,
+    tableAlias = "",
+  ): { clause: string; params: (string | number)[] } {
+    const prefix = tableAlias ? `${tableAlias}.` : "";
+    const conditions: string[] = [];
+    const params: (string | number)[] = [];
+
+    if (range?.startTime) {
+      conditions.push(`${prefix}timestamp >= ?`);
+      params.push(range.startTime);
+    }
+    if (range?.endTime) {
+      conditions.push(`${prefix}timestamp <= ?`);
+      params.push(range.endTime);
+    }
+
+    return {
+      clause: conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "",
+      params,
+    };
   }
 
   // --------------------------------------------------------------------------
   // Tool Performance Metrics
   // --------------------------------------------------------------------------
 
-  getToolPerformance(toolName?: string, range?: TimeRange): ToolPerformanceMetrics[] {
-    const params: unknown[] = [];
-    let whereClause = `WHERE event_type IN (?, ?, ?)`;
-    params.push(EventTypes.TOOL_EXECUTION_STARTED, EventTypes.TOOL_EXECUTION_COMPLETED, EventTypes.TOOL_EXECUTION_FAILED);
+  getToolPerformance(
+    toolName?: string,
+    range?: TimeRange,
+  ): ToolPerformanceMetrics[] {
+    const conditions = [`event_type IN (?, ?, ?)`];
+    const params: (string | number)[] = [
+      EventTypes.TOOL_EXECUTION_STARTED,
+      EventTypes.TOOL_EXECUTION_COMPLETED,
+      EventTypes.TOOL_EXECUTION_FAILED,
+    ];
 
     if (toolName) {
-      whereClause += ` AND json_extract(payload, '$.tool_name') = ?`;
+      conditions.push(`json_extract(payload, '$.tool_name') = ?`);
       params.push(toolName);
     }
 
-    if (range?.startTime) {
-      whereClause += ` AND timestamp >= ?`;
-      params.push(range.startTime);
+    const { clause: timeClause, params: timeParams } = this.buildTimeRange(range);
+    if (timeClause) {
+      conditions.push(timeClause.replace("WHERE ", ""));
     }
-    if (range?.endTime) {
-      whereClause += ` AND timestamp <= ?`;
-      params.push(range.endTime);
-    }
+    params.push(...timeParams);
+
+    const whereClause = `WHERE ${conditions.join(" AND ")}`;
 
     const sql = `
       SELECT
         json_extract(payload, '$.tool_name') as tool_name,
         COUNT(*) as total_invocations,
-        SUM(CASE WHEN event_type = '${EventTypes.TOOL_EXECUTION_COMPLETED}' THEN 1 ELSE 0 END) as success_count,
-        SUM(CASE WHEN event_type = '${EventTypes.TOOL_EXECUTION_FAILED}' THEN 1 ELSE 0 END) as failure_count,
-        AVG(CASE WHEN event_type = '${EventTypes.TOOL_EXECUTION_COMPLETED}' THEN json_extract(payload, '$.duration_ms')::DOUBLE ELSE NULL END) as avg_duration_ms
+        SUM(CASE WHEN event_type = ? THEN 1 ELSE 0 END) as success_count,
+        SUM(CASE WHEN event_type = ? THEN 1 ELSE 0 END) as failure_count,
+        AVG(CASE WHEN event_type = ? THEN CAST(json_extract(payload, '$.duration_ms') AS REAL) ELSE NULL END) as avg_duration_ms
       FROM events
       ${whereClause}
       GROUP BY json_extract(payload, '$.tool_name')
     `;
 
-    const rows = this.conn.all(sql, params);
+    const rows = this.db.prepare(sql).all(
+      EventTypes.TOOL_EXECUTION_COMPLETED,
+      EventTypes.TOOL_EXECUTION_FAILED,
+      EventTypes.TOOL_EXECUTION_COMPLETED,
+      ...params,
+    );
 
     return rows.map((row) => ({
       toolName: row.tool_name as string,
@@ -95,23 +123,24 @@ export class DuckDBQueryEngine implements IEventQueryEngine {
   // --------------------------------------------------------------------------
 
   getErrorPatterns(toolName?: string, range?: TimeRange): ErrorPattern[] {
-    const params: unknown[] = [];
-    let whereClause = `WHERE event_type IN (?, ?)`;
-    params.push(EventTypes.TOOL_EXECUTION_FAILED, EventTypes.MCP_ERROR);
+    const conditions = [`event_type IN (?, ?)`];
+    const params: (string | number)[] = [
+      EventTypes.TOOL_EXECUTION_FAILED,
+      EventTypes.MCP_ERROR,
+    ];
 
     if (toolName) {
-      whereClause += ` AND json_extract(payload, '$.tool_name') = ?`;
+      conditions.push(`json_extract(payload, '$.tool_name') = ?`);
       params.push(toolName);
     }
 
-    if (range?.startTime) {
-      whereClause += ` AND timestamp >= ?`;
-      params.push(range.startTime);
+    const { clause: timeClause, params: timeParams } = this.buildTimeRange(range);
+    if (timeClause) {
+      conditions.push(timeClause.replace("WHERE ", ""));
     }
-    if (range?.endTime) {
-      whereClause += ` AND timestamp <= ?`;
-      params.push(range.endTime);
-    }
+    params.push(...timeParams);
+
+    const whereClause = `WHERE ${conditions.join(" AND ")}`;
 
     const sql = `
       SELECT
@@ -125,7 +154,7 @@ export class DuckDBQueryEngine implements IEventQueryEngine {
       ORDER BY count DESC
     `;
 
-    const rows = this.conn.all(sql, params);
+    const rows = this.db.prepare(sql).all(...params);
 
     return rows.map((row) => ({
       errorType: row.error_type as string,
@@ -146,25 +175,24 @@ export class DuckDBQueryEngine implements IEventQueryEngine {
         COUNT(*) as total_events,
         MIN(timestamp) as started_at,
         MAX(timestamp) as last_event_at,
-        AVG(CASE WHEN event_type IN (?, ?) THEN 1 ELSE 0 END) * COUNT(*) as tool_call_count,
-        AVG(CASE WHEN event_type = ? THEN 1 ELSE 0 END) * COUNT(*) as model_invocation_count,
-        COUNT(CASE WHEN event_type = ? THEN 1 END) as completion_count
+        CAST(SUM(CASE WHEN event_type IN (?, ?) THEN 1 ELSE 0 END) AS REAL) * COUNT(*) / COUNT(*) as tool_call_count,
+        CAST(SUM(CASE WHEN event_type = ? THEN 1 ELSE 0 END) AS REAL) * COUNT(*) / COUNT(*) as model_invocation_count,
+        SUM(CASE WHEN event_type = ? THEN 1 ELSE 0 END) as completion_count
       FROM events
       WHERE session_id = ?
       GROUP BY session_id
     `;
 
-    const rows = this.conn.all(sql, [
+    const row = this.db.prepare(sql).get(
       EventTypes.TOOL_EXECUTION_STARTED,
       EventTypes.TOOL_EXECUTION_COMPLETED,
       EventTypes.MODEL_REQUEST,
       EventTypes.SESSION_COMPLETED,
       sessionId,
-    ]);
+    ) as Record<string, unknown> | undefined;
 
-    if (rows.length === 0) return undefined;
+    if (!row) return undefined;
 
-    const row = rows[0];
     const startedAt = row.started_at as string;
     const lastEventAt = row.last_event_at as string;
     const durationMs = new Date(lastEventAt).getTime() - new Date(startedAt).getTime();
@@ -192,22 +220,22 @@ export class DuckDBQueryEngine implements IEventQueryEngine {
         COUNT(*) as total_events,
         MIN(timestamp) as started_at,
         MAX(timestamp) as last_event_at,
-        AVG(CASE WHEN event_type IN (?, ?) THEN 1 ELSE 0 END) * COUNT(*) as tool_call_count,
-        AVG(CASE WHEN event_type = ? THEN 1 ELSE 0 END) * COUNT(*) as model_invocation_count,
-        COUNT(CASE WHEN event_type = ? THEN 1 END) as completion_count
+        CAST(SUM(CASE WHEN event_type IN (?, ?) THEN 1 ELSE 0 END) AS REAL) * COUNT(*) / COUNT(*) as tool_call_count,
+        CAST(SUM(CASE WHEN event_type = ? THEN 1 ELSE 0 END) AS REAL) * COUNT(*) / COUNT(*) as model_invocation_count,
+        SUM(CASE WHEN event_type = ? THEN 1 ELSE 0 END) as completion_count
       FROM events
       GROUP BY session_id
       ORDER BY last_event_at DESC
       LIMIT ?
     `;
 
-    const rows = this.conn.all(sql, [
+    const rows = this.db.prepare(sql).all(
       EventTypes.TOOL_EXECUTION_STARTED,
       EventTypes.TOOL_EXECUTION_COMPLETED,
       EventTypes.MODEL_REQUEST,
       EventTypes.SESSION_COMPLETED,
       limit,
-    ]);
+    );
 
     return rows.map((row) => {
       const startedAt = row.started_at as string;
@@ -232,30 +260,21 @@ export class DuckDBQueryEngine implements IEventQueryEngine {
   // --------------------------------------------------------------------------
 
   getEventTypeDistribution(range?: TimeRange): EventTypeDistribution[] {
-    const params: unknown[] = [];
-    let whereClause = "";
-
-    if (range?.startTime) {
-      whereClause += ` WHERE timestamp >= ?`;
-      params.push(range.startTime);
-    }
-    if (range?.endTime) {
-      whereClause += whereClause ? ` AND timestamp <= ?` : ` WHERE timestamp <= ?`;
-      params.push(range.endTime);
-    }
+    const { clause: timeClause, params } = this.buildTimeRange(range);
+    const whereClause = timeClause || "";
 
     const sql = `
       SELECT
         event_type,
         COUNT(*) as count,
-        ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM events${whereClause}), 2) as percentage
+        ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM events ${whereClause}), 2) as percentage
       FROM events
       ${whereClause}
       GROUP BY event_type
       ORDER BY count DESC
     `;
 
-    const rows = this.conn.all(sql, params);
+    const rows = this.db.prepare(sql).all(...params);
 
     return rows.map((row) => ({
       eventType: row.event_type as string,
@@ -269,18 +288,19 @@ export class DuckDBQueryEngine implements IEventQueryEngine {
   // --------------------------------------------------------------------------
 
   getAggregateToolUsage(range?: TimeRange): AggregateToolUsage {
-    const params: unknown[] = [];
-    let whereClause = `WHERE event_type IN (?, ?)`;
-    params.push(EventTypes.TOOL_EXECUTION_STARTED, EventTypes.TOOL_EXECUTION_COMPLETED);
+    const conditions = [`event_type IN (?, ?)`];
+    const params: (string | number)[] = [
+      EventTypes.TOOL_EXECUTION_STARTED,
+      EventTypes.TOOL_EXECUTION_COMPLETED,
+    ];
 
-    if (range?.startTime) {
-      whereClause += ` AND timestamp >= ?`;
-      params.push(range.startTime);
+    const { clause: timeClause, params: timeParams } = this.buildTimeRange(range);
+    if (timeClause) {
+      conditions.push(timeClause.replace("WHERE ", ""));
     }
-    if (range?.endTime) {
-      whereClause += ` AND timestamp <= ?`;
-      params.push(range.endTime);
-    }
+    params.push(...timeParams);
+
+    const whereClause = `WHERE ${conditions.join(" AND ")}`;
 
     const sql = `
       SELECT
@@ -291,7 +311,7 @@ export class DuckDBQueryEngine implements IEventQueryEngine {
       GROUP BY json_extract(payload, '$.tool_name')
     `;
 
-    const rows = this.conn.all(sql, params);
+    const rows = this.db.prepare(sql).all(...params);
 
     const toolBreakdown: Record<string, number> = {};
     let totalInvocations = 0;
@@ -315,17 +335,11 @@ export class DuckDBQueryEngine implements IEventQueryEngine {
   // --------------------------------------------------------------------------
 
   getSessionDurationTrends(range?: TimeRange): SessionDurationTrends {
-    const params: unknown[] = [];
-    let whereClause = "";
-
-    if (range?.startTime) {
-      whereClause += ` WHERE started_at >= ?`;
-      params.push(range.startTime);
-    }
-    if (range?.endTime) {
-      whereClause += whereClause ? ` AND started_at <= ?` : ` WHERE started_at <= ?`;
-      params.push(range.endTime);
-    }
+    const { clause: timeClause, params } = this.buildTimeRange(range);
+    // Remap "timestamp" references to "started_at" for the subquery
+    const whereClause = timeClause
+      ? timeClause.replace(/timestamp/g, "started_at")
+      : "";
 
     const sql = `
       SELECT
@@ -336,7 +350,7 @@ export class DuckDBQueryEngine implements IEventQueryEngine {
       FROM (
         SELECT
           session_id,
-          MAX(timestamp) - MIN(timestamp) as duration_ms,
+          (julianday(MAX(timestamp)) - julianday(MIN(timestamp))) * 86400000 as duration_ms,
           MIN(timestamp) as started_at
         FROM events
         GROUP BY session_id
@@ -344,15 +358,10 @@ export class DuckDBQueryEngine implements IEventQueryEngine {
       ${whereClause}
     `;
 
-    const rows = this.conn.all(sql, params);
+    const rows = this.db.prepare(sql).all(...params);
 
     if (rows.length === 0) {
-      return {
-        averageMs: 0,
-        minMs: 0,
-        maxMs: 0,
-        sessionCount: 0,
-      };
+      return { averageMs: 0, minMs: 0, maxMs: 0, sessionCount: 0 };
     }
 
     const row = rows[0];
@@ -370,34 +379,35 @@ export class DuckDBQueryEngine implements IEventQueryEngine {
 
   getTimeSeriesAggregation(
     granularity: "minute" | "hour" | "day" | "week",
-    range?: TimeRange
+    range?: TimeRange,
   ): { timestamp: string; event_count: number; error_count: number }[] {
-    const params: unknown[] = [];
-    let whereClause = "";
+    const formatMap: Record<string, string> = {
+      minute: "%Y-%m-%dT%H:%M:00",
+      hour: "%Y-%m-%dT%H:00:00",
+      day: "%Y-%m-%dT00:00:00",
+      week: "%Y-%W01T00:00:00",
+    };
+    const strftimeFmt = formatMap[granularity] || formatMap.hour;
 
-    if (range?.startTime) {
-      whereClause += ` WHERE timestamp >= ?`;
-      params.push(range.startTime);
-    }
-    if (range?.endTime) {
-      whereClause += whereClause ? ` AND timestamp <= ?` : ` WHERE timestamp <= ?`;
-      params.push(range.endTime);
-    }
-
-    const dateTrunc = `date_trunc('${granularity}', timestamp)`;
+    const { clause: timeClause, params } = this.buildTimeRange(range);
+    const whereClause = timeClause || "";
 
     const sql = `
       SELECT
-        ${dateTrunc} as time_bucket,
+        strftime('${strftimeFmt}', timestamp) as time_bucket,
         COUNT(*) as event_count,
-        SUM(CASE WHEN event_type IN ('${EventTypes.MCP_ERROR}', '${EventTypes.TOOL_EXECUTION_FAILED}') THEN 1 ELSE 0 END) as error_count
+        SUM(CASE WHEN event_type IN (?, ?) THEN 1 ELSE 0 END) as error_count
       FROM events
       ${whereClause}
-      GROUP BY ${dateTrunc}
+      GROUP BY time_bucket
       ORDER BY time_bucket
     `;
 
-    const rows = this.conn.all(sql, params);
+    const rows = this.db.prepare(sql).all(
+      EventTypes.MCP_ERROR,
+      EventTypes.TOOL_EXECUTION_FAILED,
+      ...params,
+    );
 
     return rows.map((row) => ({
       timestamp: (row.time_bucket as string) || "",
@@ -421,7 +431,7 @@ export class DuckDBQueryEngine implements IEventQueryEngine {
         e.session_id,
         COUNT(DISTINCT e.id) as event_count,
         COUNT(DISTINCT m.id) as memory_count,
-        ARRAY_AGG(DISTINCT m.type) as memory_types
+        GROUP_CONCAT(DISTINCT m.type) as memory_types
       FROM events e
       LEFT JOIN memories m ON e.session_id = m.session_id
       GROUP BY e.session_id
@@ -429,13 +439,13 @@ export class DuckDBQueryEngine implements IEventQueryEngine {
       ORDER BY memory_count DESC
     `;
 
-    const rows = this.conn.all(sql);
+    const rows = this.db.prepare(sql).all();
 
     return rows.map((row) => ({
       sessionId: row.session_id as string,
       eventCount: row.event_count as number,
       memoryCount: row.memory_count as number,
-      memoryTypes: (row.memory_types as string[]) || [],
+      memoryTypes: (row.memory_types as string)?.split(",") || [],
     }));
   }
 
@@ -458,10 +468,10 @@ export class DuckDBQueryEngine implements IEventQueryEngine {
       ORDER BY session_id, count DESC
     `;
 
-    const rows = this.conn.all(sql, [
+    const rows = this.db.prepare(sql).all(
       EventTypes.TOOL_EXECUTION_STARTED,
       EventTypes.TOOL_EXECUTION_COMPLETED,
-    ]);
+    );
 
     const pivotMap = new Map<string, Record<string, number>>();
 
@@ -488,7 +498,7 @@ export class DuckDBQueryEngine implements IEventQueryEngine {
 
   getRollingErrorRate(
     sessionId: string,
-    windowSize: number = 10
+    windowSize: number = 10,
   ): {
     eventNum: number;
     isError: boolean;
@@ -498,7 +508,7 @@ export class DuckDBQueryEngine implements IEventQueryEngine {
       SELECT
         ROW_NUMBER() OVER (ORDER BY sequence) as event_num,
         CASE WHEN event_type IN (?, ?) THEN 1 ELSE 0 END as is_error,
-        AVG(CASE WHEN event_type IN (?, ?) THEN 1 ELSE 0 END) OVER (
+        AVG(CASE WHEN event_type IN (?, ?) THEN 1.0 ELSE 0.0 END) OVER (
           ORDER BY sequence
           ROWS BETWEEN ? PRECEDING AND CURRENT ROW
         ) as rolling_error_rate
@@ -507,14 +517,14 @@ export class DuckDBQueryEngine implements IEventQueryEngine {
       ORDER BY sequence
     `;
 
-    const rows = this.conn.all(sql, [
+    const rows = this.db.prepare(sql).all(
       EventTypes.MCP_ERROR,
       EventTypes.TOOL_EXECUTION_FAILED,
       EventTypes.MCP_ERROR,
       EventTypes.TOOL_EXECUTION_FAILED,
       windowSize,
       sessionId,
-    ]);
+    );
 
     return rows.map((row) => ({
       eventNum: row.event_num as number,
