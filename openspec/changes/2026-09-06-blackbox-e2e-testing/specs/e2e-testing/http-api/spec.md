@@ -28,6 +28,18 @@ The harness SHALL expose an endpoint that lists all active sessions with their e
 - **WHEN** a session is created via the harness and `GET /api/sessions` is called
 - **THEN** the response contains one entry with `event_count >= 1`
 
+### Requirement: Session creation via API
+
+The harness SHALL support creating sessions via POST with an optional description, returning the new session in active state.
+
+#### Scenario: Create session returns 201 with active state
+- **WHEN** `POST /api/sessions` is called with `{ "description": "..." }`
+- **THEN** the response is HTTP 201 with body containing `state: "active"`, a generated `id`, and the provided `description`
+
+#### Scenario: Create session without description
+- **WHEN** `POST /api/sessions` is called with no body
+- **THEN** the response is HTTP 201 with `state: "active"` and `description` is null or undefined
+
 ### Requirement: Session lifecycle via API
 
 The harness SHALL support creating sessions and transitioning their state through the HTTP API, with full event history returned for each session.
@@ -35,6 +47,22 @@ The harness SHALL support creating sessions and transitioning their state throug
 #### Scenario: Full lifecycle
 - **WHEN** a session is created, paused, resumed, and completed via the harness
 - **THEN** the session transitions through states `active → paused → active → completed` and the event history reflects all transitions in order
+
+#### Scenario: Fail action
+- **WHEN** `PATCH /api/sessions/:id` is called with `{ "action": "fail", "error": "..." }` on an active session
+- **THEN** the session transitions to `failed` state
+
+#### Scenario: Cancel action
+- **WHEN** `PATCH /api/sessions/:id` is called with `{ "action": "cancel" }` on an active session
+- **THEN** the session transitions to `cancelled` state
+
+#### Scenario: Invalid action returns 400
+- **WHEN** `PATCH /api/sessions/:id` is called with `{ "action": "bogus" }`
+- **THEN** the response is HTTP 400 with an error message
+
+#### Scenario: Patch non-existent session returns 404
+- **WHEN** `PATCH /api/sessions/:id` is called with a non-existent session ID
+- **THEN** the response is HTTP 404
 
 #### Scenario: Session not found
 - **WHEN** `GET /api/sessions/:id` is called with a non-existent session ID
@@ -70,8 +98,16 @@ The harness SHALL respond to CORS preflight requests and include appropriate COR
 
 #### Scenario: Preflight returns 204
 - **WHEN** `OPTIONS /api/health` is sent with `Origin` and `Access-Control-Request-Method` headers
-- **THEN** the response is HTTP 204 with CORS headers allowing the origin
+- **THEN** the response is HTTP 204 with CORS headers allowing the origin, including `Access-Control-Allow-Methods` containing `PATCH`
 
 #### Scenario: Response includes CORS headers
 - **WHEN** any GET request is made with an `Origin` header
 - **THEN** the response includes `Access-Control-Allow-Origin: *`
+
+### Requirement: Unknown route handling
+
+The harness SHALL return 404 for requests to undefined API routes.
+
+#### Scenario: Unknown API route returns 404
+- **WHEN** `GET /api/nonexistent` is called
+- **THEN** the response is HTTP 404

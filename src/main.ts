@@ -328,6 +328,7 @@ interface WebSocketClient {
   eventTypes?: string[];
   lastPong: number;
   lastSequence: number;
+  unsubscribe?: () => void;
 }
 
 const wsClients = new Map<string, WebSocketClient>();
@@ -359,8 +360,8 @@ function handleWebSocketUpgrade(
       lastSequence: client.lastSequence,
     }));
 
-    // Subscribe to event stream
-    components.eventStream.onAppend((event) => {
+    // Subscribe to event stream and store unsubscribe function
+    client.unsubscribe = components.eventStream.onAppend((event) => {
       // Check if client is interested in this event
       if (client.sessionId && event.session_id !== client.sessionId) {
         return;
@@ -403,37 +404,36 @@ function handleWebSocketUpgrade(
         const fromSequence = msg.from_sequence as number;
         console.log(`[WS] Client ${clientId} reconnecting from sequence ${fromSequence}`);
 
-        // Get all events and filter by session/type if subscribed
-        let events = components.eventStream.getEvents(client.sessionId ?? "");
-
-        // Apply session filter if subscribed
+        // Only replay if client has a session subscription
         if (client.sessionId) {
-          events = events.filter((e) => e.session_id === client.sessionId);
-        }
+          let events = components.eventStream.getEvents(client.sessionId);
 
-        // Apply type filter if subscribed
-        if (client.eventTypes) {
-          events = events.filter((e) => client.eventTypes!.includes(e.event_type));
-        }
-
-        // Filter events after the given sequence
-        const missedEvents = events.filter((e) => e.sequence_number > fromSequence);
-
-        // Send missed events
-        for (const missedEvent of missedEvents) {
-          try {
-            socket.send(JSON.stringify({ type: "event", event: missedEvent }));
-            // Update last sequence
-            if (missedEvent.sequence_number > client.lastSequence) {
-              client.lastSequence = missedEvent.sequence_number;
-            }
-          } catch {
-            // Client disconnected during replay
-            break;
+          // Apply type filter if subscribed
+          if (client.eventTypes) {
+            events = events.filter((e) => client.eventTypes!.includes(e.event_type));
           }
-        }
 
-        console.log(`[WS] Replayed ${missedEvents.length} events for client ${clientId}`);
+          // Filter events after the given sequence
+          const missedEvents = events.filter((e) => e.sequence_number > fromSequence);
+
+          // Send missed events
+          for (const missedEvent of missedEvents) {
+            try {
+              socket.send(JSON.stringify({ type: "event", event: missedEvent }));
+              // Update last sequence
+              if (missedEvent.sequence_number > client.lastSequence) {
+                client.lastSequence = missedEvent.sequence_number;
+              }
+            } catch {
+              // Client disconnected during replay
+              break;
+            }
+          }
+
+          console.log(`[WS] Replayed ${missedEvents.length} events for client ${clientId}`);
+        } else {
+          console.log(`[WS] Client ${clientId} has no session subscription, skipping replay`);
+        }
       }
     } catch {
       // Ignore malformed messages
@@ -442,11 +442,15 @@ function handleWebSocketUpgrade(
 
   socket.onclose = () => {
     console.log(`[WS] Client disconnected: ${clientId}`);
+    // Unsubscribe from event stream to prevent memory leak
+    client.unsubscribe?.();
     wsClients.delete(clientId);
   };
 
   socket.onerror = (error) => {
     console.error(`[WS] Client error: ${clientId}`, error);
+    // Unsubscribe from event stream to prevent memory leak
+    client.unsubscribe?.();
     wsClients.delete(clientId);
   };
 
@@ -504,6 +508,9 @@ async function main() {
   // Store harness URLs in environment for Fresh routes to access
   Deno.env.set("HARNESS_URLS", JSON.stringify([`localhost:${args.port}`]));
 
+  // Cache Fresh handler for embedded mode
+  let freshHandler: ((request: Request) => Response | Promise<Response>) | null = null;
+
   Deno.serve({
     port: args.port,
     hostname: "0.0.0.0",
@@ -524,9 +531,12 @@ async function main() {
     // Dynamic import: Fresh is optional and may not be available in all environments
     if (args.web) {
       try {
-        const { createFreshHandler } = await import("../web/main.ts");
-        const handler = createFreshHandler();
-        return handler(request);
+        // Cache handler after first import
+        if (!freshHandler) {
+          const { createFreshHandler } = await import("../web/main.ts");
+          freshHandler = createFreshHandler();
+        }
+        return freshHandler(request);
       } catch (error) {
         console.error("Failed to load Fresh UI:", error);
         return new Response("Web UI not available", { status: 503 });

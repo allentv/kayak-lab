@@ -1,8 +1,10 @@
+# test-infrastructure Specification
+
 ## Purpose
 
 Reusable test helpers for starting the harness as a subprocess, making typed HTTP requests, and connecting WebSocket clients — all without importing from `src/`.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Subprocess lifecycle management
 
@@ -31,6 +33,14 @@ The test infrastructure SHALL provide a typed client for all harness API endpoin
 #### Scenario: Health check
 - **WHEN** `client.getHealth()` is called
 - **THEN** it returns `{ status: string, uptime: number, session_count: number, event_count: number }`
+
+#### Scenario: Create session
+- **WHEN** `client.createSession(description?)` is called
+- **THEN** it sends `POST /api/sessions` and returns the created session summary
+
+#### Scenario: Patch session
+- **WHEN** `client.patchSession(id, action, error?)` is called
+- **THEN** it sends `PATCH /api/sessions/:id` with the action payload and returns the updated session summary; throws `HttpError` on non-2xx responses
 
 #### Scenario: List sessions
 - **WHEN** `client.getSessions()` is called
