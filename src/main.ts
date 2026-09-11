@@ -24,21 +24,23 @@ import { SessionError } from "./core/session-manager.ts";
 // ============================================================================
 
 interface CliArgs {
-  noWeb: boolean;
+  web: boolean;
   port: number;
   configDir?: string;
 }
 
 function parseArgs(args: string[]): CliArgs {
   const result: CliArgs = {
-    noWeb: false,
+    web: true,
     port: parseInt(Deno.env.get("PORT") ?? "9000", 10),
   };
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     if (arg === "--no-web") {
-      result.noWeb = true;
+      result.web = false;
+    } else if (arg === "--web") {
+      result.web = true;
     } else if (arg === "--port" && i + 1 < args.length) {
       result.port = parseInt(args[++i], 10);
     } else if (arg === "--config" && i + 1 < args.length) {
@@ -325,6 +327,7 @@ interface WebSocketClient {
   sessionId?: string;
   eventTypes?: string[];
   lastPong: number;
+  lastSequence: number;
 }
 
 const wsClients = new Map<string, WebSocketClient>();
@@ -341,6 +344,7 @@ function handleWebSocketUpgrade(
     id: clientId,
     socket,
     lastPong: Date.now(),
+    lastSequence: 0,
   };
 
   socket.onopen = () => {
@@ -352,6 +356,7 @@ function handleWebSocketUpgrade(
       type: "welcome",
       version: "1.0.0",
       capabilities: ["subscribe", "reconnect"],
+      lastSequence: client.lastSequence,
     }));
 
     // Subscribe to event stream
@@ -367,6 +372,10 @@ function handleWebSocketUpgrade(
       // Send event to client
       try {
         socket.send(JSON.stringify({ type: "event", event }));
+        // Update last sequence after successful send
+        if (event.sequence_number > client.lastSequence) {
+          client.lastSequence = event.sequence_number;
+        }
       } catch {
         // Client disconnected
       }
@@ -389,6 +398,42 @@ function handleWebSocketUpgrade(
         client.eventTypes = undefined;
       } else if (msg.type === "pong") {
         client.lastPong = Date.now();
+      } else if (msg.type === "from_sequence") {
+        // Reconnection: replay events from the given sequence
+        const fromSequence = msg.from_sequence as number;
+        console.log(`[WS] Client ${clientId} reconnecting from sequence ${fromSequence}`);
+
+        // Get all events and filter by session/type if subscribed
+        let events = components.eventStream.getEvents(client.sessionId ?? "");
+
+        // Apply session filter if subscribed
+        if (client.sessionId) {
+          events = events.filter((e) => e.session_id === client.sessionId);
+        }
+
+        // Apply type filter if subscribed
+        if (client.eventTypes) {
+          events = events.filter((e) => client.eventTypes!.includes(e.event_type));
+        }
+
+        // Filter events after the given sequence
+        const missedEvents = events.filter((e) => e.sequence_number > fromSequence);
+
+        // Send missed events
+        for (const missedEvent of missedEvents) {
+          try {
+            socket.send(JSON.stringify({ type: "event", event: missedEvent }));
+            // Update last sequence
+            if (missedEvent.sequence_number > client.lastSequence) {
+              client.lastSequence = missedEvent.sequence_number;
+            }
+          } catch {
+            // Client disconnected during replay
+            break;
+          }
+        }
+
+        console.log(`[WS] Replayed ${missedEvents.length} events for client ${clientId}`);
       }
     } catch {
       // Ignore malformed messages
@@ -439,7 +484,7 @@ async function main() {
 
   console.log("Starting kayak-lab harness...");
   console.log(`  Port: ${args.port}`);
-  console.log(`  Mode: ${args.noWeb ? "headless" : "embedded"}`);
+  console.log(`  Mode: ${args.web ? "embedded" : "headless"}`);
 
   // Initialize harness components
   const components = await initializeHarness(args.configDir);
@@ -456,15 +501,36 @@ async function main() {
   // Start HTTP server
   const router = createRouter(components);
 
+  // Store harness URLs in environment for Fresh routes to access
+  Deno.env.set("HARNESS_URLS", JSON.stringify([`localhost:${args.port}`]));
+
   Deno.serve({
     port: args.port,
     hostname: "0.0.0.0",
-  }, (request) => {
+  }, async (request) => {
     const url = new URL(request.url);
 
     // Check for WebSocket upgrade
     if (url.pathname === "/ws/events" && request.headers.get("upgrade") === "websocket") {
       return handleWebSocketUpgrade(request, components);
+    }
+
+    // API routes
+    if (url.pathname.startsWith("/api/")) {
+      return router(request);
+    }
+
+    // If web mode is enabled, serve Fresh UI for non-API routes
+    // Dynamic import: Fresh is optional and may not be available in all environments
+    if (args.web) {
+      try {
+        const { createFreshHandler } = await import("../web/main.ts");
+        const handler = createFreshHandler();
+        return handler(request);
+      } catch (error) {
+        console.error("Failed to load Fresh UI:", error);
+        return new Response("Web UI not available", { status: 503 });
+      }
     }
 
     return router(request);
@@ -473,6 +539,9 @@ async function main() {
   console.log(`\nHarness running on http://localhost:${args.port}`);
   console.log(`  API: http://localhost:${args.port}/api/`);
   console.log(`  WebSocket: ws://localhost:${args.port}/ws/events`);
+  if (args.web) {
+    console.log(`  Web UI: http://localhost:${args.port}/`);
+  }
   console.log("\nPress Ctrl+C to stop.");
 }
 

@@ -11,7 +11,7 @@
 - [x] 2.2 Add HTTP server using `Deno.serve` with API routes and WebSocket upgrade handler. Verify: server starts on configured port.
 - [x] 2.3 Add `--no-web` flag support: when passed, skip Fresh UI and serve only API + WebSocket. Verify: headless mode starts without Fresh dependency.
 - [x] 2.4 Add `--port` flag and `PORT` env var support (default 9000). Verify: server listens on configured port.
-- [ ] 2.5 Add `--web` mode (default): start Fresh UI embedded in the same process for single-instance use. Verify: embedded mode works.
+- [x] 2.5 Add `--web` mode (default): start Fresh UI embedded in the same process for single-instance use. Verify: embedded mode works.
 
 ## 3. Harness API Routes
 
@@ -27,7 +27,7 @@
 - [x] 4.2 Wire `EventStream.onAppend` to WebSocket broadcast: on each event, send JSON to all connected clients. Verify: event appended → clients receive it within 100ms.
 - [x] 4.3 Implement client filter messages: `{ type: "subscribe", session_id?, event_types? }`. Verify: only matching events delivered.
 - [x] 4.4 Implement heartbeat: ping idle clients every 30s, disconnect if no pong in 5s. Verify: stale clients cleaned up.
-- [ ] 4.5 Implement reconnection: client sends `from_sequence` on reconnect, server replays missed events. Verify: no gaps after reconnect.
+- [x] 4.5 Implement reconnection: client sends `from_sequence` on reconnect, server replays missed events. Verify: no gaps after reconnect.
 
 ## 5. Fresh Web UI Setup
 

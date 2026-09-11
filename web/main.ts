@@ -40,6 +40,19 @@ function parseArgs(args: string[]): CliArgs {
 }
 
 // ============================================================================
+// Exported Handler for Embedded Mode
+// ============================================================================
+
+/**
+ * Creates a Fresh handler that can be used with Deno.serve().
+ * This allows embedding the Fresh UI in the same process as the harness.
+ */
+export function createFreshHandler(): (request: Request) => Response | Promise<Response> {
+  const app = new App();
+  return app.handler();
+}
+
+// ============================================================================
 // Main
 // ============================================================================
 
@@ -58,7 +71,10 @@ async function main() {
   await app.listen({ port: args.port });
 }
 
-main().catch((error) => {
-  console.error("Fatal error:", error);
-  Deno.exit(1);
-});
+// Run main only if this file is the entry point
+if (import.meta.main) {
+  main().catch((error) => {
+    console.error("Fatal error:", error);
+    Deno.exit(1);
+  });
+}
