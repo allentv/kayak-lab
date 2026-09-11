@@ -907,7 +907,8 @@ export class AgentRuntime {
     if (!this.memoryRetrieval) {
       return [];
     }
-    return await this.memoryRetrieval.retrieve(options);
+    const results = await this.memoryRetrieval.retrieve(options);
+    return results.map(result => result.memory);
   }
 
   /**
