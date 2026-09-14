@@ -1,11 +1,5 @@
 import type { Finding } from "./types.ts";
 
-const PRIORITY_LABEL: Record<number, string> = {
-  1: "CRIT",
-  2: "WARN",
-  3: "INFO",
-};
-
 const PRIORITY_COLOR: Record<number, string> = {
   1: "\x1b[31m", // red
   2: "\x1b[33m", // yellow
@@ -14,7 +8,6 @@ const PRIORITY_COLOR: Record<number, string> = {
 
 const RESET = "\x1b[0m";
 const BOLD = "\x1b[1m";
-const DIM = "\x1b[2m";
 
 /**
  * Format findings grouped by file path, with a summary line.
@@ -34,16 +27,39 @@ export function formatFindings(findings: Finding[]): string {
 
   const lines: string[] = [];
 
+  // Show all critical findings
+  let warningCount = 0;
+  const maxWarnings = 50;
+
   for (const [file, fileFindings] of grouped) {
-    lines.push(`${BOLD}${file}${RESET}`);
-    for (const f of fileFindings.sort((a, b) => a.priority - b.priority)) {
-      const label = PRIORITY_LABEL[f.priority] ?? "????";
-      const color = PRIORITY_COLOR[f.priority] ?? "";
-      const loc = `L${f.line_start}${f.line_start !== f.line_end ? `-L${f.line_end}` : ""}`;
-      lines.push(`  ${color}${label}${RESET} ${DIM}${loc}${RESET} ${f.title}`);
-      lines.push(`    ${DIM}${f.body}${RESET}`);
+    const sorted = fileFindings.sort((a, b) => a.priority - b.priority);
+    const critical = sorted.filter((f) => f.priority === 1);
+    const warnings = sorted.filter((f) => f.priority === 2);
+
+    // Always show critical
+    if (critical.length > 0) {
+      lines.push(`${BOLD}${file}${RESET}`);
+      for (const f of critical) {
+        const loc = `L${f.line_start}${f.line_start !== f.line_end ? `-L${f.line_end}` : ""}`;
+        lines.push(`  \x1b[31mCRIT\x1b[0m \x1b[2m${loc}\x1b[0m ${f.title}`);
+        lines.push(`    \x1b[2m${f.body}\x1b[0m`);
+      }
+      lines.push("");
     }
-    lines.push("");
+
+    // Show warnings up to limit
+    if (warnings.length > 0 && warningCount < maxWarnings) {
+      if (critical.length === 0) {
+        lines.push(`${BOLD}${file}${RESET}`);
+      }
+      for (const f of warnings) {
+        if (warningCount >= maxWarnings) break;
+        const loc = `L${f.line_start}${f.line_start !== f.line_end ? `-L${f.line_end}` : ""}`;
+        lines.push(`  \x1b[33mWARN\x1b[0m \x1b[2m${loc}\x1b[0m ${f.title}`);
+        warningCount++;
+      }
+      lines.push("");
+    }
   }
 
   // Summary
