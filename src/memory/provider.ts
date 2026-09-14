@@ -81,6 +81,17 @@ export interface IMemoryProvider {
 
   /** List memories with optional type/status filters. */
   list(options?: ListOptions): Promise<AnyMemory[]>;
+
+  // L2 Scenario Memory
+  writeScenario(agentId: string, path: string, content: string, name?: string): Promise<ScenarioMemory>;
+  readScenario(agentId: string, path: string): Promise<ScenarioMemory | null>;
+  listScenarios(agentId: string, prefix?: string): Promise<ScenarioMemory[]>;
+  deleteScenario(agentId: string, path: string): Promise<boolean>;
+  countScenarios(agentId: string): Promise<number>;
+
+  // L3 Core Memory
+  readCore(agentId: string): Promise<CoreMemory | null>;
+  writeCore(agentId: string, sections: Record<string, string>): Promise<CoreMemory>;
 }
 
 /** Options for reflect (search) operations. */

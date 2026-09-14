@@ -28,7 +28,7 @@ AgentRuntime MUST load CoreMemory for the agent at session start and inject its 
 PatternAnalyzer MUST write scenario files when it detects meaningful patterns.
 
 #### Scenario: Tool failure pattern detected
-- **WHEN** `PatternAnalyzer.generateReport()` detects a tool with `direction: "degrading"` and `changeMagnitude > 0.1`
+- **WHEN** `PatternAnalyzer.generateReport()` detects a tool with `direction: "degrading"`
 - **THEN** a scenario is written at `patterns.tool-failure.<toolName>` with the trend details
 - **AND** the scenario content includes tool name, success rate, and degradation magnitude
 

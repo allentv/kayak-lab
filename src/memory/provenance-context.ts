@@ -228,6 +228,7 @@ export class ProvenanceContextManager extends ContextManager {
       summaryPercent: config.summaryPercent,
       historyPercent: config.historyPercent,
       memoriesPercent: config.memoriesPercent,
+      scenariosPercent: config.scenariosPercent,
     };
   }
 

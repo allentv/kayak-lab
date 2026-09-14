@@ -6,6 +6,7 @@
  */
 
 import { IEventQueryEngine, TimeRange } from "../store/query-engine.ts";
+import type { IMemoryProvider } from "../memory/provider.ts";
 
 // ============================================================================
 // Analysis Types
@@ -73,8 +74,24 @@ export interface IPatternAnalyzer {
 // Pattern Analyzer Implementation
 // ============================================================================
 
+export interface PatternAnalyzerOptions {
+  /** Optional memory provider for writing scenarios. */
+  memoryProvider?: IMemoryProvider;
+  /** Whether to write patterns to scenario storage. Default: true. */
+  writePatterns?: boolean;
+}
+
 export class PatternAnalyzer implements IPatternAnalyzer {
-  constructor(private readonly queryEngine: IEventQueryEngine) {}
+  private memoryProvider: IMemoryProvider | null;
+  private writePatterns: boolean;
+
+  constructor(
+    private readonly queryEngine: IEventQueryEngine,
+    options?: PatternAnalyzerOptions,
+  ) {
+    this.memoryProvider = options?.memoryProvider ?? null;
+    this.writePatterns = options?.writePatterns ?? true;
+  }
 
   analyzeToolTrends(range?: TimeRange): ToolTrend[] {
     const metrics = this.queryEngine.getToolPerformance(undefined, range);
@@ -168,12 +185,75 @@ export class PatternAnalyzer implements IPatternAnalyzer {
   }
 
   generateReport(range?: TimeRange): AnalysisReport {
-    return {
+    const report: AnalysisReport = {
       toolTrends: this.analyzeToolTrends(range),
       sessionEfficiency: this.analyzeSessionEfficiency(),
       modelUsage: this.analyzeModelUsage(range),
       errorClusters: this.clusterErrors(range),
       generatedAt: new Date().toISOString(),
     };
+
+    // Write L2 scenarios for detected patterns
+    if (this.writePatterns && this.memoryProvider) {
+      this.writePatternScenarios(report);
+    }
+
+    return report;
+  }
+
+  /**
+   * Write L2 scenarios for detected patterns.
+   */
+  private writePatternScenarios(report: AnalysisReport): void {
+    if (!this.memoryProvider) return;
+
+    // Write tool failure scenarios for degrading tools
+    for (const trend of report.toolTrends) {
+      if (trend.direction === "degrading") {
+        const content = [
+          `# Tool Failure Pattern: ${trend.toolName}`,
+          ``,
+          `Success rate: ${(trend.currentSuccessRate * 100).toFixed(1)}%`,
+          `Previous rate: ${(trend.previousSuccessRate * 100).toFixed(1)}%`,
+          `Change magnitude: ${(trend.changeMagnitude * 100).toFixed(1)}%`,
+          ``,
+          `This tool has been degrading and may need investigation.`,
+        ].join("\n");
+
+        // Use fire-and-forget for scenario writes (don't block report generation)
+        this.memoryProvider.writeScenario(
+          "patterns",
+          `tool-failure.${trend.toolName}`,
+          content,
+          `Tool Failure: ${trend.toolName}`,
+        ).catch(() => {
+          // Ignore write failures for pattern scenarios
+        });
+      }
+    }
+
+    // Write efficiency scenarios for low-scoring sessions
+    const lowEfficiencySessions = report.sessionEfficiency.filter((s) => s.score < 0.3);
+    if (lowEfficiencySessions.length > 0) {
+      const content = [
+        `# Low Session Efficiency`,
+        ``,
+        `Sessions with score < 0.3:`,
+        ...lowEfficiencySessions.map(
+          (s) => `- ${s.sessionId}: score=${s.score.toFixed(2)}, tools=${s.toolCompletions}, effort=${s.totalEffort}`,
+        ),
+        ``,
+        `Consider optimizing tool usage or reducing model invocations.`,
+      ].join("\n");
+
+      this.memoryProvider.writeScenario(
+        "patterns",
+        "efficiency.low-score",
+        content,
+        "Low Efficiency Pattern",
+      ).catch(() => {
+        // Ignore write failures
+      });
+    }
   }
 }

@@ -39,6 +39,8 @@ export interface TokenBudget {
   historyPercent: number;
   /** Percentage of remaining budget for retrieved memories. */
   memoriesPercent: number;
+  /** Percentage of remaining budget for L2 scenario memories. */
+  scenariosPercent: number;
 }
 
 /** Compression result for tool outputs. */
@@ -75,8 +77,9 @@ export const DEFAULT_BUDGET: TokenBudget = {
   system: 0,
   goalPercent: 25,
   summaryPercent: 15,
-  historyPercent: 40,
+  historyPercent: 35,
   memoriesPercent: 20,
+  scenariosPercent: 5,
 };
 
 export const DEFAULT_CONFIG: ProvenanceContextConfig = {

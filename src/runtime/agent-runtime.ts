@@ -60,6 +60,8 @@ export interface AgentConfig {
   max_tokens?: number;
   /** Default tool timeout in ms. */
   tool_timeout_ms?: number;
+  /** Agent ID for core memory lookup. */
+  agentId?: string;
 }
 
 /** Agent loop state. */
@@ -200,6 +202,9 @@ export class AgentRuntime {
   private memoryUpdate: IMemoryUpdate | null = null;
   private sharedMemory: ISharedMemory | null = null;
 
+  // L3 Core memory text (loaded at session start)
+  private coreMemoryText: string | null = null;
+
   // Provenance tracking (optional)
   private provenanceGraph: ProvenanceGraph | null = null;
   private dataDir: string | null = null;
@@ -278,6 +283,20 @@ export class AgentRuntime {
       const loaded = await ProvenanceGraph.loadFromDisk(this.dataDir, session.id);
       if (loaded) {
         this.provenanceGraph = loaded;
+      }
+    }
+
+    // Load L3 core memory if agent ID is configured and memory provider is available
+    this.coreMemoryText = null;
+    if (this.config.agentId && this.memoryProvider) {
+      try {
+        const core = await this.memoryProvider.readCore(this.config.agentId);
+        if (core && Object.keys(core.sections).length > 0) {
+          const lines = Object.entries(core.sections).map(([key, value]) => `- ${key}: ${value}`);
+          this.coreMemoryText = `## Agent Identity\n${lines.join("\n")}`;
+        }
+      } catch {
+        // Core memory loading is optional — don't fail session start
       }
     }
 
@@ -799,8 +818,24 @@ export class AgentRuntime {
    * Build model request from current context.
    */
   private buildModelRequest(): ModelRequest {
-    const messages = this.contextManager!.getAll();
+    let messages = this.contextManager!.getAll();
     const tools = this.toolRegistry.getDefinitions();
+
+    // Prepend L3 core memory to system prompt if loaded
+    if (this.coreMemoryText) {
+      const systemIndex = messages.findIndex((m) => m.role === "system");
+      if (systemIndex >= 0) {
+        // Append core memory to existing system message
+        messages = [...messages];
+        messages[systemIndex] = {
+          ...messages[systemIndex],
+          content: messages[systemIndex].content + "\n\n" + this.coreMemoryText,
+        };
+      } else {
+        // Create a system message with core memory
+        messages = [{ role: "system", content: this.coreMemoryText }, ...messages];
+      }
+    }
 
     return {
       messages,

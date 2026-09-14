@@ -7,6 +7,7 @@
 
 import { TypedEmitter } from "./emitter.ts";
 import type { AnyMemory, MemoryType } from "./types.ts";
+import type { IMemoryStorage } from "./storage.ts";
 
 // ============================================================================
 // Retrieval Events
@@ -51,6 +52,8 @@ export interface RetrievalOptions {
   relevance_threshold?: number;
   /** Session ID for scoped retrieval. */
   session_id?: string;
+  /** Agent ID for L2/L3 retrieval. When set, includes scenario and core memories. */
+  agentId?: string;
 }
 
 /** Memory retrieval result with provenance score. */
@@ -97,15 +100,19 @@ export class MemoryRetrieval extends TypedEmitter<MemoryRetrievalEvents> impleme
   private config: RetrievalConfig;
   private retrieveFn: (options?: RetrievalOptions) => Promise<AnyMemory[]>;
   private provenanceWeight: number;
+  private storage: IMemoryStorage | null;
 
   /**
    * @param retrieveFn - Function that fetches memories from storage.
    * @param config - Initial retrieval configuration.
+   * @param provenanceWeight - Weight for provenance score in final calculation.
+   * @param storage - Optional storage for L2/L3 retrieval.
    */
   constructor(
     retrieveFn: (options?: RetrievalOptions) => Promise<AnyMemory[]>,
     config?: Partial<RetrievalConfig>,
     provenanceWeight?: number,
+    storage?: IMemoryStorage,
   ) {
     super();
     this.retrieveFn = retrieveFn;
@@ -115,6 +122,7 @@ export class MemoryRetrieval extends TypedEmitter<MemoryRetrievalEvents> impleme
       scope: config?.scope ?? "all",
     };
     this.provenanceWeight = provenanceWeight ?? 0.3;
+    this.storage = storage ?? null;
   }
 
   async retrieve(options?: RetrievalOptions): Promise<MemoryRetrievalResult[]> {
@@ -136,8 +144,38 @@ export class MemoryRetrieval extends TypedEmitter<MemoryRetrievalEvents> impleme
 
     const results = await this.retrieveFn(effectiveOptions);
 
+    // Collect all memories (standard + L2/L3)
+    const allMemories: AnyMemory[] = [...results];
+
+    // Retrieve L2/L3 if storage and agentId are available
+    if (this.storage && effectiveOptions.agentId) {
+      const agentId = effectiveOptions.agentId;
+
+      // Retrieve L2 scenarios (unless filtering by non-scenario type)
+      if (!effectiveOptions.type || effectiveOptions.type === "scenario") {
+        try {
+          const scenarios = await this.storage.listScenarios(agentId);
+          allMemories.push(...scenarios);
+        } catch {
+          // L2 retrieval is optional
+        }
+      }
+
+      // Retrieve L3 core (unless filtering by non-core type)
+      if (!effectiveOptions.type || effectiveOptions.type === "core") {
+        try {
+          const core = await this.storage.readCore(agentId);
+          if (core) {
+            allMemories.push(core);
+          }
+        } catch {
+          // L3 retrieval is optional
+        }
+      }
+    }
+
     // Calculate provenance scores for each memory
-    const scoredResults: MemoryRetrievalResult[] = results.map(memory => {
+    const scoredResults: MemoryRetrievalResult[] = allMemories.map(memory => {
       // Calculate relevance score based on memory type and recency
       const relevanceScore = this.calculateRelevanceScore(memory);
 
@@ -186,6 +224,8 @@ export class MemoryRetrieval extends TypedEmitter<MemoryRetrievalEvents> impleme
       "long_term": 0.8,
       "episodic": 0.6,
       "semantic": 0.7,
+      "scenario": 0.85,
+      "core": 0.9,
     };
 
     const baseScore = typeScores[memory.type] ?? 0.5;
