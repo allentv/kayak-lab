@@ -35,7 +35,7 @@ async function preflight(): Promise<Finding[]> {
   const checks: Array<{ name: string; cmd: string[] }> = [
     { name: "deno lint", cmd: ["lint"] },
     { name: "deno check", cmd: ["check", "src/**/*.ts"] },
-    { name: "deno test", cmd: ["test", "--allow-read", "--allow-env"] },
+    { name: "deno test", cmd: ["task", "test"] },
   ];
 
   for (const { name, cmd } of checks) {
