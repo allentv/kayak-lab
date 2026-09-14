@@ -131,6 +131,8 @@ export interface StorageListOptions {
 export class InMemoryStorage extends TypedEmitter<MemoryStorageEvents> implements IMemoryStorage {
   readonly backend: StorageBackend = "in_memory";
   private store_ = new Map<string, AnyMemory>();
+  private scenarios_ = new Map<string, ScenarioMemory>();
+  private cores_ = new Map<string, CoreMemory>();
 
   async store(memory: AnyMemory): Promise<void> {
     this.store_.set(memory.id, { ...memory });
@@ -173,19 +175,76 @@ export class InMemoryStorage extends TypedEmitter<MemoryStorageEvents> implement
     return true;
   }
 
-  // L2 Scenario stubs (not implemented for in-memory)
-  async writeScenario(_agentId: string, _path: string, _content: string, _name?: string): Promise<ScenarioMemory> {
-    throw new Error("Scenario storage not implemented in InMemoryStorage");
-  }
-  async readScenario(_agentId: string, _path: string): Promise<ScenarioMemory | null> { return null; }
-  async listScenarios(_agentId: string, _prefix?: string): Promise<ScenarioMemory[]> { return []; }
-  async deleteScenario(_agentId: string, _path: string): Promise<boolean> { return false; }
-  async countScenarios(_agentId: string): Promise<number> { return 0; }
+  // L2 Scenario Memory
+  async writeScenario(agentId: string, path: string, content: string, name?: string): Promise<ScenarioMemory> {
+    const key = `${agentId}:${path}`;
+    const existing = this.scenarios_.get(key);
+    const now = new Date().toISOString();
 
-  // L3 Core stubs (not implemented for in-memory)
-  async readCore(_agentId: string): Promise<CoreMemory | null> { return null; }
-  async writeCore(_agentId: string, _sections: Record<string, string>): Promise<CoreMemory> {
-    throw new Error("Core storage not implemented in InMemoryStorage");
+    const scenario: ScenarioMemory = {
+      id: existing?.id ?? crypto.randomUUID(),
+      type: "scenario",
+      path,
+      name: name ?? path,
+      agent_id: agentId,
+      content,
+      session_id: "",
+      created_at: existing?.created_at ?? now,
+      updated_at: now,
+      status: "active",
+      metadata: {},
+    };
+
+    this.scenarios_.set(key, scenario);
+    return { ...scenario };
+  }
+
+  async readScenario(agentId: string, path: string): Promise<ScenarioMemory | null> {
+    const key = `${agentId}:${path}`;
+    const scenario = this.scenarios_.get(key);
+    return scenario ? { ...scenario } : null;
+  }
+
+  async listScenarios(agentId: string, prefix?: string): Promise<ScenarioMemory[]> {
+    return Array.from(this.scenarios_.values())
+      .filter((s) => s.agent_id === agentId && (!prefix || s.path.startsWith(prefix)))
+      .sort((a, b) => a.path.localeCompare(b.path));
+  }
+
+  async deleteScenario(agentId: string, path: string): Promise<boolean> {
+    const key = `${agentId}:${path}`;
+    return this.scenarios_.delete(key);
+  }
+
+  async countScenarios(agentId: string): Promise<number> {
+    return Array.from(this.scenarios_.values()).filter((s) => s.agent_id === agentId).length;
+  }
+
+  // L3 Core Memory
+  async readCore(agentId: string): Promise<CoreMemory | null> {
+    const core = this.cores_.get(agentId);
+    return core ? { ...core } : null;
+  }
+
+  async writeCore(agentId: string, sections: Record<string, string>): Promise<CoreMemory> {
+    const existing = this.cores_.get(agentId);
+    const now = new Date().toISOString();
+
+    const core: CoreMemory = {
+      id: existing?.id ?? crypto.randomUUID(),
+      type: "core",
+      agent_id: agentId,
+      sections: { ...sections },
+      content: JSON.stringify(sections),
+      session_id: "",
+      created_at: existing?.created_at ?? now,
+      updated_at: now,
+      status: "active",
+      metadata: {},
+    };
+
+    this.cores_.set(agentId, core);
+    return { ...core };
   }
 
   /** Number of stored memories (for testing). */

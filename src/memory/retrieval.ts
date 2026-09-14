@@ -156,8 +156,9 @@ export class MemoryRetrieval extends TypedEmitter<MemoryRetrievalEvents> impleme
         try {
           const scenarios = await this.storage.listScenarios(agentId);
           allMemories.push(...scenarios);
-        } catch {
-          // L2 retrieval is optional
+        } catch (err) {
+          // L2 retrieval is optional — log but don't fail
+          console.error("[MemoryRetrieval] Failed to retrieve L2 scenarios:", err);
         }
       }
 
@@ -168,8 +169,9 @@ export class MemoryRetrieval extends TypedEmitter<MemoryRetrievalEvents> impleme
           if (core) {
             allMemories.push(core);
           }
-        } catch {
-          // L3 retrieval is optional
+        } catch (err) {
+          // L3 retrieval is optional — log but don't fail
+          console.error("[MemoryRetrieval] Failed to retrieve L3 core:", err);
         }
       }
     }

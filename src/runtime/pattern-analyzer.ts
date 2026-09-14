@@ -220,14 +220,14 @@ export class PatternAnalyzer implements IPatternAnalyzer {
           `This tool has been degrading and may need investigation.`,
         ].join("\n");
 
-        // Use fire-and-forget for scenario writes (don't block report generation)
+        // Fire-and-forget for scenario writes (don't block report generation)
         this.memoryProvider.writeScenario(
           "patterns",
           `tool-failure.${trend.toolName}`,
           content,
           `Tool Failure: ${trend.toolName}`,
-        ).catch(() => {
-          // Ignore write failures for pattern scenarios
+        ).catch((err) => {
+          console.error(`[PatternAnalyzer] Failed to write scenario for ${trend.toolName}:`, err);
         });
       }
     }
@@ -251,8 +251,8 @@ export class PatternAnalyzer implements IPatternAnalyzer {
         "efficiency.low-score",
         content,
         "Low Efficiency Pattern",
-      ).catch(() => {
-        // Ignore write failures
+      ).catch((err) => {
+        console.error("[PatternAnalyzer] Failed to write efficiency scenario:", err);
       });
     }
   }
