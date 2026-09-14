@@ -424,7 +424,7 @@ Deno.test("MemoryUpdate", async (t) => {
     const update = new MemoryUpdate(
       async (input) => {
         storeCalled = true;
-        return makeMemory({ content: input.content });
+        return makeMemory({ content: "content" in input ? input.content : "" });
       },
       async () => null,
     );
@@ -441,7 +441,7 @@ Deno.test("MemoryUpdate", async (t) => {
 
   await t.step("manualStore calls storeFn with automatic=false", async () => {
     const update = new MemoryUpdate(
-      async (input) => makeMemory({ content: input.content }),
+      async (input) => makeMemory({ content: "content" in input ? input.content : "" }),
       async () => null,
     );
     let automatic: boolean | undefined;

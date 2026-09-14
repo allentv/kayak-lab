@@ -13,7 +13,7 @@ import {
   StorageListOptions,
   StorageBackend,
 } from "../memory/storage.ts";
-import type { AnyMemory, MemoryType } from "../memory/types.ts";
+import type { AnyMemory, MemoryType, ScenarioMemory, CoreMemory } from "../memory/types.ts";
 
 // ============================================================================
 // SQLite Configuration
@@ -74,6 +74,21 @@ export class SQLitePersistenceBackend implements IPersistenceBackend, IMemorySto
         data TEXT NOT NULL,
         updated_at TEXT DEFAULT (datetime('now'))
       );
+
+      CREATE TABLE IF NOT EXISTS agent_memory (
+        id TEXT PRIMARY KEY,
+        agent_id TEXT NOT NULL,
+        memory_type TEXT NOT NULL,
+        path TEXT,
+        name TEXT,
+        content TEXT NOT NULL,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now')),
+        metadata TEXT DEFAULT '{}'
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_agent_memory_agent ON agent_memory(agent_id, memory_type);
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_agent_memory_path ON agent_memory(agent_id, path) WHERE memory_type = 'scenario';
     `);
   }
 
@@ -228,6 +243,177 @@ export class SQLitePersistenceBackend implements IPersistenceBackend, IMemorySto
 
   async isAvailable(): Promise<boolean> {
     return !this.closed;
+  }
+
+  // --------------------------------------------------------------------------
+  // L2 Scenario Memory
+  // --------------------------------------------------------------------------
+
+  async writeScenario(agentId: string, path: string, content: string, name?: string): Promise<ScenarioMemory> {
+    if (this.closed) throw new Error("Backend is closed");
+
+    const now = new Date().toISOString();
+    // Check if existing scenario exists to preserve created_at
+    const existing = this.db.prepare(
+      `SELECT id, created_at FROM agent_memory WHERE agent_id = ? AND path = ? AND memory_type = 'scenario'`,
+    ).get(agentId, path) as { id: string; created_at: string } | undefined;
+
+    const id = existing?.id ?? crypto.randomUUID();
+    const createdAt = existing?.created_at ?? now;
+
+    this.db.exec(
+      `INSERT OR REPLACE INTO agent_memory (id, agent_id, memory_type, path, name, content, created_at, updated_at)
+       VALUES (?, ?, 'scenario', ?, ?, ?, ?, ?)`,
+      id, agentId, path, name ?? path, content, createdAt, now,
+    );
+
+    return {
+      id,
+      type: "scenario",
+      path,
+      name: name ?? path,
+      agent_id: agentId,
+      content,
+      session_id: "",
+      created_at: createdAt,
+      updated_at: now,
+      status: "active",
+      metadata: {},
+    };
+  }
+
+  async readScenario(agentId: string, path: string): Promise<ScenarioMemory | null> {
+    if (this.closed) throw new Error("Backend is closed");
+
+    const row = this.db.prepare(
+      `SELECT * FROM agent_memory WHERE agent_id = ? AND path = ? AND memory_type = 'scenario'`,
+    ).get(agentId, path) as Record<string, unknown> | undefined;
+
+    if (!row) return null;
+
+    return {
+      id: row.id as string,
+      type: "scenario",
+      path: row.path as string,
+      name: row.name as string,
+      agent_id: row.agent_id as string,
+      content: row.content as string,
+      session_id: "",
+      created_at: row.created_at as string,
+      updated_at: row.updated_at as string,
+      status: "active",
+      metadata: JSON.parse((row.metadata as string) || "{}"),
+    };
+  }
+
+  async listScenarios(agentId: string, prefix?: string): Promise<ScenarioMemory[]> {
+    if (this.closed) throw new Error("Backend is closed");
+
+    let sql = `SELECT * FROM agent_memory WHERE agent_id = ? AND memory_type = 'scenario'`;
+    const params: (string | number)[] = [agentId];
+
+    if (prefix) {
+      sql += ` AND path LIKE ?`;
+      params.push(`${prefix}%`);
+    }
+
+    sql += ` ORDER BY path`;
+
+    return this.db.prepare(sql).all(...params).map((row) => ({
+      id: row.id as string,
+      type: "scenario" as const,
+      path: row.path as string,
+      name: row.name as string,
+      agent_id: row.agent_id as string,
+      content: row.content as string,
+      session_id: "",
+      created_at: row.created_at as string,
+      updated_at: row.updated_at as string,
+      status: "active" as const,
+      metadata: JSON.parse((row.metadata as string) || "{}"),
+    }));
+  }
+
+  async deleteScenario(agentId: string, path: string): Promise<boolean> {
+    if (this.closed) throw new Error("Backend is closed");
+
+    this.db.exec(
+      `DELETE FROM agent_memory WHERE agent_id = ? AND path = ? AND memory_type = 'scenario'`,
+      agentId, path,
+    );
+    // SQLite doesn't report affected rows via exec, so we check first
+    const row = this.db.prepare(
+      `SELECT 1 FROM agent_memory WHERE agent_id = ? AND path = ? AND memory_type = 'scenario'`,
+    ).get(agentId, path);
+    return !row;
+  }
+
+  async countScenarios(agentId: string): Promise<number> {
+    if (this.closed) throw new Error("Backend is closed");
+
+    const row = this.db.prepare(
+      `SELECT COUNT(*) as cnt FROM agent_memory WHERE agent_id = ? AND memory_type = 'scenario'`,
+    ).get(agentId) as { cnt: number };
+    return row.cnt;
+  }
+
+  // --------------------------------------------------------------------------
+  // L3 Core Memory
+  // --------------------------------------------------------------------------
+
+  async readCore(agentId: string): Promise<CoreMemory | null> {
+    if (this.closed) throw new Error("Backend is closed");
+
+    const row = this.db.prepare(
+      `SELECT * FROM agent_memory WHERE agent_id = ? AND memory_type = 'core'`,
+    ).get(agentId) as Record<string, unknown> | undefined;
+
+    if (!row) return null;
+
+    return {
+      id: row.id as string,
+      type: "core",
+      agent_id: row.agent_id as string,
+      sections: JSON.parse(row.content as string),
+      content: row.content as string,
+      session_id: "",
+      created_at: row.created_at as string,
+      updated_at: row.updated_at as string,
+      status: "active",
+      metadata: JSON.parse((row.metadata as string) || "{}"),
+    };
+  }
+
+  async writeCore(agentId: string, sections: Record<string, string>): Promise<CoreMemory> {
+    if (this.closed) throw new Error("Backend is closed");
+
+    const now = new Date().toISOString();
+    const existing = this.db.prepare(
+      `SELECT id, created_at FROM agent_memory WHERE agent_id = ? AND memory_type = 'core'`,
+    ).get(agentId) as { id: string; created_at: string } | undefined;
+
+    const id = existing?.id ?? crypto.randomUUID();
+    const createdAt = existing?.created_at ?? now;
+    const contentJson = JSON.stringify(sections);
+
+    this.db.exec(
+      `INSERT OR REPLACE INTO agent_memory (id, agent_id, memory_type, path, name, content, created_at, updated_at)
+       VALUES (?, ?, 'core', NULL, NULL, ?, ?, ?)`,
+      id, agentId, contentJson, createdAt, now,
+    );
+
+    return {
+      id,
+      type: "core",
+      agent_id: agentId,
+      sections,
+      content: contentJson,
+      session_id: "",
+      created_at: createdAt,
+      updated_at: now,
+      status: "active",
+      metadata: {},
+    };
   }
 
   // --------------------------------------------------------------------------

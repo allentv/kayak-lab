@@ -10,7 +10,10 @@ import {
   AnyMemory,
   CreateMemoryInput,
   MemoryType,
+  ScenarioMemory,
+  CoreMemory,
 } from "./types.ts";
+import type { IMemoryStorage } from "./storage.ts";
 
 // ============================================================================
 // Provider Types
@@ -33,7 +36,9 @@ export interface MemoryProviderConfig {
 
 /** Memory operation event payload. */
 export interface MemoryOperationEvent {
-  operation: "retain" | "recall" | "reflect" | "delete" | "list";
+  operation: "retain" | "recall" | "reflect" | "delete" | "list"
+    | "writeScenario" | "readScenario" | "listScenarios" | "deleteScenario" | "countScenarios"
+    | "readCore" | "writeCore";
   provider: MemoryProviderType;
   memory_id?: string;
   memory_type?: MemoryType;
@@ -115,11 +120,13 @@ export interface ListOptions {
 export class MemoryProvider extends TypedEmitter<MemoryProviderEvents> implements IMemoryProvider {
   private _providerType: MemoryProviderType;
   private _config: MemoryProviderConfig;
+  private _storage?: IMemoryStorage;
 
-  constructor(config: MemoryProviderConfig) {
+  constructor(config: MemoryProviderConfig, storage?: IMemoryStorage) {
     super();
     this._config = config;
     this._providerType = config.provider;
+    this._storage = storage;
   }
 
   get providerType(): MemoryProviderType {
@@ -188,14 +195,92 @@ export class MemoryProvider extends TypedEmitter<MemoryProviderEvents> implement
     return this._list(options);
   }
 
+  // -----------------------------------------------------------------------
+  // L2 Scenario Memory
+  // -----------------------------------------------------------------------
+
+  async writeScenario(agentId: string, path: string, content: string, name?: string): Promise<ScenarioMemory> {
+    if (!this._storage) throw new Error("No storage backend configured");
+    this.emit("memory_operation", {
+      operation: "writeScenario",
+      provider: this._providerType,
+      timestamp: new Date().toISOString(),
+    });
+    return this._storage.writeScenario(agentId, path, content, name);
+  }
+
+  async readScenario(agentId: string, path: string): Promise<ScenarioMemory | null> {
+    if (!this._storage) throw new Error("No storage backend configured");
+    this.emit("memory_operation", {
+      operation: "readScenario",
+      provider: this._providerType,
+      timestamp: new Date().toISOString(),
+    });
+    return this._storage.readScenario(agentId, path);
+  }
+
+  async listScenarios(agentId: string, prefix?: string): Promise<ScenarioMemory[]> {
+    if (!this._storage) throw new Error("No storage backend configured");
+    this.emit("memory_operation", {
+      operation: "listScenarios",
+      provider: this._providerType,
+      timestamp: new Date().toISOString(),
+    });
+    return this._storage.listScenarios(agentId, prefix);
+  }
+
+  async deleteScenario(agentId: string, path: string): Promise<boolean> {
+    if (!this._storage) throw new Error("No storage backend configured");
+    this.emit("memory_operation", {
+      operation: "deleteScenario",
+      provider: this._providerType,
+      timestamp: new Date().toISOString(),
+    });
+    return this._storage.deleteScenario(agentId, path);
+  }
+
+  async countScenarios(agentId: string): Promise<number> {
+    if (!this._storage) throw new Error("No storage backend configured");
+    this.emit("memory_operation", {
+      operation: "countScenarios",
+      provider: this._providerType,
+      timestamp: new Date().toISOString(),
+    });
+    return this._storage.countScenarios(agentId);
+  }
+
+  // -----------------------------------------------------------------------
+  // L3 Core Memory
+  // -----------------------------------------------------------------------
+
+  async readCore(agentId: string): Promise<CoreMemory | null> {
+    if (!this._storage) throw new Error("No storage backend configured");
+    this.emit("memory_operation", {
+      operation: "readCore",
+      provider: this._providerType,
+      timestamp: new Date().toISOString(),
+    });
+    return this._storage.readCore(agentId);
+  }
+
+  async writeCore(agentId: string, sections: Record<string, string>): Promise<CoreMemory> {
+    if (!this._storage) throw new Error("No storage backend configured");
+    this.emit("memory_operation", {
+      operation: "writeCore",
+      provider: this._providerType,
+      timestamp: new Date().toISOString(),
+    });
+    return this._storage.writeCore(agentId, sections);
+  }
+
   /**
    * Create a memory entry from input with defaults applied.
    */
   private createMemoryEntry(input: CreateMemoryInput, now: string): AnyMemory {
     const base = {
       id: crypto.randomUUID(),
-      content: input.content,
-      session_id: input.session_id,
+      content: "content" in input ? input.content : "",
+      session_id: input.session_id ?? "",
       created_at: now,
       updated_at: now,
       status: "active" as const,
@@ -233,6 +318,21 @@ export class MemoryProvider extends TypedEmitter<MemoryProviderEvents> implement
           fact: input.fact,
           confidence: input.confidence ?? 1.0,
           source: input.source,
+        };
+      case "scenario":
+        return {
+          ...base,
+          type: "scenario",
+          path: input.path,
+          name: input.name,
+          agent_id: input.agent_id,
+        };
+      case "core":
+        return {
+          ...base,
+          type: "core",
+          agent_id: input.agent_id,
+          sections: input.sections,
         };
     }
   }

@@ -6,7 +6,7 @@
  */
 
 import { TypedEmitter } from "./emitter.ts";
-import type { AnyMemory, MemoryType } from "./types.ts";
+import type { AnyMemory, MemoryType, ScenarioMemory, CoreMemory } from "./types.ts";
 
 // ============================================================================
 // Storage Events
@@ -80,6 +80,35 @@ export interface IMemoryStorage {
   /** List memories with optional filters. */
   list(options?: StorageListOptions): Promise<AnyMemory[]>;
 
+  // -----------------------------------------------------------------------
+  // L2 Scenario Memory
+  // -----------------------------------------------------------------------
+
+  /** Write (upsert) a scenario memory. Returns the stored scenario. */
+  writeScenario(agentId: string, path: string, content: string, name?: string): Promise<ScenarioMemory>;
+
+  /** Read a scenario by agent and path. Returns null if not found. */
+  readScenario(agentId: string, path: string): Promise<ScenarioMemory | null>;
+
+  /** List scenarios for an agent, optionally filtered by path prefix. */
+  listScenarios(agentId: string, prefix?: string): Promise<ScenarioMemory[]>;
+
+  /** Delete a scenario by agent and path. Returns true if deleted. */
+  deleteScenario(agentId: string, path: string): Promise<boolean>;
+
+  /** Count scenarios for an agent. */
+  countScenarios(agentId: string): Promise<number>;
+
+  // -----------------------------------------------------------------------
+  // L3 Core Memory
+  // -----------------------------------------------------------------------
+
+  /** Read core memory for an agent. Returns null if not found. */
+  readCore(agentId: string): Promise<CoreMemory | null>;
+
+  /** Write (upsert) core memory for an agent. Returns the stored core memory. */
+  writeCore(agentId: string, sections: Record<string, string>): Promise<CoreMemory>;
+
   /** Check if storage backend is available. */
   isAvailable(): Promise<boolean>;
 }
@@ -142,6 +171,21 @@ export class InMemoryStorage extends TypedEmitter<MemoryStorageEvents> implement
 
   async isAvailable(): Promise<boolean> {
     return true;
+  }
+
+  // L2 Scenario stubs (not implemented for in-memory)
+  async writeScenario(_agentId: string, _path: string, _content: string, _name?: string): Promise<ScenarioMemory> {
+    throw new Error("Scenario storage not implemented in InMemoryStorage");
+  }
+  async readScenario(_agentId: string, _path: string): Promise<ScenarioMemory | null> { return null; }
+  async listScenarios(_agentId: string, _prefix?: string): Promise<ScenarioMemory[]> { return []; }
+  async deleteScenario(_agentId: string, _path: string): Promise<boolean> { return false; }
+  async countScenarios(_agentId: string): Promise<number> { return 0; }
+
+  // L3 Core stubs (not implemented for in-memory)
+  async readCore(_agentId: string): Promise<CoreMemory | null> { return null; }
+  async writeCore(_agentId: string, _sections: Record<string, string>): Promise<CoreMemory> {
+    throw new Error("Core storage not implemented in InMemoryStorage");
   }
 
   /** Number of stored memories (for testing). */
@@ -223,6 +267,21 @@ export class PersistentStorage extends TypedEmitter<MemoryStorageEvents> impleme
     return this.store_.size;
   }
 
+  // L2 Scenario stubs (not implemented for persistent file store)
+  async writeScenario(_agentId: string, _path: string, _content: string, _name?: string): Promise<ScenarioMemory> {
+    throw new Error("Scenario storage not implemented in PersistentStorage");
+  }
+  async readScenario(_agentId: string, _path: string): Promise<ScenarioMemory | null> { return null; }
+  async listScenarios(_agentId: string, _prefix?: string): Promise<ScenarioMemory[]> { return []; }
+  async deleteScenario(_agentId: string, _path: string): Promise<boolean> { return false; }
+  async countScenarios(_agentId: string): Promise<number> { return 0; }
+
+  // L3 Core stubs (not implemented for persistent file store)
+  async readCore(_agentId: string): Promise<CoreMemory | null> { return null; }
+  async writeCore(_agentId: string, _sections: Record<string, string>): Promise<CoreMemory> {
+    throw new Error("Core storage not implemented in PersistentStorage");
+  }
+
   private async ensureLoaded(): Promise<void> {
     if (this.loaded) return;
     if (!this.loadPromise) {
@@ -288,6 +347,21 @@ export class DistributedStorage extends TypedEmitter<MemoryStorageEvents> implem
 
   async isAvailable(): Promise<boolean> {
     return this.available;
+  }
+
+  // L2 Scenario stubs (distributed storage not implemented)
+  async writeScenario(_agentId: string, _path: string, _content: string, _name?: string): Promise<ScenarioMemory> {
+    throw new Error("Distributed storage not available");
+  }
+  async readScenario(_agentId: string, _path: string): Promise<ScenarioMemory | null> { return null; }
+  async listScenarios(_agentId: string, _prefix?: string): Promise<ScenarioMemory[]> { return []; }
+  async deleteScenario(_agentId: string, _path: string): Promise<boolean> { return false; }
+  async countScenarios(_agentId: string): Promise<number> { return 0; }
+
+  // L3 Core stubs (distributed storage not implemented)
+  async readCore(_agentId: string): Promise<CoreMemory | null> { return null; }
+  async writeCore(_agentId: string, _sections: Record<string, string>): Promise<CoreMemory> {
+    throw new Error("Distributed storage not available");
   }
 
   /** Enable distributed storage (for testing). */
@@ -410,5 +484,54 @@ export class FallbackStorage extends TypedEmitter<MemoryStorageEvents> implement
       if (await backend.isAvailable()) return true;
     }
     return false;
+  }
+
+  // L2 Scenario — delegate to first available backend
+  async writeScenario(agentId: string, path: string, content: string, name?: string): Promise<ScenarioMemory> {
+    for (const backend of this.backends) {
+      if (await backend.isAvailable()) return backend.writeScenario(agentId, path, content, name);
+    }
+    throw new Error("All storage backends failed");
+  }
+  async readScenario(agentId: string, path: string): Promise<ScenarioMemory | null> {
+    for (const backend of this.backends) {
+      if (await backend.isAvailable()) return backend.readScenario(agentId, path);
+    }
+    return null;
+  }
+  async listScenarios(agentId: string, prefix?: string): Promise<ScenarioMemory[]> {
+    for (const backend of this.backends) {
+      if (await backend.isAvailable()) return backend.listScenarios(agentId, prefix);
+    }
+    return [];
+  }
+  async deleteScenario(agentId: string, path: string): Promise<boolean> {
+    let deleted = false;
+    for (const backend of this.backends) {
+      if (await backend.isAvailable()) {
+        if (await backend.deleteScenario(agentId, path)) deleted = true;
+      }
+    }
+    return deleted;
+  }
+  async countScenarios(agentId: string): Promise<number> {
+    for (const backend of this.backends) {
+      if (await backend.isAvailable()) return backend.countScenarios(agentId);
+    }
+    return 0;
+  }
+
+  // L3 Core — delegate to first available backend
+  async readCore(agentId: string): Promise<CoreMemory | null> {
+    for (const backend of this.backends) {
+      if (await backend.isAvailable()) return backend.readCore(agentId);
+    }
+    return null;
+  }
+  async writeCore(agentId: string, sections: Record<string, string>): Promise<CoreMemory> {
+    for (const backend of this.backends) {
+      if (await backend.isAvailable()) return backend.writeCore(agentId, sections);
+    }
+    throw new Error("All storage backends failed");
   }
 }

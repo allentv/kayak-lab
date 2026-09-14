@@ -10,7 +10,7 @@
 // ============================================================================
 
 /** Memory type enumeration. */
-export type MemoryType = "short_term" | "long_term" | "episodic" | "semantic";
+export type MemoryType = "short_term" | "long_term" | "episodic" | "semantic" | "scenario" | "core";
 
 /** Memory entry status. */
 export type MemoryStatus = "active" | "archived" | "deleted";
@@ -109,11 +109,45 @@ export interface SemanticMemory extends MemoryEntry {
 }
 
 // ============================================================================
+// Scenario Memory (L2)
+// ============================================================================
+
+/**
+ * L2 Scenario memory: path-addressable structured knowledge document per agent.
+ * Stores learned patterns, how-to guides, and domain knowledge as markdown files.
+ */
+export interface ScenarioMemory extends MemoryEntry {
+  type: "scenario";
+  /** Dot-path address, e.g. "git.workflow" or "error-handling.retry". */
+  path: string;
+  /** Human-readable display name. */
+  name: string;
+  /** Agent that owns this knowledge. */
+  agent_id: string;
+}
+
+// ============================================================================
+// Core Memory (L3)
+// ============================================================================
+
+/**
+ * L3 Core memory: singleton per agent with structured identity sections.
+ * Stores stable agent attributes (name, goals, constraints, personality).
+ */
+export interface CoreMemory extends MemoryEntry {
+  type: "core";
+  /** Agent this core memory belongs to. */
+  agent_id: string;
+  /** Structured sections (name, goals, constraints, personality, etc.). */
+  sections: Record<string, string>;
+}
+
+// ============================================================================
 // Union Type
 // ============================================================================
 
 /** Any memory entry type. */
-export type AnyMemory = ShortTermMemory | LongTermMemory | EpisodicMemory | SemanticMemory;
+export type AnyMemory = ShortTermMemory | LongTermMemory | EpisodicMemory | SemanticMemory | ScenarioMemory | CoreMemory;
 
 // ============================================================================
 // Input Types (for creating/updating memories)
@@ -160,12 +194,34 @@ export interface CreateSemanticInput {
   metadata?: Record<string, unknown>;
 }
 
+/** Input for creating a scenario memory. */
+export interface CreateScenarioInput {
+  type: "scenario";
+  path: string;
+  name: string;
+  content: string;
+  agent_id: string;
+  session_id?: string;
+  metadata?: Record<string, unknown>;
+}
+
+/** Input for creating a core memory. */
+export interface CreateCoreInput {
+  type: "core";
+  agent_id: string;
+  sections: Record<string, string>;
+  session_id?: string;
+  metadata?: Record<string, unknown>;
+}
+
 /** Any create input. */
 export type CreateMemoryInput =
   | CreateShortTermInput
   | CreateLongTermInput
   | CreateEpisodicInput
-  | CreateSemanticInput;
+  | CreateSemanticInput
+  | CreateScenarioInput
+  | CreateCoreInput;
 
 /** Input for updating a memory entry. */
 export interface UpdateMemoryInput {

@@ -14,12 +14,16 @@ export type {
   LongTermMemory,
   EpisodicMemory,
   SemanticMemory,
+  ScenarioMemory,
+  CoreMemory,
   AnyMemory,
   CreateMemoryInput,
   CreateShortTermInput,
   CreateLongTermInput,
   CreateEpisodicInput,
   CreateSemanticInput,
+  CreateScenarioInput,
+  CreateCoreInput,
   UpdateMemoryInput,
 } from "./types.ts";
 

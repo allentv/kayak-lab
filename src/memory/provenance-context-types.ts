@@ -81,7 +81,7 @@ export const DEFAULT_BUDGET: TokenBudget = {
 
 export const DEFAULT_CONFIG: ProvenanceContextConfig = {
   maxMessages: 100,
-  maxTokens: 8000,
+  maxTokens: 9000,
   compressionThreshold: 2000,
   provenanceWeight: 0.3,
   budget: DEFAULT_BUDGET,
