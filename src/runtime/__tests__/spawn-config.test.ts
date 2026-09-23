@@ -3,7 +3,6 @@ import {
 } from "@std/assert";
 import { ProfileRegistry } from "../profile-registry.ts";
 import { createSpawnConfig } from "../spawn-config.ts";
-import type { AgentProfile } from "../types.ts";
 
 function makeRegistry(): ProfileRegistry {
   const registry = new ProfileRegistry();
