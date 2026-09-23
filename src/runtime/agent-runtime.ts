@@ -62,6 +62,12 @@ export interface AgentConfig {
   tool_timeout_ms?: number;
   /** Agent ID for core memory lookup. */
   agentId?: string;
+  /** Max tool-call iterations per runLoop cycle (default: 10). */
+  maxIterations?: number;
+  /** Per-tool execution timeout in ms. */
+  toolTimeoutMs?: number;
+  /** Use streaming response mode. */
+  streaming?: boolean;
 }
 
 /** Agent loop state. */
@@ -445,7 +451,7 @@ export class AgentRuntime {
    */
   private async runLoop(goalNodeId?: string): Promise<string> {
     let iterations = 0;
-    const maxIterations = 10; // Safety limit
+    const maxIterations = this.config.maxIterations ?? 10;
     let observationContext: ObservationContext | undefined;
     let lastGoalOrCommitmentId = goalNodeId;
 
@@ -470,8 +476,11 @@ export class AgentRuntime {
       };
       await this.hookRegistry.dispatch(HookPoint.BeforeModelCall, beforeModelContext, this.state!.session_id);
 
-      // Use potentially modified context from hooks
+      // Propagate hook-modified context back to request
       request.messages = beforeModelContext.messages as Message[];
+      if (beforeModelContext.model !== undefined) {
+        request.model = beforeModelContext.model;
+      }
 
       // Emit model request event
       await this.appendEvent("model.request", {
@@ -610,7 +619,7 @@ export class AgentRuntime {
    */
   private async *runLoopStreaming(goalNodeId?: string): AsyncIterable<string | StreamDelta> {
     let iterations = 0;
-    const maxIterations = 10;
+    const maxIterations = this.config.maxIterations ?? 10;
     let observationContext: ObservationContext | undefined;
     let lastGoalOrCommitmentId = goalNodeId;
 
@@ -636,8 +645,11 @@ export class AgentRuntime {
       };
       await this.hookRegistry.dispatch(HookPoint.BeforeModelCall, beforeModelContext, this.state!.session_id);
 
-      // Use potentially modified context from hooks
+      // Propagate hook-modified context back to request
       request.messages = beforeModelContext.messages as Message[];
+      if (beforeModelContext.model !== undefined) {
+        request.model = beforeModelContext.model;
+      }
 
       // Emit model request event
       await this.appendEvent("model.request", {
@@ -864,45 +876,69 @@ export class AgentRuntime {
       });
 
       let result: ToolResult;
+      const timeoutMs = this.config.toolTimeoutMs;
 
-      if (this.newToolRegistry && this.newToolRegistry.has(toolCall.name)) {
-        // New protocol path
-        await this.appendEvent("tool.call.invocation", {
-          tool_call_id: toolCall.id,
-          tool_name: toolCall.name,
-          parameters: toolCall.arguments,
-        });
+      try {
+        if (this.newToolRegistry && this.newToolRegistry.has(toolCall.name)) {
+          // New protocol path
+          await this.appendEvent("tool.call.invocation", {
+            tool_call_id: toolCall.id,
+            tool_name: toolCall.name,
+            parameters: toolCall.arguments,
+          });
 
-        const newResult: NewToolResult = await this.newToolRegistry.invoke(
-          toolCall.id,
-          toolCall.name,
-          toolCall.arguments,
-          { session_id: this.state!.session_id },
-        );
+          const invokePromise = this.newToolRegistry.invoke(
+            toolCall.id,
+            toolCall.name,
+            toolCall.arguments,
+            { session_id: this.state!.session_id },
+          );
+          const newResult: NewToolResult = timeoutMs
+            ? await Promise.race([
+                invokePromise,
+                this.toolTimeoutPromise<NewToolResult>(timeoutMs, toolCall),
+              ])
+            : await invokePromise;
 
-        await this.appendEvent("tool.call.result", {
-          tool_call_id: newResult.tool_call_id,
-          tool_name: newResult.tool_name,
-          exit_code: newResult.exit_code,
-          stdout: newResult.stdout,
-          stderr: newResult.stderr,
-          duration_ms: newResult.duration_ms,
-          success: newResult.success,
-        });
+          await this.appendEvent("tool.call.result", {
+            tool_call_id: newResult.tool_call_id,
+            tool_name: newResult.tool_name,
+            exit_code: newResult.exit_code,
+            stdout: newResult.stdout,
+            stderr: newResult.stderr,
+            duration_ms: newResult.duration_ms,
+            success: newResult.success,
+          });
 
-        // Adapt new result to legacy format
+          // Adapt new result to legacy format
+          result = {
+            tool_call_id: newResult.tool_call_id,
+            success: newResult.success,
+            result: newResult.stdout,
+            error: newResult.stderr || undefined,
+            duration_ms: newResult.duration_ms,
+          };
+        } else {
+          // Legacy protocol path
+          const invokePromise = this.toolRegistry.invoke(toolCall, {
+            session_id: this.state!.session_id,
+          });
+          result = timeoutMs
+            ? await Promise.race([
+                invokePromise,
+                this.toolTimeoutPromise<ToolResult>(timeoutMs, toolCall),
+              ])
+            : await invokePromise;
+        }
+      } catch (error) {
+        // Tool execution failed (timeout or other error)
         result = {
-          tool_call_id: newResult.tool_call_id,
-          success: newResult.success,
-          result: newResult.stdout,
-          error: newResult.stderr || undefined,
-          duration_ms: newResult.duration_ms,
+          tool_call_id: toolCall.id,
+          success: false,
+          result: null,
+          error: error instanceof Error ? error.message : String(error),
+          duration_ms: 0,
         };
-      } else {
-        // Legacy protocol path
-        result = await this.toolRegistry.invoke(toolCall, {
-          session_id: this.state!.session_id,
-        });
       }
 
       this.events.onToolResult?.(result);
@@ -928,6 +964,18 @@ export class AgentRuntime {
     }
 
     return results;
+  }
+
+  /**
+   * Returns a promise that rejects with a timeout error after `ms` milliseconds.
+   * Used with Promise.race to enforce tool execution timeouts.
+   */
+  private toolTimeoutPromise<T>(ms: number, toolCall: ToolCall): Promise<T> {
+    const { promise, reject } = Promise.withResolvers<T>();
+    setTimeout(() => {
+      reject(new Error(`Tool "${toolCall.name}" timed out after ${ms}ms`));
+    }, ms);
+    return promise;
   }
 
   // ==========================================================================

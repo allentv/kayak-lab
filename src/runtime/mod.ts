@@ -53,6 +53,32 @@ export type {
   AgentEvents,
 } from "./agent-runtime.ts";
 
+// Agent profiles
+export {
+  ProfileRegistry,
+  ProfileError,
+  ProfileNotFoundError,
+  ProfileCycleError,
+} from "./profile-registry.ts";
+
+export type { AgentProfile, SpawnConfig } from "./types.ts";
+
+// Spawn configuration builder
+export { SpawnConfigBuilder, createSpawnConfig } from "./spawn-config.ts";
+
+// Spawn function
+export { spawn } from "./spawn.ts";
+export type { SpawnDependencies } from "./spawn.ts";
+
+// Built-in profiles
+export {
+  builtinProfiles,
+  reviewerProfile,
+  scoutProfile,
+  coderProfile,
+  quickProfile,
+} from "./profiles.ts";
+
 // Memory integration (re-export from memory module)
 export type {
   AnyMemory,
