@@ -1,2 +1,17 @@
 [tools]
 deno = "2.9"
+
+[tasks.graft-build]
+description = "Structural graft rebuild (instant, no LLM)"
+run = "graft build"
+
+[tasks.graft-deep]
+description = "Deep graft rebuild with LLM summaries (requires GRAFT_* env)"
+run = "graft build --deep --allow-partial"
+
+[tasks.graft-map]
+run = "graft map"
+
+[tasks.graft-ask]
+description = "Query Graft graph (usage: mise run graft-ask -- 'how does auth work?')"
+run = "graft ask {{arg(name='query', i=1, required=true)}}"

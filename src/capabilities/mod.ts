@@ -40,6 +40,29 @@ export type {
   ShellExecResult,
   ShellEnvironment,
 } from "./shell.ts";
+
+// GitHub capability
+export { GitHubCapability } from "./github.ts";
+
+export type {
+  IGitHubCapability,
+  GitHubRepository,
+  GitHubIssue,
+  GitHubPullRequest,
+  GitHubWorkflow,
+  GitHubWorkflowRun,
+} from "./github.ts";
+
+// File capability
+export { FileCapability } from "./file.ts";
+
+export type { IFileCapability } from "./file.ts";
+
+// Search capability
+export { SearchCapability } from "./search.ts";
+
+export type { ISearchCapability, GrepMatch } from "./search.ts";
+
 // Sandbox execution
 export { SandboxedShellCapability } from "./sandboxed-shell.ts";
 export type { SandboxedShellExecOptions } from "./sandboxed-shell.ts";

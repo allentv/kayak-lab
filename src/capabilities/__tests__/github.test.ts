@@ -2,6 +2,9 @@ import { assertEquals, assertExists } from "@std/assert";
 import { GitHubCapability } from "../github.ts";
 import type { CapabilityContext } from "../capability.ts";
 
+/** Epoch seconds for the mock rate-limit reset header (1.8e9 - 1). */
+const RATE_LIMIT_RESET = 1_8e9 - 1;
+
 /** Start a mock GitHub API server. Returns the base URL and a close function. */
 function startMockServer(): { url: string; close: () => Promise<void> } {
   const server = Deno.serve({ port: 0, onListen: () => {} }, (req) => {
@@ -134,6 +137,89 @@ function startMockServer(): { url: string; close: () => Promise<void> } {
       });
     }
 
+    // GET /repos/{owner}/{repo}/actions/workflows/{id}/runs (before generic workflows/runs routes)
+    if (req.method === "GET" && path.match(/^\/repos\/[^/]+\/[^/]+\/actions\/workflows\/\d+\/runs$/)) {
+      return Response.json({
+        total_count: 1,
+        workflow_runs: [
+          {
+            id: 82001,
+            name: "CI",
+            status: "completed",
+            conclusion: "failure",
+            created_at: "2026-02-01T00:00:00Z",
+            updated_at: "2026-02-01T00:03:00Z",
+            run_started_at: "2026-02-01T00:00:05Z",
+          },
+        ],
+      });
+    }
+
+    // GET /repos/{owner}/{repo}/actions/runs
+    if (req.method === "GET" && path.match(/^\/repos\/[^/]+\/[^/]+\/actions\/runs$/)) {
+      return Response.json({
+        total_count: 2,
+        workflow_runs: [
+          {
+            id: 81001,
+            name: "CI",
+            status: "completed",
+            conclusion: "success",
+            created_at: "2026-01-01T00:00:00Z",
+            updated_at: "2026-01-01T00:05:00Z",
+            run_started_at: "2026-01-01T00:00:10Z",
+          },
+          {
+            id: 81002,
+            name: "CI",
+            status: "in_progress",
+            created_at: "2026-01-02T00:00:00Z",
+            updated_at: "2026-01-02T00:01:00Z",
+            run_started_at: "2026-01-02T00:00:00Z",
+          },
+        ],
+      });
+    }
+
+    // GET /repos/{owner}/{repo}/actions/workflows (rate-limited owner → 403 with quota headers)
+    if (req.method === "GET" && path === "/repos/rate-limited-owner/rate-limited-repo/actions/workflows") {
+      return new Response(JSON.stringify({ message: "API rate limit exceeded" }), {
+        status: 403,
+        headers: {
+          "content-type": "application/json",
+          "x-ratelimit-limit": "60",
+          "x-ratelimit-remaining": "0",
+          "x-ratelimit-reset": String(RATE_LIMIT_RESET),
+        },
+      });
+    }
+
+    // GET /repos/{owner}/{repo}/actions/workflows (list)
+    if (req.method === "GET" && path.match(/^\/repos\/[^/]+\/[^/]+\/actions\/workflows$/)) {
+      return Response.json({
+        total_count: 2,
+        workflows: [
+          {
+            id: 7001,
+            name: "CI",
+            path: ".github/workflows/ci.yml",
+            state: "active",
+            last_run_status: "success",
+            created_at: "2026-01-01T00:00:00Z",
+            updated_at: "2026-01-01T00:00:00Z",
+          },
+          {
+            id: 7002,
+            name: "Release",
+            path: ".github/workflows/release.yml",
+            state: "disabled_manually",
+            created_at: "2026-01-01T00:00:00Z",
+            updated_at: "2026-01-01T00:00:00Z",
+          },
+        ],
+      });
+    }
+
     return Response.json({ error: "Not found" }, { status: 404 });
   });
 
@@ -257,6 +343,68 @@ Deno.test("GitHubCapability", async (t) => {
       assertEquals(result.success, true);
       assertExists(result.data);
       assertEquals(result.data.id, 200);
+    });
+
+    await t.step("listWorkflows returns workflows", async () => {
+      const gh = new GitHubCapability();
+      await gh.initialize(context);
+
+      const result = await gh.listWorkflows("test-owner", "test-repo");
+      assertEquals(result.success, true);
+      assertExists(result.data);
+      assertEquals(result.data.length, 2);
+      assertEquals(result.data[0].id, 7001);
+      assertEquals(result.data[0].name, "CI");
+      assertEquals(result.data[0].state, "active");
+      assertEquals(result.data[0].last_run_status, "success");
+      assertEquals(result.data[1].name, "Release");
+      assertEquals(result.data[1].state, "disabled_manually");
+    });
+
+    await t.step("getWorkflowRuns returns runs without workflowId", async () => {
+      const gh = new GitHubCapability();
+      await gh.initialize(context);
+
+      const result = await gh.getWorkflowRuns("test-owner", "test-repo");
+      assertEquals(result.success, true);
+      assertExists(result.data);
+      assertEquals(result.data.length, 2);
+      assertEquals(result.data[0].id, 81001);
+      assertEquals(result.data[0].status, "completed");
+      assertEquals(result.data[0].conclusion, "success");
+      assertEquals(result.data[0].created_at, "2026-01-01T00:00:00Z");
+      assertEquals(result.data[0].updated_at, "2026-01-01T00:05:00Z");
+      assertEquals(result.data[0].run_started_at, "2026-01-01T00:00:10Z");
+      assertEquals(result.data[1].status, "in_progress");
+      assertEquals(result.data[1].conclusion, undefined);
+    });
+
+    await t.step("getWorkflowRuns returns runs for a workflow when workflowId given", async () => {
+      const gh = new GitHubCapability();
+      await gh.initialize(context);
+
+      const result = await gh.getWorkflowRuns("test-owner", "test-repo", "7001");
+      assertEquals(result.success, true);
+      assertExists(result.data);
+      assertEquals(result.data.length, 1);
+      assertEquals(result.data[0].id, 82001);
+      assertEquals(result.data[0].status, "completed");
+      assertEquals(result.data[0].conclusion, "failure");
+      assertEquals(result.data[0].updated_at, "2026-02-01T00:03:00Z");
+    });
+
+    await t.step("rate limit error includes reset time and remaining quota", async () => {
+      const gh = new GitHubCapability();
+      await gh.initialize(context);
+
+      const result = await gh.listWorkflows("rate-limited-owner", "rate-limited-repo");
+      assertEquals(result.success, false);
+      assertExists(result.error);
+      const message = result.error as string;
+      const expectedIso = new Date(RATE_LIMIT_RESET * 1000).toISOString();
+      assertEquals(message.includes("GitHub API rate limit exceeded"), true);
+      assertEquals(message.includes("0 requests remaining"), true);
+      assertEquals(message.includes(`resets at ${expectedIso}`), true);
     });
 
     await t.step("fails when not initialized", async () => {

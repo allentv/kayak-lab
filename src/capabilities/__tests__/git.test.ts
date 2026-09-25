@@ -38,6 +38,23 @@ async function removeTempDir(dir: string): Promise<void> {
   await Deno.remove(dir, { recursive: true });
 }
 
+/** Run a git command in a directory, throwing on failure. Returns combined output. */
+async function runGit(cwd: string, args: string[]): Promise<string> {
+  const cmd = new Deno.Command("git", {
+    args,
+    cwd,
+    stdout: "piped",
+    stderr: "piped",
+  });
+  const output = await cmd.output();
+  const text = new TextDecoder().decode(output.stdout) +
+    new TextDecoder().decode(output.stderr);
+  if (!output.success) {
+    throw new Error(`git ${args.join(" ")} failed: ${text}`);
+  }
+  return text;
+}
+
 Deno.test("GitCapability", async (t) => {
   const dir = await createTempRepo();
   const context: CapabilityContext = {
@@ -235,6 +252,128 @@ Deno.test("GitCapability", async (t) => {
       const result = await git.getStatus();
       assertEquals(result.success, true);
       assertEquals(result.data?.changes.length, 0);
+    });
+
+    await t.step("getDiff returns unstaged and staged diffs", async () => {
+      const git = new GitCapability();
+      await git.initialize(context);
+
+      // Unstaged modification of a tracked file
+      await Deno.writeTextFile(`${dir}/test.txt`, "modified again");
+      const unstaged = await git.getDiff();
+      assertEquals(unstaged.success, true);
+      assertExists(unstaged.data);
+      assertEquals(unstaged.data.includes("diff --git a/test.txt b/test.txt"), true);
+      assertEquals(unstaged.data.includes("+modified again"), true);
+
+      // Nothing staged yet: empty diff is a success with empty data
+      const stagedBefore = await git.getDiff(undefined, { staged: true });
+      assertEquals(stagedBefore.success, true);
+      assertEquals(stagedBefore.data, "");
+
+      // Stage the file: unstaged diff empties out, staged diff shows the change
+      await git.stage(["test.txt"]);
+
+      const unstagedAfter = await git.getDiff();
+      assertEquals(unstagedAfter.success, true);
+      assertEquals(unstagedAfter.data, "");
+
+      const stagedAfter = await git.getDiff(undefined, { staged: true });
+      assertEquals(stagedAfter.success, true);
+      assertExists(stagedAfter.data);
+      assertEquals(stagedAfter.data.includes("diff --git a/test.txt b/test.txt"), true);
+      assertEquals(stagedAfter.data.includes("+modified again"), true);
+
+      // Restore clean state for later steps
+      await git.commit("Diff state");
+    });
+
+    await t.step("getDiff(path) scopes the diff to one file", async () => {
+      const git = new GitCapability();
+      await git.initialize(context);
+
+      await Deno.writeTextFile(`${dir}/test.txt`, "scoped change");
+      await Deno.writeTextFile(`${dir}/another.txt`, "other change");
+
+      const result = await git.getDiff("another.txt");
+      assertEquals(result.success, true);
+      assertExists(result.data);
+      assertEquals(result.data.includes("diff --git a/another.txt b/another.txt"), true);
+      assertEquals(result.data.includes("+other change"), true);
+      assertEquals(result.data.includes("diff --git a/test.txt"), false);
+      assertEquals(result.data.includes("+scoped change"), false);
+
+      // Restore clean state for later steps
+      await git.stage(["test.txt", "another.txt"]);
+      await git.commit("Scoped diff state");
+    });
+
+    await t.step("push and pull transfer commits through a real remote", async () => {
+      // Set up: bare remote + two clones of it, all in one temp workspace
+      const ws = await Deno.makeTempDir({ prefix: "git-remote-" });
+      const remoteDir = `${ws}/remote.git`;
+      const cloneA = `${ws}/clone-a`;
+      const cloneB = `${ws}/clone-b`;
+
+      try {
+        await runGit(ws, ["init", "--bare", remoteDir]);
+        await runGit(ws, ["clone", remoteDir, "clone-a"]);
+        await runGit(cloneA, ["config", "user.email", "test@test.com"]);
+        await runGit(cloneA, ["config", "user.name", "Test User"]);
+
+        const gitA = new GitCapability();
+        await gitA.initialize({
+          session_id: "test-push",
+          working_directory: cloneA,
+        });
+
+        // Commit in clone-a and push to the bare remote
+        await Deno.writeTextFile(`${cloneA}/pushed.txt`, "pushed content");
+        const stageResult = await gitA.stage(["pushed.txt"]);
+        assertEquals(stageResult.success, true);
+        const commitResult = await gitA.commit("Push commit");
+        assertEquals(commitResult.success, true);
+
+        const pushResult = await gitA.push("origin", "master");
+        assertEquals(pushResult.success, true);
+
+        // The remote actually received the commit
+        const lsRemote = await runGit(ws, ["ls-remote", remoteDir, "refs/heads/master"]);
+        assertEquals(lsRemote.includes(commitResult.data?.hash ?? "missing"), true);
+
+        // Failures surface as success: false (unknown remote)
+        const failedPush = await gitA.push("nonexistent-remote", "master");
+        assertEquals(failedPush.success, false);
+        assertExists(failedPush.error);
+
+        // clone-b is cloned only now so its history includes clone-a's push
+        await runGit(ws, ["clone", remoteDir, "clone-b"]);
+        await runGit(cloneB, ["config", "user.email", "test@test.com"]);
+        await runGit(cloneB, ["config", "user.name", "Test User"]);
+        const gitB = new GitCapability();
+        await gitB.initialize({
+          session_id: "test-pull",
+          working_directory: cloneB,
+        });
+        await Deno.writeTextFile(`${cloneB}/pulled.txt`, "pulled content");
+        await gitB.stage(["pulled.txt"]);
+        await gitB.commit("Pull commit");
+        const pushB = await gitB.push("origin", "master");
+        assertEquals(pushB.success, true);
+
+        // clone-a pulls and receives clone-b's change
+        const pullResult = await gitA.pull("origin", "master");
+        assertEquals(pullResult.success, true);
+        const content = await Deno.readTextFile(`${cloneA}/pulled.txt`);
+        assertEquals(content, "pulled content");
+
+        // Failures surface as success: false (unknown remote)
+        const failedPull = await gitA.pull("nonexistent-remote", "master");
+        assertEquals(failedPull.success, false);
+        assertExists(failedPull.error);
+      } finally {
+        await removeTempDir(ws);
+      }
     });
 
     await t.step("disposes successfully", async () => {

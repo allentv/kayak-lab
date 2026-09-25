@@ -14,10 +14,14 @@ import { SessionManager } from "./core/session-manager.ts";
 import { CapabilityRegistry } from "./capabilities/capability.ts";
 import { ShellCapability } from "./capabilities/shell.ts";
 import { GitCapability } from "./capabilities/git.ts";
+import { FileCapability } from "./capabilities/file.ts";
+import { SearchCapability } from "./capabilities/search.ts";
+import { GitHubCapability } from "./capabilities/github.ts";
 import { PersistentEventStore } from "./store/persistence.ts";
 import { SQLitePersistenceBackend } from "./store/sqlite-backend.ts";
+import { EventStoreBridge } from "./store/event-store.ts";
 import { ProjectionProtocol } from "./projection/protocol.ts";
-import { ModelManager } from "./runtime/model-provider.ts";
+import { ModelManager, type IModelProvider, type ModelRequest, type ModelResponse, type StreamDelta } from "./runtime/model-provider.ts";
 import { AgentRuntime } from "./runtime/agent-runtime.ts";
 import {
   ToolRegistry,
@@ -137,6 +141,7 @@ interface HarnessComponents {
   projectionProtocol: ProjectionProtocol;
   modelManager: ModelManager;
   toolRegistry: ToolRegistry;
+  bridge?: EventStoreBridge;
 }
 
 async function initializeHarness(
@@ -149,8 +154,14 @@ async function initializeHarness(
   const capabilityRegistry = new CapabilityRegistry();
   const shellCap = new ShellCapability();
   const gitCap = new GitCapability();
+  const fileCap = new FileCapability();
+  const searchCap = new SearchCapability();
+  const githubCap = new GitHubCapability();
   capabilityRegistry.register(shellCap);
   capabilityRegistry.register(gitCap);
+  capabilityRegistry.register(fileCap);
+  capabilityRegistry.register(searchCap);
+  capabilityRegistry.register(githubCap);
 
   // Initialize persistent event store with SQLite backend
   const dbPath = `${projectDir}/.kayak/events.sqlite`;
@@ -160,8 +171,175 @@ async function initializeHarness(
     backend,
   });
 
+  // Bridge EventStream to SQLite persistence
+  const bridge = new EventStoreBridge(eventStream, {
+    dataDir: `${projectDir}/.kayak`,
+    backend,
+  });
+  bridge.connect();
+
   const projectionProtocol = new ProjectionProtocol(eventStream);
+
+  // ModelManager: check for API key and register provider
   const modelManager = new ModelManager();
+  const apiKeyEnv: Record<string, { key: string; baseUrl: string; defaultModel: string; name: string }> = {
+    OPENAI_API_KEY: {
+      key: Deno.env.get("OPENAI_API_KEY") ?? "",
+      baseUrl: "https://api.openai.com/v1",
+      defaultModel: "gpt-4o",
+      name: "openai",
+    },
+    ANTHROPIC_API_KEY: {
+      key: Deno.env.get("ANTHROPIC_API_KEY") ?? "",
+      baseUrl: "https://api.anthropic.com/v1",
+      defaultModel: "claude-sonnet-4-20250514",
+      name: "anthropic",
+    },
+    GOOGLE_API_KEY: {
+      key: Deno.env.get("GOOGLE_API_KEY") ?? "",
+      baseUrl: "https://generativelanguage.googleapis.com/v1beta",
+      defaultModel: "gemini-2.0-flash",
+      name: "google",
+    },
+  };
+
+  let detectedProvider: { key: string; baseUrl: string; defaultModel: string; name: string } | null = null;
+  for (const envVar of Object.keys(apiKeyEnv)) {
+    const entry = apiKeyEnv[envVar];
+    if (entry.key) {
+      detectedProvider = entry;
+      break;
+    }
+  }
+
+  if (!detectedProvider) {
+    console.error("Error: No API key configured. Set one of OPENAI_API_KEY, ANTHROPIC_API_KEY, or GOOGLE_API_KEY.");
+    Deno.exit(1);
+  }
+
+  const providerName = detectedProvider.name;
+  const apiKey = detectedProvider.key;
+  const baseUrl = detectedProvider.baseUrl;
+  const defaultModel = detectedProvider.defaultModel;
+
+  const openaiCompatibleProvider: IModelProvider = {
+    name: providerName,
+    async invoke(request: ModelRequest): Promise<ModelResponse> {
+      const model = request.model ?? defaultModel;
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+      };
+      const body: Record<string, unknown> = {
+        model,
+        messages: request.messages,
+        temperature: request.temperature,
+        max_tokens: request.max_tokens,
+      };
+      if (request.tools && request.tools.length > 0) {
+        body.tools = request.tools.map((t) => ({
+          type: "function",
+          function: {
+            name: t.name,
+            description: t.description,
+            parameters: t.parameters,
+          },
+        }));
+      }
+      const response = await fetch(`${baseUrl}/chat/completions`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`Model API error ${response.status}: ${text}`);
+      }
+      const data = await response.json();
+      const choice = data.choices?.[0];
+      if (!choice) {
+        throw new Error("No choices in model response");
+      }
+      return {
+        content: choice.message?.content ?? null,
+        tool_calls: (choice.message?.tool_calls ?? []).map((tc: Record<string, unknown>) => ({
+          id: tc.id as string,
+          name: (tc.function as Record<string, unknown>)?.name as string,
+          arguments: JSON.parse((tc.function as Record<string, unknown>)?.arguments as string ?? "{}"),
+        })),
+        finish_reason: choice.finish_reason ?? "stop",
+        usage: data.usage,
+      };
+    },
+    async *stream(request: ModelRequest): AsyncIterable<StreamDelta> {
+      const model = request.model ?? defaultModel;
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+      };
+      const body: Record<string, unknown> = {
+        model,
+        messages: request.messages,
+        temperature: request.temperature,
+        max_tokens: request.max_tokens,
+        stream: true,
+      };
+      if (request.tools && request.tools.length > 0) {
+        body.tools = request.tools.map((t) => ({
+          type: "function",
+          function: {
+            name: t.name,
+            description: t.description,
+            parameters: t.parameters,
+          },
+        }));
+      }
+      const response = await fetch(`${baseUrl}/chat/completions`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`Model API error ${response.status}: ${text}`);
+      }
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("No response body");
+      const decoder = new TextDecoder();
+      let buffer = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const jsonStr = line.slice(6).trim();
+            if (jsonStr === "[DONE]") return;
+            try {
+              const chunk = JSON.parse(jsonStr);
+              const delta = chunk.choices?.[0]?.delta;
+              if (delta) {
+                yield {
+                  content: delta.content ?? undefined,
+                  tool_calls: delta.tool_calls?.map((tc: Record<string, unknown>) => ({
+                    id: tc.id as string,
+                    name: (tc.function as Record<string, unknown>)?.name as string,
+                    arguments: JSON.parse((tc.function as Record<string, unknown>)?.arguments as string ?? "{}"),
+                  })),
+                  finish_reason: chunk.choices?.[0]?.finish_reason ?? undefined,
+                };
+              }
+            } catch {
+              // Skip malformed chunks
+            }
+          }
+        }
+      }
+    },
+  };
+  modelManager.register(openaiCompatibleProvider);
 
   // Initialize runtime tool registry
   const toolRegistry = new ToolRegistry();
@@ -214,6 +392,244 @@ async function initializeHarness(
     handler: gitHandler as ToolHandler,
   });
 
+  // File tool handler
+  const fileHandler: ToolHandler = async (
+    params,
+    _context: ToolContext,
+  ) => {
+    const p = params as {
+      action: string;
+      path?: string;
+      content?: string;
+      old_string?: string;
+      new_string?: string;
+      offset?: number;
+      limit?: number;
+      replace_all?: boolean;
+    };
+    await fileCap.initialize({ session_id: "cli", working_directory: projectDir });
+    switch (p.action) {
+      case "read": {
+        if (!p.path) throw new Error("path is required for read");
+        const result = await fileCap.read(p.path, {
+          offset: p.offset,
+          limit: p.limit,
+        });
+        if (result.error) {
+          const msg = typeof result.error === "string" ? result.error : result.error.message;
+          throw new Error(msg);
+        }
+        return JSON.stringify(result.data);
+      }
+      case "write": {
+        if (!p.path) throw new Error("path is required for write");
+        if (p.content === undefined) throw new Error("content is required for write");
+        const result = await fileCap.write(p.path, p.content);
+        if (result.error) {
+          const msg = typeof result.error === "string" ? result.error : result.error.message;
+          throw new Error(msg);
+        }
+        return JSON.stringify(result.data);
+      }
+      case "edit": {
+        if (!p.path) throw new Error("path is required for edit");
+        if (!p.old_string) throw new Error("old_string is required for edit");
+        if (p.new_string === undefined) throw new Error("new_string is required for edit");
+        const result = await fileCap.edit(p.path, p.old_string, p.new_string, {
+          replace_all: p.replace_all,
+        });
+        if (result.error) {
+          const msg = typeof result.error === "string" ? result.error : result.error.message;
+          throw new Error(msg);
+        }
+        return JSON.stringify(result.data);
+      }
+      default:
+        throw new Error(`Unknown file action: ${p.action}`);
+    }
+  };
+
+  toolRegistry.register({
+    name: "file",
+    description: "Read, write, and edit files in the project directory",
+    parameters: {
+      action: { type: "string", description: "Action to perform: read, write, or edit" },
+      path: { type: "string", description: "File path relative to project root" },
+      content: { type: "string", description: "Content to write (for write action)" },
+      old_string: { type: "string", description: "String to replace (for edit action)" },
+      new_string: { type: "string", description: "Replacement string (for edit action)" },
+      offset: { type: "number", description: "Line offset for read (1-indexed)" },
+      limit: { type: "number", description: "Max lines to read" },
+      replace_all: { type: "boolean", description: "Replace all occurrences (for edit action)" },
+    },
+    handler: fileHandler,
+  });
+
+  // Search tool handler
+  const searchHandler: ToolHandler = async (
+    params,
+    _context: ToolContext,
+  ) => {
+    const p = params as {
+      action: string;
+      pattern: string;
+      path?: string;
+      options?: {
+        case?: boolean;
+        glob?: string;
+        hidden?: boolean;
+        gitignore?: boolean;
+      };
+    };
+    await searchCap.initialize({ session_id: "cli", working_directory: projectDir });
+    switch (p.action) {
+      case "grep": {
+        const result = await searchCap.grep(p.pattern, p.path, {
+          case: p.options?.case,
+          glob: p.options?.glob,
+        });
+        if (result.error) {
+          const msg = typeof result.error === "string" ? result.error : result.error.message;
+          throw new Error(msg);
+        }
+        return JSON.stringify(result.data);
+      }
+      case "glob": {
+        const result = await searchCap.glob(p.pattern, {
+          hidden: p.options?.hidden,
+          gitignore: p.options?.gitignore,
+        });
+        if (result.error) {
+          const msg = typeof result.error === "string" ? result.error : result.error.message;
+          throw new Error(msg);
+        }
+        return JSON.stringify(result.data);
+      }
+      default:
+        throw new Error(`Unknown search action: ${p.action}`);
+    }
+  };
+
+  toolRegistry.register({
+    name: "search",
+    description: "Search the codebase using grep (regex) or glob (file patterns)",
+    parameters: {
+      action: { type: "string", description: "Action to perform: grep or glob" },
+      pattern: { type: "string", description: "Search pattern (regex for grep, glob pattern for glob)" },
+      path: { type: "string", description: "File or directory to search in" },
+      options: {
+        type: "object",
+        properties: {
+          case: { type: "boolean", description: "Case-sensitive search (default: true)" },
+          glob: { type: "string", description: "File glob filter for grep (e.g. *.ts)" },
+          hidden: { type: "boolean", description: "Include hidden files for glob" },
+          gitignore: { type: "boolean", description: "Respect .gitignore for glob" },
+        },
+      },
+    },
+    handler: searchHandler,
+  });
+
+  // GitHub tool handler
+  const githubHandler: ToolHandler = async (
+    params,
+    _context: ToolContext,
+  ) => {
+    const p = params as {
+      action: string;
+      [key: string]: unknown;
+    };
+    const env: Record<string, string> = {};
+    const ghToken = Deno.env.get("GITHUB_TOKEN");
+    if (ghToken) env["GITHUB_TOKEN"] = ghToken;
+    const ghOwner = Deno.env.get("GITHUB_OWNER");
+    if (ghOwner) env["GITHUB_OWNER"] = ghOwner;
+    const ghRepo = Deno.env.get("GITHUB_REPO");
+    if (ghRepo) env["GITHUB_REPO"] = ghRepo;
+    await githubCap.initialize({ session_id: "cli", working_directory: projectDir, environment: env });
+    switch (p.action) {
+      case "getRepository": {
+        const result = await githubCap.getRepository();
+        if (result.error) {
+          const msg = typeof result.error === "string" ? result.error : result.error.message;
+          throw new Error(msg);
+        }
+        return JSON.stringify(result.data);
+      }
+      case "listIssues": {
+        const result = await githubCap.listIssues({
+          state: p.state as "open" | "closed" | undefined,
+          labels: p.labels as string[] | undefined,
+          assignee: p.assignee as string | undefined,
+          limit: p.limit as number | undefined,
+        });
+        if (result.error) {
+          const msg = typeof result.error === "string" ? result.error : result.error.message;
+          throw new Error(msg);
+        }
+        return JSON.stringify(result.data);
+      }
+      case "getIssue": {
+        const result = await githubCap.getIssue(p.number as number);
+        if (result.error) {
+          const msg = typeof result.error === "string" ? result.error : result.error.message;
+          throw new Error(msg);
+        }
+        return JSON.stringify(result.data);
+      }
+      case "createIssue": {
+        const result = await githubCap.createIssue({
+          title: p.title as string,
+          body: p.body as string | undefined,
+          labels: p.labels as string[] | undefined,
+          assignees: p.assignees as string[] | undefined,
+        });
+        if (result.error) {
+          const msg = typeof result.error === "string" ? result.error : result.error.message;
+          throw new Error(msg);
+        }
+        return JSON.stringify(result.data);
+      }
+      case "listPullRequests": {
+        const result = await githubCap.listPullRequests({
+          state: p.state as "open" | "closed" | "merged" | undefined,
+          limit: p.limit as number | undefined,
+        });
+        if (result.error) {
+          const msg = typeof result.error === "string" ? result.error : result.error.message;
+          throw new Error(msg);
+        }
+        return JSON.stringify(result.data);
+      }
+      case "getPullRequest": {
+        const result = await githubCap.getPullRequest(p.number as number);
+        if (result.error) {
+          const msg = typeof result.error === "string" ? result.error : result.error.message;
+          throw new Error(msg);
+        }
+        return JSON.stringify(result.data);
+      }
+      default:
+        throw new Error(`Unknown github action: ${p.action}`);
+    }
+  };
+
+  toolRegistry.register({
+    name: "github",
+    description: "GitHub API operations (repository, issues, pull requests)",
+    parameters: {
+      action: { type: "string", description: "Action to perform (getRepository, listIssues, getIssue, createIssue, listPullRequests, getPullRequest)" },
+      state: { type: "string", description: "Filter by state (open, closed, merged)" },
+      labels: { type: "array", items: { type: "string" }, description: "Filter by labels" },
+      assignee: { type: "string", description: "Filter by assignee" },
+      limit: { type: "number", description: "Max results to return" },
+      number: { type: "number", description: "Issue or PR number" },
+      title: { type: "string", description: "Issue title" },
+      body: { type: "string", description: "Issue or PR body" },
+    },
+    handler: githubHandler,
+  });
+
   return {
     eventStream,
     sessionManager,
@@ -222,6 +638,7 @@ async function initializeHarness(
     projectionProtocol,
     modelManager,
     toolRegistry,
+    bridge,
   };
 }
 
@@ -275,7 +692,7 @@ async function runRepl(
   const buffer = new Uint8Array(1024);
 
   while (true) {
-    await Deno.stdout.write(encoder.encode(`\x1b[1m[kayak]\x1b[0m `));
+    await Deno.stdout.write(encoder.encode(`\x1b[1m[kayak]$\x1b[0m `));
 
     let line = "";
     while (true) {

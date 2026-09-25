@@ -1,0 +1,1521 @@
+{
+  "version": 1,
+  "model": "openai:deepseek/deepseek-v3.2",
+  "repoDigest": "48871034bfbefd90761d75364efc869ffb979f9c2e86c29acb9b937d30f0878c",
+  "files": [
+    {
+      "path": "review/checks/file-size.ts",
+      "hash": "df18770d8416268a78c6f60578c5bf52e61006af817d62c5513975f3915fd7bc"
+    },
+    {
+      "path": "review/checks/reexports.ts",
+      "hash": "a0d935dcb1a48ab5c811380c07b4bec0491cfe643fb24777bb58f0f22b1f5b76"
+    },
+    {
+      "path": "review/checks/test-pairing.ts",
+      "hash": "e92a5e9d8ceb1e0f22efaf345cd6df7fb79f351a22803d1a8249951feafb9373"
+    },
+    {
+      "path": "review/cli.ts",
+      "hash": "f46e8d8b0efa5613197edd553eded67e310a65983f9065617ccb481b1665ee83"
+    },
+    {
+      "path": "review/context.ts",
+      "hash": "cab2714df3803615fcf6dc1e27cc6e648e0c71eaebfc8cdfea7571f02e1d129a"
+    },
+    {
+      "path": "review/delegate/deno-check.ts",
+      "hash": "b5ebce768bb6229e1d2132ac58b9c9a31de1a460aadef5d353d74f640684eaeb"
+    },
+    {
+      "path": "review/delegate/deno-lint.ts",
+      "hash": "bd94c9c07fd5a39174269c460cf60613c9d82bc406c25519d5a6ac842b1c36db"
+    },
+    {
+      "path": "review/delegate/knip.ts",
+      "hash": "b0fa7d91289fecb857e572a3d61ff64cdaf3217472f2aae7bf84f1f551a7045a"
+    },
+    {
+      "path": "review/delegate/madge.ts",
+      "hash": "f07a630264c0940570c0f6301b5d236555c1ff5f0f59a80cad95bc9deb088b40"
+    },
+    {
+      "path": "review/formatter.ts",
+      "hash": "b0080d6dd29a2f95aafcf520fbd715b64fbc6ce0b601917dd889027ae6176f52"
+    },
+    {
+      "path": "review/registry.ts",
+      "hash": "9dd80adec361f8c0f9dfe69c668c13e8ea156511fe8ad8b899e220ddcdf7ba34"
+    },
+    {
+      "path": "review/types.ts",
+      "hash": "4afdc3e5116100aeac867f5b38a4424a85b22eb27b4cc61717ae6c45965eb359"
+    },
+    {
+      "path": "scripts/migrate-jsonl-to-duckdb.ts",
+      "hash": "2d001ac42d0f2b0510ce23cae590a42b3c932b175e9e20c2a4625499abbd3e18"
+    },
+    {
+      "path": "scripts/sandbox-health-check.sh",
+      "hash": "c5e35026e9b5a203b0fc459757144b88fb9ffef2da02dbf6ca9d179ebe44a9e2"
+    },
+    {
+      "path": "scripts/setup-duckdb.sh",
+      "hash": "880cd8abfab6cdea304ab75fab42d4f610881c6d14011f086522a98127b030a8"
+    },
+    {
+      "path": "scripts/setup-sandbox.sh",
+      "hash": "0f53c04a1c74a5187f0909c0eb1f214152f04c133cd42595a729183a9141d119"
+    },
+    {
+      "path": "search_smoke.ts",
+      "hash": "3ac83aba5da6586e73d8f4e71e87368cfdbba7e399c239758df43705b29a2ee2"
+    },
+    {
+      "path": "src/__test-utils__/fixtures/loader.ts",
+      "hash": "7f2314e2181626cbd2ebb206696661c57ed3a9018546977ca9f63c3e6574e7f1"
+    },
+    {
+      "path": "src/__test-utils__/fixtures/mod.ts",
+      "hash": "895cb379127fa83df84a2782fb8e9c6fff8a1635e6f5bc8d7efcbf3b447e2593"
+    },
+    {
+      "path": "src/__test-utils__/harness/environment.ts",
+      "hash": "0f40742ba44ec366a94640aae1c4dc2e844e4281a07fdac4eb8c98c4be94b468"
+    },
+    {
+      "path": "src/__test-utils__/harness/mod.ts",
+      "hash": "ed6e25afcb71d457c6d5abd84811ac89ba2a6188746418dc46d46d338bb0d89d"
+    },
+    {
+      "path": "src/__test-utils__/helpers/assertions.ts",
+      "hash": "082d709c34e0d234d2f80a4c94efdf1be9be884b5ac3187f7632e23e983d713e"
+    },
+    {
+      "path": "src/__test-utils__/helpers/event-generators.ts",
+      "hash": "2eee0b519247c71b4cfd4fea219852fe48236f87bbeb59d35ca1f5eefc373193"
+    },
+    {
+      "path": "src/__test-utils__/helpers/mod.ts",
+      "hash": "862c8fbb2749b3810e363abed2be8a5fdc1001ca6c640b300aa0455a87aa074e"
+    },
+    {
+      "path": "src/__test-utils__/helpers/session-builder.ts",
+      "hash": "5817078160926cb51e447793bdb331d031317a411be5b40332f50ff27a12b83d"
+    },
+    {
+      "path": "src/__test-utils__/mocks/mock-event-store.ts",
+      "hash": "398dae5c7feeb4f8068ce404a1f2c141b7617f2d734f6bc2853f1c846f07367c"
+    },
+    {
+      "path": "src/__test-utils__/mocks/mock-git.ts",
+      "hash": "81245185b8f21c741b6509752a1da9a1be54d5c1bff5951c70aa2046e8e91086"
+    },
+    {
+      "path": "src/__test-utils__/mocks/mock-github.ts",
+      "hash": "c7210bc2cfbd7e40d8c09d395f8355c2b5047a56f1cdf09a424e05e6ce6872c3"
+    },
+    {
+      "path": "src/__test-utils__/mocks/mock-model.ts",
+      "hash": "1af2eea8363bd4ba63ae599a43f9cc64ba8a241c1f0d442ad04943234f4d40ff"
+    },
+    {
+      "path": "src/__test-utils__/mocks/mock-shell.ts",
+      "hash": "1bf7cd5c0e41e254aeaf0265e8f180ca69540af2a261b36019f5dba45ad218dd"
+    },
+    {
+      "path": "src/__test-utils__/mocks/mod.ts",
+      "hash": "9849b44982bdd384935c0390246d485929697848a43481d8641e465cb262f35d"
+    },
+    {
+      "path": "src/__test-utils__/mod.ts",
+      "hash": "a011027fedbed0563bdf66910e8363dca1455ce47981e57f9abd747d772ee003"
+    },
+    {
+      "path": "src/__tests__/_helpers/harness-client.ts",
+      "hash": "f4f94f68f93b4f82d1df7e518fc5103498e54015edee3fb4cddafd5a28266163"
+    },
+    {
+      "path": "src/__tests__/_helpers/harness-process.ts",
+      "hash": "ce84bac11b2758323d10287ccd57bab4cd17032ba1cbd1ecce2170170089b9be"
+    },
+    {
+      "path": "src/__tests__/benchmarks.test.ts",
+      "hash": "89a7848a3eb52be5b549bc069c29d29054a5d8a6e1a34c67c3087ac39255f01c"
+    },
+    {
+      "path": "src/__tests__/e2e-http-api.test.ts",
+      "hash": "28dab3869f116b377e94c092108dceb9f186311ae42776a8234d723ca79b47e1"
+    },
+    {
+      "path": "src/__tests__/e2e-session-lifecycle.test.ts",
+      "hash": "599e893c38e21c102c3af40440c990fa540fef8a801e1d468704ba704f459006"
+    },
+    {
+      "path": "src/analysis.ts",
+      "hash": "8436c7b51a843d471a49d1fdf5a1954a3c463dda56a01e15712248b28c69c076"
+    },
+    {
+      "path": "src/capabilities/__tests__/capability.test.ts",
+      "hash": "24a61708e780bf6ffe96c9813fb5e9235827c0e0bde6ebfe8526cfb47e5cb9fc"
+    },
+    {
+      "path": "src/capabilities/__tests__/file.test.ts",
+      "hash": "fcc53ef488d8dd188c7871bc8425aa29ddb0eedada09a62095a143c236a899d8"
+    },
+    {
+      "path": "src/capabilities/__tests__/git.test.ts",
+      "hash": "4cc090f8b12750e1392cb90554f1bf6973a31b5d8e5aad951cc05affcb88b70a"
+    },
+    {
+      "path": "src/capabilities/__tests__/github.test.ts",
+      "hash": "90fab3ceda879ba2997e5dbb561d030c86ba3cdb6d299cb3767ae993b394cd58"
+    },
+    {
+      "path": "src/capabilities/__tests__/kubernetes.test.ts",
+      "hash": "4e1bcb5be856bf87ad08ff95f1b66cc149b23ced7d2061cb78004b6160f52f4e"
+    },
+    {
+      "path": "src/capabilities/__tests__/sandbox-docker.test.ts",
+      "hash": "32f41dc690fbfd41d5c0774bf9a597170fde7e9d8101674e7b4f2b31481f9eaf"
+    },
+    {
+      "path": "src/capabilities/__tests__/sandbox-gvisor.test.ts",
+      "hash": "ed425a4b9fb89a0365bebcfffd370adcc9420ed0be7c72ea5fe0dd37f7b246c0"
+    },
+    {
+      "path": "src/capabilities/__tests__/sandboxed-shell.test.ts",
+      "hash": "c4b037efc8cc47b5689f4719f173793b95c61b45c8e1d2f48e2b138ac746adab"
+    },
+    {
+      "path": "src/capabilities/__tests__/shell.test.ts",
+      "hash": "bb5afdfff7e6783e8362b1d0d666ba0bdc1e79d468b629ba943c75c4adb91b4c"
+    },
+    {
+      "path": "src/capabilities/capability.ts",
+      "hash": "2ed982a3cb89bbc4e065c0fddda6e25dd6d6777179140f8ee0e9323927996e77"
+    },
+    {
+      "path": "src/capabilities/file.ts",
+      "hash": "0292b8e66e6f62428e731b04d716279127e1f05d4479edb88954bb8b37b6a335"
+    },
+    {
+      "path": "src/capabilities/git.ts",
+      "hash": "a8a891abceab607e16e618f245c3853e8056a6d188afe5ac8259585f3e3cd37c"
+    },
+    {
+      "path": "src/capabilities/github.ts",
+      "hash": "afc029aff2f6b9bcede2ddd7db2fd12b6a10e03378f2800e427d89b127db41f4"
+    },
+    {
+      "path": "src/capabilities/kubernetes.ts",
+      "hash": "3cc196b2c5f55b21caa8782c0e554c6e3bad3e0147d8cac26eb2893747b47136"
+    },
+    {
+      "path": "src/capabilities/mod.ts",
+      "hash": "b8d77a04ba0974323bdbd7a93744592e3b0d60b5025ce8b1a67ae485fe9d2389"
+    },
+    {
+      "path": "src/capabilities/sandbox/docker-runtime.ts",
+      "hash": "c7944ff2ba4030e97b1af304be3c661657e9cc8dc3830fd35f8831afad5bb7c4"
+    },
+    {
+      "path": "src/capabilities/sandbox/gvisor-runtime.ts",
+      "hash": "28439a2565865cf40930d91be9f0108608947d94d35aa3431976c8ee75ab5c44"
+    },
+    {
+      "path": "src/capabilities/sandbox/mod.ts",
+      "hash": "f4a2044c23ad09e37d476e5c8545aa7666fbb04b1c087c920559bde2c255c1b2"
+    },
+    {
+      "path": "src/capabilities/sandbox/types.ts",
+      "hash": "89466f08fc1cfacbdb6d4cdc04f25628b3b0d065a2d139ec12a5a8c38144255a"
+    },
+    {
+      "path": "src/capabilities/sandboxed-shell.ts",
+      "hash": "58c7308b7c0a3438b4ff9c6c2ce021665b66a6b1e79eed6677fef761f47ad9a6"
+    },
+    {
+      "path": "src/capabilities/search.ts",
+      "hash": "cb266f3e0d35260bafeda011df1667b5ba4f3be663b12dee4e010a659436be22"
+    },
+    {
+      "path": "src/capabilities/shell.ts",
+      "hash": "7dbf1074634f8a2e15f9521a9adffaad2cd97aab2d6914a539140d2e7108b53b"
+    },
+    {
+      "path": "src/cli.ts",
+      "hash": "45d10ec443e3d1d91f79ec470559d2077795900535455617f5a9c131aad0f24b"
+    },
+    {
+      "path": "src/core/__tests__/circuit-breaker.test.ts",
+      "hash": "a0f13c8a107ce49873a9abf0b4712a01705dc8ec3cea0c750053c4d5d071945e"
+    },
+    {
+      "path": "src/core/__tests__/config.test.ts",
+      "hash": "9e9dd628176514bb9bcade054828e701f720b1da5096c160a940505ef74e1633"
+    },
+    {
+      "path": "src/core/__tests__/errors.test.ts",
+      "hash": "b5fe463446a529876dcd8e46282ab351f370046658c59d07b01a07f1d7b50b3b"
+    },
+    {
+      "path": "src/core/__tests__/event-stream-subscription.test.ts",
+      "hash": "b31f8d2666330d24ce07b019f45bf0b09caaae068441627f1f2dd9ccbdb931f6"
+    },
+    {
+      "path": "src/core/__tests__/event-stream.test.ts",
+      "hash": "9871249e452cd904a22ccbfb5144f1a28b8578752c157e954ccda04af0b95376"
+    },
+    {
+      "path": "src/core/__tests__/fallback.test.ts",
+      "hash": "f7d021dddd8ae43ea111c7bbe6932fe2d4c110a09b331945e7312c9675f18dae"
+    },
+    {
+      "path": "src/core/__tests__/health.test.ts",
+      "hash": "6deb05a6a055f8baae07a0fa42a843cc9176849d90b71e37b7917b219ee9f217"
+    },
+    {
+      "path": "src/core/__tests__/rate-limiter.test.ts",
+      "hash": "437e7474fda6f40e2d0c1686f5ff57fe6e98d08b2ea2e06fd46d6f8eb7872255"
+    },
+    {
+      "path": "src/core/__tests__/retry.test.ts",
+      "hash": "3deeef63336dfca49285bdb535b36e2d9506f6d552e314045e3e76712b2d2e4a"
+    },
+    {
+      "path": "src/core/__tests__/schema-registry.test.ts",
+      "hash": "bf65532cb27da6f9bb9ec699206609149b20a4a64e47916bbb99ab47669e8f7f"
+    },
+    {
+      "path": "src/core/__tests__/session-manager.test.ts",
+      "hash": "34e23b36fd0beb9cab3d03312caa49c113ca46db424d6f4cf92e08005349d41f"
+    },
+    {
+      "path": "src/core/bounded-queue.ts",
+      "hash": "f96b4a63e8354e84d16213219e448a1d58331ae7562074a4142a79932a8126c7"
+    },
+    {
+      "path": "src/core/circuit-breaker.ts",
+      "hash": "153e27ef570e47ceb8c8e30bd8a18b5ca5ad044fa22bf323dc6d3f27e70bb0b4"
+    },
+    {
+      "path": "src/core/component-health.ts",
+      "hash": "16813d80745df9dcee62351f6315a7befed961b93857f3c574948e3c3749f17c"
+    },
+    {
+      "path": "src/core/config.ts",
+      "hash": "3979972ac0b6d03d8e0a9d85248141854f98134d7d7dd5d2603cf088d00e7ebe"
+    },
+    {
+      "path": "src/core/errors.ts",
+      "hash": "fa8083f676e7788ec3fbc25ca546fe9533a7773563b0baf4ae0a701abcb85096"
+    },
+    {
+      "path": "src/core/event-stream.ts",
+      "hash": "6f644ba24e0ca3a8f26ebf0ef883b723bbfc985aef35e63ca9ebb7723ebbc5fb"
+    },
+    {
+      "path": "src/core/fallback.ts",
+      "hash": "0a09ba50e497819364c4f09f6531ed9dd020244a2cf58940d678423161f6bfe4"
+    },
+    {
+      "path": "src/core/health.ts",
+      "hash": "7682940e4caa372a30b75cc8aac7e605d2177d6db7c232e07b14a30093e85efc"
+    },
+    {
+      "path": "src/core/rate-limiter.ts",
+      "hash": "621b57f5d86f3011e6299b0de814a02b7891fe15b84932c37e7416635e6837c6"
+    },
+    {
+      "path": "src/core/retry.ts",
+      "hash": "1a17fab9b780a07ebb3deda67b05d8ce7caae0ceb359be87f45a47123c124c84"
+    },
+    {
+      "path": "src/core/schema-registry.ts",
+      "hash": "720248f30abfcd4a657067ea32118c3c92577fbedba6cecd2bcfa00ce0c1d9ed"
+    },
+    {
+      "path": "src/core/session-manager.ts",
+      "hash": "54128b33d517550228051ec5a092b32c0c09e7171682a1fc3b6bf3a6c49d5345"
+    },
+    {
+      "path": "src/cross-cutting/evaluation/__tests__/evaluation.test.ts",
+      "hash": "821ae09d5ad7bd57579ef46cad7a41bea5445d14ec1adfa63ca277a661e7e570"
+    },
+    {
+      "path": "src/cross-cutting/evaluation/benchmark.ts",
+      "hash": "ee162425c1ab24bc621e52a3f338af4d62d38bc9c3650bfdb1c285e77e319948"
+    },
+    {
+      "path": "src/cross-cutting/evaluation/metrics.ts",
+      "hash": "d946a711ee6d8bc8e0a2b1f62bb31dd5f472b179637b9344ad24ea45fb18f5f6"
+    },
+    {
+      "path": "src/cross-cutting/evaluation/mod.ts",
+      "hash": "1ff51485fbcf40f3b71de943be38f992cab0715aee85cd6f7e42cd751199ac4a"
+    },
+    {
+      "path": "src/cross-cutting/evaluation/quality.ts",
+      "hash": "b8770d9267c3fcebea6e112761bcb77eb957dea512a0bf98cc54af8295780c45"
+    },
+    {
+      "path": "src/cross-cutting/evaluation/types.ts",
+      "hash": "42fba63ed2da9854e19fc602992f0fb0fdcd1768417329c49c08c3f147bd18cf"
+    },
+    {
+      "path": "src/cross-cutting/identity/__tests__/identity.test.ts",
+      "hash": "b870aff83af0fd827170a358757b8f65b42a1445c646cd0c8ca04c7915a05f28"
+    },
+    {
+      "path": "src/cross-cutting/identity/middleware.ts",
+      "hash": "cdec616689e4d752bccb408515886a948d2602a01968c2305f29cd90167b298e"
+    },
+    {
+      "path": "src/cross-cutting/identity/mod.ts",
+      "hash": "3316a8d5cf12d0e688e6711af97144af45764fbea31d9a89717089f9be1bc472"
+    },
+    {
+      "path": "src/cross-cutting/identity/provider.ts",
+      "hash": "997a1723c5faeb957333116c4f48520faa5f8fb967c7ae43ad91b004b6687742"
+    },
+    {
+      "path": "src/cross-cutting/identity/types.ts",
+      "hash": "ac3a6550f13dd3388e9f52ce5bd7c976d6e1df100ec13e12f7f41ee131c75c9b"
+    },
+    {
+      "path": "src/cross-cutting/policy/__tests__/policy.test.ts",
+      "hash": "30ca6f9a04e93a4b36c34359e35d38da15202a5870e8edd41b4f2d3f80276b70"
+    },
+    {
+      "path": "src/cross-cutting/policy/engine.ts",
+      "hash": "62c6e84130cc42056d081c2d0a7072ffe0aa2f9e8e173d1437ab3a0678f8a0a9"
+    },
+    {
+      "path": "src/cross-cutting/policy/mod.ts",
+      "hash": "1485d3fa8165dd57f193f6a7f2f4eb4512193ec824786a93387b4439372ddcaf"
+    },
+    {
+      "path": "src/cross-cutting/policy/types.ts",
+      "hash": "f2117eb3cfc76eb85794e859455d9dc7eb72d849966b120a6a9edea49fcea2bf"
+    },
+    {
+      "path": "src/cross-cutting/telemetry/__tests__/telemetry.test.ts",
+      "hash": "5b2640bb7d937fea8c4eea3802fd52ad3b8e913cded34da1f146b59e96a51ebe"
+    },
+    {
+      "path": "src/cross-cutting/telemetry/logger.ts",
+      "hash": "3ad39db92ac2c69cf07f6230498fbcd06305c43b2b73b4950e1f0dd8b1586f74"
+    },
+    {
+      "path": "src/cross-cutting/telemetry/metrics.ts",
+      "hash": "dca4e983f2782a177cf53ebd59ec20ddb8ef00c87c18f47408728094a07b65bd"
+    },
+    {
+      "path": "src/cross-cutting/telemetry/mod.ts",
+      "hash": "2ff1e54954e8d762b15db008508704b75339604818d418d2dfcf024d2d080987"
+    },
+    {
+      "path": "src/cross-cutting/telemetry/tracing.ts",
+      "hash": "10f4377bb473257694c202de4f8087cdf0bc1d18595adcd37a488a3df4b90ca9"
+    },
+    {
+      "path": "src/cross-cutting/telemetry/types.ts",
+      "hash": "7ca7bd532a30c7efee92dcf5702290cc62dfe31ba3b3722c47b43b0142595677"
+    },
+    {
+      "path": "src/main.ts",
+      "hash": "ce33a7d2a10066c853f5dab9dfee93d0fd42769e450795a610d69d7eda503393"
+    },
+    {
+      "path": "src/mcp/__tests__/client.test.ts",
+      "hash": "276b3a4421fb4098ebd5d8efa15f63fb8787bcee51bd3d2980826cb2e678a7ed"
+    },
+    {
+      "path": "src/mcp/__tests__/event-emitter.test.ts",
+      "hash": "ec43a0e613ff28f5bdca1510db96750d3b0180cc767b0e0b19c30768826c50fa"
+    },
+    {
+      "path": "src/mcp/__tests__/registry.test.ts",
+      "hash": "4a36d4bd163ca80c1dc316e3a2c2af8462b917fd060e8d1a6bfafef6c63797cf"
+    },
+    {
+      "path": "src/mcp/__tests__/search.test.ts",
+      "hash": "5dbe24b3a1b8a29e3e464a24b5eacca05dd47f734299242c5c8871d6aa01e5ea"
+    },
+    {
+      "path": "src/mcp/__tests__/server.test.ts",
+      "hash": "2d516d8ab743caa652dee57fce5ca3a5e086658d21fc6ebe926f29d8bfa52329"
+    },
+    {
+      "path": "src/mcp/__tests__/transport.test.ts",
+      "hash": "1dfaf101c592f1ead2269e4ecf4957d819fd0dbc2f1649c0349a8e4bb6a106a7"
+    },
+    {
+      "path": "src/mcp/client.ts",
+      "hash": "32d4c0fdc2f7815108253a1b7792ade7852477315d82982b9b9eca6ee5af26ce"
+    },
+    {
+      "path": "src/mcp/event-emitter.ts",
+      "hash": "18367d499052f7cb12044f421300952bcce8f7f3855fd88dfb4563d0bb224281"
+    },
+    {
+      "path": "src/mcp/events.ts",
+      "hash": "1964886335f70eb2a6576bd5043553fd94bf8fd3366add76d2f0b48997969417"
+    },
+    {
+      "path": "src/mcp/mod.ts",
+      "hash": "23dd7552d4a61e3dac2736a2a01af2553964ca7044059902d6a852376f843174"
+    },
+    {
+      "path": "src/mcp/registry.ts",
+      "hash": "6ceacb27fdf40cb379212f180863353fd45bc8534f164f44114df6192c82a973"
+    },
+    {
+      "path": "src/mcp/search.ts",
+      "hash": "a5e9b072dd6a674a3e44ffe933542d798d54d4ebf2303d95143a980d053116e5"
+    },
+    {
+      "path": "src/mcp/server.ts",
+      "hash": "d8729fa85a043f1f53b437ba62230401b3ee490dcd44ca82b87ee716f5040155"
+    },
+    {
+      "path": "src/mcp/transport.ts",
+      "hash": "f19fc3111809b80d424dca07a6fffe5d8c43f392bf90fe4d44cc84885eebf792"
+    },
+    {
+      "path": "src/mcp/types.ts",
+      "hash": "c3b013b2abe9ea4f8149a44e4600c1e295fc415b925236bd744736dad01c14fe"
+    },
+    {
+      "path": "src/memory/__tests__/memory.test.ts",
+      "hash": "1c54f90274f6d7fa5484013fd1e3257af7a51313787b3089bc611a3eac8a5db0"
+    },
+    {
+      "path": "src/memory/__tests__/provenance-context.test.ts",
+      "hash": "14123a821a949bbe051bdd3da485b0f0ffa035488cad0197b0ab1ce1518b6d26"
+    },
+    {
+      "path": "src/memory/__tests__/retrieval-l2l3.test.ts",
+      "hash": "06b8023a047192f80b4c7c211e556fb67846211b1cebac8da05f00b712385aca"
+    },
+    {
+      "path": "src/memory/config.ts",
+      "hash": "6527ed9ad0c0f3eedbe3a8943d5e1909e72594be80e7fdcb229e7403cfe1a9ec"
+    },
+    {
+      "path": "src/memory/emitter.ts",
+      "hash": "90fdc07d5efc1a1ab7d55ad6c026c2154cdea4af6f6d471e4bfbda0af92d4bfa"
+    },
+    {
+      "path": "src/memory/message-classifier.ts",
+      "hash": "6d01c40eb71cf735fff0bfd8e303806b0e5ea33557de6834b94e7dc735b09e71"
+    },
+    {
+      "path": "src/memory/mod.ts",
+      "hash": "2be384d1f6871cc76345f7f3e02313a46e85e3f154d9218cdc2fef15e517c9b5"
+    },
+    {
+      "path": "src/memory/provenance-context-types.ts",
+      "hash": "8c44fd75dba4f46e400a640a5501376a2b60cdd8d28c8bdec68291da39a338e8"
+    },
+    {
+      "path": "src/memory/provenance-context.ts",
+      "hash": "e46eb1f21ac6305615d27dcd2be61f224361012f86a70814dc9dacd754e85ef6"
+    },
+    {
+      "path": "src/memory/provider.ts",
+      "hash": "4c07507019f287e5a070d9edc9723775ad18c9290d9ae310a23202d5cee67082"
+    },
+    {
+      "path": "src/memory/retrieval.ts",
+      "hash": "6805775f7f4247f9340ae17413e768c93088dbdc8d10b4b72718e55e4858d676"
+    },
+    {
+      "path": "src/memory/search.ts",
+      "hash": "c4439e6c7e2b5d20bd4233c4a1f2ad206cc6ac4245f62b530f20bffde459a3ab"
+    },
+    {
+      "path": "src/memory/shared.ts",
+      "hash": "a09742b39222f0e86818f48cbe3f3deb96179b53474308f3fbc41c3991d3eda5"
+    },
+    {
+      "path": "src/memory/storage.ts",
+      "hash": "c096f41e0176a3516e0959d227fd1786e818afb459d3a211063b093875e863d2"
+    },
+    {
+      "path": "src/memory/types.ts",
+      "hash": "236e8efc98ab25a91add3d005f0e3a4f73852e314d0821fb29076ca3137588ea"
+    },
+    {
+      "path": "src/memory/update.ts",
+      "hash": "bcb0c33794eddbd1ad0ef0039ea08c54e8050665be23aed444b5a1504120139b"
+    },
+    {
+      "path": "src/projection/__tests__/desktop.test.ts",
+      "hash": "e5b536817a8efa9347ce3acccc8fc5848f7f4b6bae804836ef9e6283e7b9a038"
+    },
+    {
+      "path": "src/projection/__tests__/protocol.test.ts",
+      "hash": "93d3219b3195339150f63f1233485a604f28af06eb213c3291519552c1a3e6d3"
+    },
+    {
+      "path": "src/projection/__tests__/rest-api.test.ts",
+      "hash": "49756be0c290bdc9c7cab8b99e719691e2f773b896d2651240698b19f5b39283"
+    },
+    {
+      "path": "src/projection/__tests__/vscode.test.ts",
+      "hash": "40479acb32d73fac1f2cb27a2af85ea673081566e2f667a288281875c9a50232"
+    },
+    {
+      "path": "src/projection/__tests__/web.test.ts",
+      "hash": "3853c1ced7f31456afca01233951652ed91129f97bd0b1ad8077db6a98dc0c9a"
+    },
+    {
+      "path": "src/projection/__tests__/websocket-server.test.ts",
+      "hash": "d8a2123466ce4aa551d188493f7ee4f00fa99c514c48a844a180b805de80bee7"
+    },
+    {
+      "path": "src/projection/desktop.ts",
+      "hash": "0a8128816a6e07c437b34173da66cf7dfdf7bc7b5058424621ebf6a64f0643c2"
+    },
+    {
+      "path": "src/projection/mod.ts",
+      "hash": "dd46e4d84375723319f84a29b2e0ec3c07c4f787c41ff6a1cb928db5fdca1e16"
+    },
+    {
+      "path": "src/projection/protocol.ts",
+      "hash": "fbd69382aedad9ac32644194f825e4c45004e9acf2fec88ac703b6b970725f54"
+    },
+    {
+      "path": "src/projection/rest-api.ts",
+      "hash": "10c582275de33245dd178ccf48ca57cf3bc98a619d897ec33413d829562f5451"
+    },
+    {
+      "path": "src/projection/terminal.ts",
+      "hash": "680e1f7d56156ad3738940df9cf124ebbb32ebbf466400d2756f6be9025df051"
+    },
+    {
+      "path": "src/projection/vscode.ts",
+      "hash": "11f5b5be10fb44919e2f6a92bbf193100620f9bc4fbf9de54659a4d723be6888"
+    },
+    {
+      "path": "src/projection/web.ts",
+      "hash": "12b8e872b0697349feae11e4ff55156d2e57401097c6e48e37b02747989657bf"
+    },
+    {
+      "path": "src/projection/websocket-server.ts",
+      "hash": "b0fb869ea7caf8516807774ff0c42679aea3489ddee7d75f4abbd85348a41f8a"
+    },
+    {
+      "path": "src/provenance/__tests__/classifier.test.ts",
+      "hash": "1dd6606111e678fe6e176ed2426adfa19bcc39bbc70605b3dc657c693ed1ba1a"
+    },
+    {
+      "path": "src/provenance/__tests__/graph.test.ts",
+      "hash": "1fe6c5fae919ffa63bfb414424a044e7d52ff175395a2f258436cf15f4c0e25f"
+    },
+    {
+      "path": "src/provenance/classifier.ts",
+      "hash": "7a0594121086d00b29afb27885bf591a70d74a1f2352a823a92f225cd304f274"
+    },
+    {
+      "path": "src/provenance/graph.ts",
+      "hash": "51115f8d179ab21932ee5590d4a5cda21751ef5b015d4156120b991b71c38b91"
+    },
+    {
+      "path": "src/provenance/mod.ts",
+      "hash": "18413c8a756a1dbbf7f4c8862625d2e57199f5f9707a66a86619d0034365e396"
+    },
+    {
+      "path": "src/provenance/types.ts",
+      "hash": "b5274cfb5355adc596838662de96b78445d87384f213d9ea267fc2eeeb66bdfb"
+    },
+    {
+      "path": "src/runtime/__tests__/agent-runtime-config.test.ts",
+      "hash": "dfbdc3f1a5dec122f6bfb80a8a8c82903a2797da94c22e23febdb3349939eaa3"
+    },
+    {
+      "path": "src/runtime/__tests__/agent-runtime-l3.test.ts",
+      "hash": "b2e90d4e5e4305ce08d9ea94b118a62754d06824d023d73ef51ebb9adc7bd381"
+    },
+    {
+      "path": "src/runtime/__tests__/agent-runtime.test.ts",
+      "hash": "38b61060122b1a3f2736237fb35d594a7af75ae6dee89b3add47ae25d1a6c686"
+    },
+    {
+      "path": "src/runtime/__tests__/builtin-profiles.test.ts",
+      "hash": "107a6a986766cea35546ea76e7a0a84894cb5f4e39dd765ef047676ddb0e7059"
+    },
+    {
+      "path": "src/runtime/__tests__/dynamic-tool-registry.test.ts",
+      "hash": "6988522b48727679677b29ec0bda40b53e1471ee62de3cb46d70da7bbe83c49f"
+    },
+    {
+      "path": "src/runtime/__tests__/hooks.test.ts",
+      "hash": "3aa309db06f0112b752fd20317ef16c38198135d64d19ebf25b7435b5a964bba"
+    },
+    {
+      "path": "src/runtime/__tests__/model-provider.test.ts",
+      "hash": "57c785fcfcf0bcc10dbf98bdc9b295a4abe52b244f40580c8205c44a7fb2765c"
+    },
+    {
+      "path": "src/runtime/__tests__/pattern-analyzer-l2.test.ts",
+      "hash": "efc2e4c352eeff9f09447061253e354fe11400042ff9c10f39b8ac6e0e0c4dd4"
+    },
+    {
+      "path": "src/runtime/__tests__/pattern-analyzer.test.ts",
+      "hash": "2cec30bac36df5497393f539b6b5b7b27cd6830bf103ce30abcf7c439ea66320"
+    },
+    {
+      "path": "src/runtime/__tests__/profile-registry.test.ts",
+      "hash": "259047fbf2d9cac92929d9364733986dfa8bf889f4c412b0b2f06995f4b11ad4"
+    },
+    {
+      "path": "src/runtime/__tests__/self-observation.test.ts",
+      "hash": "2888fccad79a71404f70abaa37a8a18bcb8ff6a005fa622c7d6a4fad021dfe27"
+    },
+    {
+      "path": "src/runtime/__tests__/spawn-config.test.ts",
+      "hash": "1f0adb8d97efccada7d784f499706512f33ad7441e9e0e0577b2462cabe084c5"
+    },
+    {
+      "path": "src/runtime/__tests__/spawn.test.ts",
+      "hash": "182bd4eb9db9d21a12fdbc42e34952017d8f6c2e7c1ee09e7de7d9f06b1cc5dc"
+    },
+    {
+      "path": "src/runtime/__tests__/tool-registry.test.ts",
+      "hash": "d430f97a6f538d9157922c244423b6756905dc61ba9b14be02f75f04d4b84574"
+    },
+    {
+      "path": "src/runtime/agent-runtime.ts",
+      "hash": "7d7c326dcd7435ab4ed084c5d4510efcd6101ca049cacd887f9510aa2dc5cb04"
+    },
+    {
+      "path": "src/runtime/dynamic-tool-registry.ts",
+      "hash": "2fa4a2276d02195abc3f9bcb9f8ded58d50bcc0171b3c63f24ce53339836709a"
+    },
+    {
+      "path": "src/runtime/hooks.ts",
+      "hash": "fa1df80a31102431e033364151bc92edc3b36a2575d2a23909e374c1835a86db"
+    },
+    {
+      "path": "src/runtime/mod.ts",
+      "hash": "aa2d2d0afab21ade69f85ea0881a16e8632e59d17124fdebf56b872bb5e86a1c"
+    },
+    {
+      "path": "src/runtime/model-provider.ts",
+      "hash": "c8a192c878464a7a31433bcb7f2f3eb6e845aa6362b046fd7ebc3c107da3c785"
+    },
+    {
+      "path": "src/runtime/pattern-analyzer.ts",
+      "hash": "e260254e00101782762612c24a7a7e4ed63a76bb7c79ab1bd9d45bcb16160527"
+    },
+    {
+      "path": "src/runtime/profile-registry.ts",
+      "hash": "ef7fce9216ef969be07f84dfbba472408f15168e1cd8b1ea53fdb38d5b65e01b"
+    },
+    {
+      "path": "src/runtime/profiles.ts",
+      "hash": "637ecda8496a4e8b53d0c083c9e7371192ed8a06d6355646eca537e3078b1229"
+    },
+    {
+      "path": "src/runtime/self-observation.ts",
+      "hash": "cce70c21d21ace25e8ad48b852d6846a05d3caa93bc3b29a41ffd16fcde7736f"
+    },
+    {
+      "path": "src/runtime/spawn-config.ts",
+      "hash": "9d45ae581d9957cddaeba62eb8d232d798223b7bcda0427dca9736591b22662e"
+    },
+    {
+      "path": "src/runtime/spawn.ts",
+      "hash": "7c14c2897e267321b808ae329db7d93803c3b740853bb3f1680ddab53e35b344"
+    },
+    {
+      "path": "src/runtime/tool-registry.ts",
+      "hash": "cf4be8c7fc8e565ecd89791f3f9a42041b2ce049257158f2bfd1d74e393235d8"
+    },
+    {
+      "path": "src/runtime/types.ts",
+      "hash": "a0e89af6fed713fdccf6b0a9bb483f1375113fb515e4b085dc234a355433a8af"
+    },
+    {
+      "path": "src/session/__tests__/attestation-service.test.ts",
+      "hash": "25193bc9ecf2df7c5145343072916cd920b1ea8aad33626f2109d975c8561b65"
+    },
+    {
+      "path": "src/session/attestation-service.ts",
+      "hash": "1e1f670ed650dd96d5d7ae9379496a58ad2dd2256e224d8850ed11333ac9618d"
+    },
+    {
+      "path": "src/session/mod.ts",
+      "hash": "12fba6676c1a992d11869b35d689db83434d4296e56899a2f18d67b81ec84e40"
+    },
+    {
+      "path": "src/store/__tests__/event-store.test.ts",
+      "hash": "6e4f93ae26b3b6d147759aeb15c73bc9a217c006606607470fa06d8da4b9a8c5"
+    },
+    {
+      "path": "src/store/__tests__/persistence.test.ts",
+      "hash": "d1a671424298d928ad86292488b3169da03611779fae19879163a0f6fda7d203"
+    },
+    {
+      "path": "src/store/__tests__/query-engine.test.ts",
+      "hash": "5a7bade661ef2e7124fb8019e6e2c6eebc370e750070547a1a3ed21f501ec48b"
+    },
+    {
+      "path": "src/store/__tests__/sqlite-agent-memory.test.ts",
+      "hash": "5ba150e810247e0cff5463ad4da9394424ba844499eadf070330596e59919e0b"
+    },
+    {
+      "path": "src/store/__tests__/sqlite-backend.test.ts",
+      "hash": "cf13364bb7cfa6d432acb018e0f7fc85d94b5e0951ea1586aed5f4340d4df594"
+    },
+    {
+      "path": "src/store/__tests__/sqlite-migration.test.ts",
+      "hash": "644f00faffc59513571f1c3e9a08d873a5f9e4441b236e05ae440a321b081168"
+    },
+    {
+      "path": "src/store/__tests__/sqlite-performance.test.ts",
+      "hash": "769f0cf1818f0ea73dc4b170e7bdca1955891c4bfc719fac15f691f98136123b"
+    },
+    {
+      "path": "src/store/__tests__/sqlite-query-engine.test.ts",
+      "hash": "2f67c5300b7bb2ca798acb7cec8d7ab3e3363bfa7b7b48a5cb19fdf26930bf2d"
+    },
+    {
+      "path": "src/store/causal-graph.ts",
+      "hash": "03c7eba68dcda9c936f831e7c71ca9dca2c0993c3e8f6ce6db7974f0ed7959b5"
+    },
+    {
+      "path": "src/store/event-store.ts",
+      "hash": "6aa77821b76a3ac067c476661afccec01eca77bad4bfc2a1af8e74d1278efcf5"
+    },
+    {
+      "path": "src/store/persistence.ts",
+      "hash": "6aa453e20f932554105e78b38fcdb5a6ccdb450136ebb577ebfe9944662c8810"
+    },
+    {
+      "path": "src/store/query-engine.ts",
+      "hash": "75486bd3ea10cd1753d2d76a2720022ecd2964e20010ba6a7c87fd4a94e9342b"
+    },
+    {
+      "path": "src/store/sqlite-backend.ts",
+      "hash": "3f504e193810e7bc4c78de3e21235c9432c00fc24d96ce5772547f41057f9ee9"
+    },
+    {
+      "path": "src/store/sqlite-query-engine.ts",
+      "hash": "d1e3b544871e2a2905bb9ae8a944426c083431a11b24bdabfb9f7160d109623e"
+    },
+    {
+      "path": "src/tools/__tests__/authoring.test.ts",
+      "hash": "b0666b7f701dda9bdcfbb17755f13c64085d9afc50360e181dad443814867414"
+    },
+    {
+      "path": "src/tools/__tests__/calling-engine.test.ts",
+      "hash": "a3c3422d02b7f64e59c67e39d83ebeaf2607b3e3f1e6fcac4187d57bb801569b"
+    },
+    {
+      "path": "src/tools/__tests__/registry.test.ts",
+      "hash": "cce0be24e4be3c758074c7856a0c41096de8988fa9fd6a15371046f86bd714e3"
+    },
+    {
+      "path": "src/tools/__tests__/self-improvement.test.ts",
+      "hash": "313134dc1c21ecfa4293105933fa5f66a8a63879e439842ade8b6a7fd3fe17d7"
+    },
+    {
+      "path": "src/tools/__tests__/tool-definition.test.ts",
+      "hash": "591f9ac41606115ae4ed5e05c0409174ae28145571e8681aa672b9553046b990"
+    },
+    {
+      "path": "src/tools/authoring.ts",
+      "hash": "7cf3bc8da36111244d1a70541faba46c366a7f42adaa11580a760d6abf47e18a"
+    },
+    {
+      "path": "src/tools/calling-engine.ts",
+      "hash": "c92e37a2ea3d9614dd85d5bbcc8932aedcb2319dae0aeb8cd99e6500d191d5ec"
+    },
+    {
+      "path": "src/tools/mod.ts",
+      "hash": "7f1042aa69c6e6eff775aeaeb9e489e229462d2fbf74e6dc9273300a92c22039"
+    },
+    {
+      "path": "src/tools/registry.ts",
+      "hash": "9d4f51d9625af4828495f380f9170e4bdec49f6e39696c7f186f969c7bf19ca9"
+    },
+    {
+      "path": "src/tools/self-improvement.ts",
+      "hash": "714642dc034d070e48da98cd1459745eb992af94309dc730fb2f414d0e03cb5a"
+    },
+    {
+      "path": "src/tools/tool-definition.ts",
+      "hash": "2200f14d4bab685ec4d72f3088cdbccfb72fd4f0f22e6ed33bb6104d21755631"
+    },
+    {
+      "path": "src/tools/types.ts",
+      "hash": "e9bd0618cf6f748ef4b75686668bf0bf43f8bdcc31d9027abc856db5715a9a1a"
+    },
+    {
+      "path": "src/types/attestations.ts",
+      "hash": "afbf1f997b34e216a4c572a0b6812127403b7a0c973f876a55e67aaadc757877"
+    },
+    {
+      "path": "src/types/events.ts",
+      "hash": "8203e72009eb82a4d84755bf18f9d77c8dbad285bedc1a2113ff46ff9c2f9ea7"
+    },
+    {
+      "path": "web/components/Layout.tsx",
+      "hash": "3c3c5570cdf98bda9f891f86737b553ed0f08a44e446162d0eaa01e0b5f08be6"
+    },
+    {
+      "path": "web/fresh.config.ts",
+      "hash": "df1d9004052316ab4bea0725f64c816d4ad3c70b4f6b7c8312568588aecdffd6"
+    },
+    {
+      "path": "web/islands/DashboardIsland.tsx",
+      "hash": "2f9315989344475afe1fd734fbbbd14c8db374d3f53e126dc2906e88daca287f"
+    },
+    {
+      "path": "web/islands/SessionInspectorIsland.tsx",
+      "hash": "b829889a84e287c02c8c1646a3e742e7e410368cd782eb9bb74039e128ae0559"
+    },
+    {
+      "path": "web/lib/aggregation.ts",
+      "hash": "b9d4c11443cb6cdcefe519ac85368a294d216c112f39e0293813298f6c642bed"
+    },
+    {
+      "path": "web/lib/harness-connection.ts",
+      "hash": "28ef232b00e8ff46669af0065d3b22fc028f761cd983a6b8bc6d918d2f57039f"
+    },
+    {
+      "path": "web/main.ts",
+      "hash": "190df0ec56a5a0242729ff3e46d811c6e18dde7e53c8e8977b6d1332e086e54c"
+    },
+    {
+      "path": "web/routes/api/harnesses.ts",
+      "hash": "ca6ebb65fec6e4dbfe18e94b0ce1a4a25a224b2b670c0eae3640919593df7e52"
+    },
+    {
+      "path": "web/routes/api/health.ts",
+      "hash": "e7d0218877e9d1d699bce1ab184e0fc5e0dcd33368bfbe60e65d0f64606c4e86"
+    },
+    {
+      "path": "web/routes/api/query.ts",
+      "hash": "107a42222beebedd1f9abd65c0ce961e864d651b8b6aa19fc9821a02ae39a2bc"
+    },
+    {
+      "path": "web/routes/api/sessions.ts",
+      "hash": "708ff1abab3a79c36686a8382cff7183693d44447248f1a233fe53582331c7f4"
+    },
+    {
+      "path": "web/routes/index.tsx",
+      "hash": "70479f0ce2249ed94e3407b4977ab894875b17dfe76a15e08c129fcdcb527468"
+    },
+    {
+      "path": "web/routes/sessions/[harness]/[id].tsx",
+      "hash": "c9cad304d6a0c7851e24523b32d1d4f207964dc2acd3e717ce965b8d99d0b178"
+    }
+  ],
+  "nodes": [
+    {
+      "slug": "aggregation-layer",
+      "name": "Aggregation Layer",
+      "type": "system",
+      "sources": [
+        "web/lib/aggregation.ts",
+        "web/routes/api/health.ts",
+        "web/routes/api/sessions.ts"
+      ],
+      "sourcesDigest": "61ea697f84618f93bc89d950deb5821e0ef6de4555b2d6383cf3ffba7ed4326e"
+    },
+    {
+      "slug": "analytics-query-engines",
+      "name": "Analytics Query Engines",
+      "type": "system",
+      "sources": [
+        "src/store/__tests__/query-engine.test.ts",
+        "src/store/__tests__/sqlite-query-engine.test.ts",
+        "src/store/query-engine.ts",
+        "src/store/sqlite-query-engine.ts"
+      ],
+      "sourcesDigest": "e586880285acc16fc159164a2fa798ace6459f1cbaa80a8fd9d47465d5c2bbd2"
+    },
+    {
+      "slug": "attestation-service",
+      "name": "Attestation Service",
+      "type": "system",
+      "sources": [
+        "src/session/__tests__/attestation-service.test.ts",
+        "src/session/attestation-service.ts",
+        "src/session/mod.ts"
+      ],
+      "sourcesDigest": "00ba2ef7d808e7ba487666808dbccf2165f430ddf6e35257fdc727110a4b98ec"
+    },
+    {
+      "slug": "capability-framework",
+      "name": "Capability Framework",
+      "type": "system",
+      "sources": [
+        "src/capabilities/capability.ts",
+        "src/capabilities/mod.ts"
+      ],
+      "sourcesDigest": "52d765fb03e6b158491e98157b0c44af0234af5538db06a1b7ed46cc1c363ba7"
+    },
+    {
+      "slug": "capability-lifecycle-enforcement",
+      "name": "Capability Lifecycle Enforcement",
+      "type": "concept",
+      "sources": [
+        "src/capabilities/__tests__/capability.test.ts",
+        "src/capabilities/capability.ts"
+      ],
+      "sourcesDigest": "3d27ff0481fcd6bc221507346462cb00f91b374d7cd15006d8a6ca8f64151029"
+    },
+    {
+      "slug": "causal-graph-analysis",
+      "name": "Causal Graph Analysis",
+      "type": "concept",
+      "sources": [
+        "src/store/causal-graph.ts"
+      ],
+      "sourcesDigest": "de3721c6d711c4fd915a63c8588ff933b7dd1868ecabb42f2c341821f90ae28e"
+    },
+    {
+      "slug": "cli-repl",
+      "name": "CLI & REPL",
+      "type": "system",
+      "sources": [
+        "src/cli.ts"
+      ],
+      "sourcesDigest": "a44b4cc7ec1ecc544b32964b30e22af3a98d749f5a752ef9ea5731e48c3ccf55"
+    },
+    {
+      "slug": "code-review-system",
+      "name": "Code Review System",
+      "type": "system",
+      "sources": [
+        "review/cli.ts",
+        "review/context.ts",
+        "review/formatter.ts",
+        "review/registry.ts",
+        "review/types.ts"
+      ],
+      "sourcesDigest": "45980b95371c3b15eb8818c095df8ab658fdab5bd2d64d011e7b100c2b584e8f"
+    },
+    {
+      "slug": "concrete-capabilities",
+      "name": "Concrete Capabilities",
+      "type": "system",
+      "sources": [
+        "src/capabilities/file.ts",
+        "src/capabilities/git.ts",
+        "src/capabilities/github.ts",
+        "src/capabilities/kubernetes.ts",
+        "src/capabilities/search.ts",
+        "src/capabilities/shell.ts"
+      ],
+      "sourcesDigest": "e1b1019d4e0d3adf2dfac274147824ebd526694002ac5071a3353e2bc37919b4"
+    },
+    {
+      "slug": "core-resilience-fault-tolerance",
+      "name": "Core Resilience & Fault Tolerance",
+      "type": "system",
+      "sources": [
+        "src/core/bounded-queue.ts",
+        "src/core/circuit-breaker.ts",
+        "src/core/fallback.ts",
+        "src/core/rate-limiter.ts",
+        "src/core/retry.ts"
+      ],
+      "sourcesDigest": "6b5b8e84bd75924fd7de418360c7cf342c38cae09ffb7da550cd2d05b397a242"
+    },
+    {
+      "slug": "cross-cutting-telemetry",
+      "name": "Cross-Cutting Telemetry",
+      "type": "system",
+      "sources": [
+        "src/cross-cutting/telemetry/logger.ts",
+        "src/cross-cutting/telemetry/metrics.ts",
+        "src/cross-cutting/telemetry/mod.ts",
+        "src/cross-cutting/telemetry/tracing.ts",
+        "src/cross-cutting/telemetry/types.ts"
+      ],
+      "sourcesDigest": "c554afd748e5b8fb20717b7d89eae04aeb0d64dfa93017d61e14e4a2e64d9c99"
+    },
+    {
+      "slug": "dynamic-tool-management",
+      "name": "Dynamic Tool Management",
+      "type": "concept",
+      "sources": [
+        "src/runtime/__tests__/dynamic-tool-registry.test.ts",
+        "src/runtime/dynamic-tool-registry.ts"
+      ],
+      "sourcesDigest": "08dc0915be49a502d0eb1df32887c1ed4d832be6856f6a2b22fe555c06e3ee5d"
+    },
+    {
+      "slug": "evaluation-framework",
+      "name": "Evaluation Framework",
+      "type": "system",
+      "sources": [
+        "src/cross-cutting/evaluation/benchmark.ts",
+        "src/cross-cutting/evaluation/metrics.ts",
+        "src/cross-cutting/evaluation/mod.ts",
+        "src/cross-cutting/evaluation/quality.ts",
+        "src/cross-cutting/evaluation/types.ts"
+      ],
+      "sourcesDigest": "bc25541b44177c7d70bd40fde91b410d4521d86a8d1cd8861f1f6915d9120900"
+    },
+    {
+      "slug": "event-analysis-optimization",
+      "name": "Event Analysis & Optimization",
+      "type": "concept",
+      "sources": [
+        "src/analysis.ts"
+      ],
+      "sourcesDigest": "42ccc9fc3793825ab822855dcdf5f16fe3e07bf49805e54a487ef51b3bbf8bf1"
+    },
+    {
+      "slug": "event-sourcing-core",
+      "name": "Event-Sourcing Core",
+      "type": "system",
+      "sources": [
+        "src/__tests__/e2e-session-lifecycle.test.ts",
+        "src/analysis.ts",
+        "src/cli.ts"
+      ],
+      "sourcesDigest": "347d84ffbf2af72b72d4a67b6bf8664ac0365d8e9621666c9a4914315423fc4a"
+    },
+    {
+      "slug": "event-sourcing-persistence-system",
+      "name": "Event Sourcing & Persistence System",
+      "type": "system",
+      "sources": [
+        "src/store/__tests__/event-store.test.ts",
+        "src/store/__tests__/persistence.test.ts",
+        "src/store/__tests__/sqlite-backend.test.ts",
+        "src/store/__tests__/sqlite-migration.test.ts",
+        "src/store/__tests__/sqlite-performance.test.ts",
+        "src/store/causal-graph.ts",
+        "src/store/event-store.ts",
+        "src/store/persistence.ts",
+        "src/store/sqlite-backend.ts"
+      ],
+      "sourcesDigest": "e1011f606d23c1a694055578ca1600d433c4b48e20469c0aecdf1a3efca02643"
+    },
+    {
+      "slug": "event-sourcing-session-lifecycle",
+      "name": "Event Sourcing & Session Lifecycle",
+      "type": "system",
+      "sources": [
+        "src/core/event-stream.ts",
+        "src/core/session-manager.ts"
+      ],
+      "sourcesDigest": "272fae130954191e973497a74f6e3fe46f481bd42a187c666286d782380cca23"
+    },
+    {
+      "slug": "event-type-taxonomy",
+      "name": "Event Type Taxonomy",
+      "type": "concept",
+      "sources": [
+        "src/types/attestations.ts",
+        "src/types/events.ts"
+      ],
+      "sourcesDigest": "971102630ee372676b65217154b79bfa7891a498a3c07391bbe618fd10ed63c3"
+    },
+    {
+      "slug": "finding-types",
+      "name": "Finding Types",
+      "type": "concept",
+      "sources": [
+        "review/types.ts"
+      ],
+      "sourcesDigest": "39ac6d07e7d28194ed717dbb5622c99648c5db34ff8552617143d46ad2dbe7a5"
+    },
+    {
+      "slug": "harness-connection-manager",
+      "name": "Harness Connection Manager",
+      "type": "system",
+      "sources": [
+        "web/lib/harness-connection.ts",
+        "web/routes/api/harnesses.ts"
+      ],
+      "sourcesDigest": "d16bf498ab7fb6bd3c09d672fa102a23c5dd138c03a8414ee9a8ce83d27846ab"
+    },
+    {
+      "slug": "health-observability",
+      "name": "Health & Observability",
+      "type": "system",
+      "sources": [
+        "src/core/component-health.ts",
+        "src/core/health.ts"
+      ],
+      "sourcesDigest": "1fdf97fc40e23852c6812966d1c6db43babcb771c15006babf82b8be22185b92"
+    },
+    {
+      "slug": "hook-based-extensibility",
+      "name": "Hook-Based Extensibility",
+      "type": "concept",
+      "sources": [
+        "src/runtime/__tests__/hooks.test.ts",
+        "src/runtime/agent-runtime.ts",
+        "src/runtime/hooks.ts"
+      ],
+      "sourcesDigest": "dd5f344b0d381271921684aeddbc1c66dbc083bef8253746ca61589781c4e88b"
+    },
+    {
+      "slug": "identity-authorization",
+      "name": "Identity & Authorization",
+      "type": "system",
+      "sources": [
+        "src/cross-cutting/identity/middleware.ts",
+        "src/cross-cutting/identity/mod.ts",
+        "src/cross-cutting/identity/provider.ts",
+        "src/cross-cutting/identity/types.ts",
+        "src/cross-cutting/policy/engine.ts",
+        "src/cross-cutting/policy/mod.ts",
+        "src/cross-cutting/policy/types.ts"
+      ],
+      "sourcesDigest": "d2b976d8395749f119d37b01b1a786adf9acbbc3e002acc441ed6bfca7c426f0"
+    },
+    {
+      "slug": "main-application-harness",
+      "name": "Main Application Harness",
+      "type": "file",
+      "sources": [
+        "src/main.ts"
+      ],
+      "sourcesDigest": "fd81220b39c632327d0bebc13ce12be85e538d68ca7619ee7cea32853070dcc2"
+    },
+    {
+      "slug": "memory-context-management",
+      "name": "Memory & Context Management",
+      "type": "system",
+      "sources": [
+        "src/memory/__tests__/memory.test.ts",
+        "src/memory/__tests__/provenance-context.test.ts",
+        "src/memory/__tests__/retrieval-l2l3.test.ts",
+        "src/memory/config.ts"
+      ],
+      "sourcesDigest": "a444fbb9ed7427e83dbb85fb1fe61f5a3b0e947baa8cb653be178c6d04273ee8"
+    },
+    {
+      "slug": "memory-system",
+      "name": "Memory System",
+      "type": "system",
+      "sources": [
+        "src/memory/emitter.ts",
+        "src/memory/message-classifier.ts",
+        "src/memory/mod.ts",
+        "src/memory/provenance-context-types.ts",
+        "src/memory/provenance-context.ts",
+        "src/memory/provider.ts",
+        "src/memory/retrieval.ts",
+        "src/memory/search.ts",
+        "src/memory/shared.ts",
+        "src/memory/storage.ts",
+        "src/memory/types.ts",
+        "src/memory/update.ts"
+      ],
+      "sourcesDigest": "5330675dc8c4c30ccefa02f61691d6d5bcd5872b233461675ab1393b30b19394"
+    },
+    {
+      "slug": "memory-tiering-l1-l2-l3",
+      "name": "Memory Tiering (L1/L2/L3)",
+      "type": "concept",
+      "sources": [
+        "src/memory/provider.ts",
+        "src/memory/retrieval.ts",
+        "src/memory/types.ts",
+        "src/runtime/__tests__/agent-runtime-l3.test.ts",
+        "src/runtime/__tests__/pattern-analyzer-l2.test.ts"
+      ],
+      "sourcesDigest": "88bdcc61c20761226897a9a48605705500ce927b23d3cdec2e33bea9c745d5c4"
+    },
+    {
+      "slug": "model-context-protocol-mcp-integration",
+      "name": "Model Context Protocol (MCP) Integration",
+      "type": "system",
+      "sources": [
+        "src/mcp/client.ts",
+        "src/mcp/event-emitter.ts",
+        "src/mcp/events.ts",
+        "src/mcp/mod.ts",
+        "src/mcp/registry.ts",
+        "src/mcp/search.ts",
+        "src/mcp/server.ts",
+        "src/mcp/transport.ts",
+        "src/mcp/types.ts"
+      ],
+      "sourcesDigest": "65621df983660a679c1e8e8b90f2579064f04cebb389b522894937ed68d45957"
+    },
+    {
+      "slug": "pluggable-check-architecture",
+      "name": "Pluggable Check Architecture",
+      "type": "concept",
+      "sources": [
+        "review/cli.ts",
+        "review/registry.ts"
+      ],
+      "sourcesDigest": "1e3b3f9968aef3d990a091b7073f1d2d81e5a02592ea80afe48f2b5c50f9bb43"
+    },
+    {
+      "slug": "profile-inheritance",
+      "name": "Profile Inheritance",
+      "type": "concept",
+      "sources": [
+        "src/runtime/__tests__/profile-registry.test.ts",
+        "src/runtime/profile-registry.ts",
+        "src/runtime/profiles.ts"
+      ],
+      "sourcesDigest": "2d148a74d8a45de28edac30845e497bc284742390ecc2312be4e05bd003bf2c8"
+    },
+    {
+      "slug": "projection-system",
+      "name": "Projection System",
+      "type": "system",
+      "sources": [
+        "src/projection/__tests__/desktop.test.ts",
+        "src/projection/__tests__/protocol.test.ts",
+        "src/projection/__tests__/rest-api.test.ts",
+        "src/projection/__tests__/vscode.test.ts",
+        "src/projection/__tests__/web.test.ts",
+        "src/projection/__tests__/websocket-server.test.ts",
+        "src/projection/desktop.ts",
+        "src/projection/mod.ts",
+        "src/projection/protocol.ts",
+        "src/projection/rest-api.ts",
+        "src/projection/terminal.ts",
+        "src/projection/vscode.ts",
+        "src/projection/web.ts",
+        "src/projection/websocket-server.ts"
+      ],
+      "sourcesDigest": "1a6e4922e6fb99c5bb8983150ad45e949829f45ae0d5049842fa57b51e5e97a2"
+    },
+    {
+      "slug": "provenance-aware-context-pruning",
+      "name": "Provenance-Aware Context Pruning",
+      "type": "concept",
+      "sources": [
+        "src/memory/message-classifier.ts",
+        "src/memory/provenance-context.ts"
+      ],
+      "sourcesDigest": "a4411eef50407f05f1f4ac25540aad85a180fbcf5adc9ac3d02fa7e1495ad910"
+    },
+    {
+      "slug": "provenance-graph-system",
+      "name": "Provenance Graph System",
+      "type": "system",
+      "sources": [
+        "src/provenance/__tests__/classifier.test.ts",
+        "src/provenance/__tests__/graph.test.ts",
+        "src/provenance/classifier.ts",
+        "src/provenance/graph.ts",
+        "src/provenance/mod.ts",
+        "src/provenance/types.ts"
+      ],
+      "sourcesDigest": "92c08b6fbc6e2acee82f89d60483510f36514d32e2ca90dce29930664d195127"
+    },
+    {
+      "slug": "review-checks",
+      "name": "Review Checks",
+      "type": "system",
+      "sources": [
+        "review/checks/file-size.ts",
+        "review/checks/reexports.ts",
+        "review/checks/test-pairing.ts"
+      ],
+      "sourcesDigest": "458f16520aa0c98be65ab12cf6b125db3ad7cd3ad253d949d167b24cc0b56bcd"
+    },
+    {
+      "slug": "review-delegates",
+      "name": "Review Delegates",
+      "type": "system",
+      "sources": [
+        "review/delegate/deno-check.ts",
+        "review/delegate/deno-lint.ts",
+        "review/delegate/knip.ts",
+        "review/delegate/madge.ts"
+      ],
+      "sourcesDigest": "d92d58f3e68c941f1bea6527da82a3d887884f6576e03ac6dda3398d6e799a62"
+    },
+    {
+      "slug": "runtime-orchestration",
+      "name": "Runtime Orchestration",
+      "type": "system",
+      "sources": [
+        "src/runtime/__tests__/agent-runtime-config.test.ts",
+        "src/runtime/__tests__/agent-runtime-l3.test.ts",
+        "src/runtime/__tests__/agent-runtime.test.ts",
+        "src/runtime/__tests__/builtin-profiles.test.ts",
+        "src/runtime/__tests__/dynamic-tool-registry.test.ts",
+        "src/runtime/__tests__/hooks.test.ts",
+        "src/runtime/__tests__/model-provider.test.ts",
+        "src/runtime/__tests__/pattern-analyzer-l2.test.ts",
+        "src/runtime/__tests__/pattern-analyzer.test.ts",
+        "src/runtime/__tests__/profile-registry.test.ts",
+        "src/runtime/__tests__/self-observation.test.ts",
+        "src/runtime/__tests__/spawn-config.test.ts",
+        "src/runtime/__tests__/spawn.test.ts",
+        "src/runtime/__tests__/tool-registry.test.ts",
+        "src/runtime/agent-runtime.ts",
+        "src/runtime/dynamic-tool-registry.ts",
+        "src/runtime/hooks.ts",
+        "src/runtime/mod.ts",
+        "src/runtime/model-provider.ts",
+        "src/runtime/pattern-analyzer.ts",
+        "src/runtime/profile-registry.ts",
+        "src/runtime/profiles.ts",
+        "src/runtime/self-observation.ts",
+        "src/runtime/spawn-config.ts",
+        "src/runtime/spawn.ts",
+        "src/runtime/tool-registry.ts",
+        "src/runtime/types.ts"
+      ],
+      "sourcesDigest": "7bb0c4e59d36d867db70d0f661c068d997f812830792dcfbcc705eee985c8b24"
+    },
+    {
+      "slug": "safe-sql-query-api",
+      "name": "Safe SQL Query API",
+      "type": "concept",
+      "sources": [
+        "web/routes/api/query.ts"
+      ],
+      "sourcesDigest": "344452593ace15c0baaa867a7fde2aae0b43aefb7a0c25a8c5274fc8a1b73997"
+    },
+    {
+      "slug": "sandboxed-execution",
+      "name": "Sandboxed Execution",
+      "type": "system",
+      "sources": [
+        "src/capabilities/sandbox/docker-runtime.ts",
+        "src/capabilities/sandbox/gvisor-runtime.ts",
+        "src/capabilities/sandbox/mod.ts",
+        "src/capabilities/sandbox/types.ts",
+        "src/capabilities/sandboxed-shell.ts"
+      ],
+      "sourcesDigest": "e0af93129f541eb9886200feeb6e76099b3a136b9290c06597f1481d650b56f9"
+    },
+    {
+      "slug": "schema-evolution-migration",
+      "name": "Schema Evolution & Migration",
+      "type": "concept",
+      "sources": [
+        "src/core/schema-registry.ts"
+      ],
+      "sourcesDigest": "ffc3aeb8ff8f4c25b2caabaa787c3e9780c2038f8cf10261ac0d4a23fe268c29"
+    },
+    {
+      "slug": "scripts-setup",
+      "name": "Scripts & Setup",
+      "type": "system",
+      "sources": [
+        "scripts/migrate-jsonl-to-duckdb.ts",
+        "scripts/sandbox-health-check.sh",
+        "scripts/setup-duckdb.sh",
+        "scripts/setup-sandbox.sh"
+      ],
+      "sourcesDigest": "974657fecee1317749586e93ead2dcffafa3fb4a936714f8e90dbb8f89c5777f"
+    },
+    {
+      "slug": "security-first-sandboxing",
+      "name": "Security-First Sandboxing",
+      "type": "concept",
+      "sources": [
+        "scripts/sandbox-health-check.sh",
+        "src/capabilities/file.ts",
+        "src/capabilities/sandbox/docker-runtime.ts",
+        "src/capabilities/sandbox/gvisor-runtime.ts",
+        "src/capabilities/shell.ts"
+      ],
+      "sourcesDigest": "15bc71976f82661924ac0ca6e0bcc5717278759b11c02e2272a310b5ed0ddc7d"
+    },
+    {
+      "slug": "self-observation-and-pattern-detection",
+      "name": "Self-Observation and Pattern Detection",
+      "type": "concept",
+      "sources": [
+        "src/runtime/__tests__/self-observation.test.ts",
+        "src/runtime/pattern-analyzer.ts",
+        "src/runtime/self-observation.ts"
+      ],
+      "sourcesDigest": "b8ac6e01de93a2991f9165fbdb5f31c6bf0e42176ce469b8dd9f79b56415b754"
+    },
+    {
+      "slug": "sqlite-query-engine",
+      "name": "SQLite Query Engine",
+      "type": "file",
+      "sources": [
+        "src/store/sqlite-query-engine.ts"
+      ],
+      "sourcesDigest": "fb80d9c916ee0879947844a6996eb71b42c9096ffe5127270155932c340e24a9"
+    },
+    {
+      "slug": "structured-error-taxonomy",
+      "name": "Structured Error Taxonomy",
+      "type": "concept",
+      "sources": [
+        "src/core/errors.ts"
+      ],
+      "sourcesDigest": "b41976800b8e1f80db8c7f7b586220f6ccff5c54ffa6d1082b8c9bd313489435"
+    },
+    {
+      "slug": "test-utilities",
+      "name": "Test Utilities",
+      "type": "system",
+      "sources": [
+        "src/__test-utils__/fixtures/mod.ts",
+        "src/__test-utils__/harness/mod.ts",
+        "src/__test-utils__/helpers/mod.ts",
+        "src/__test-utils__/mocks/mod.ts",
+        "src/__tests__/_helpers/harness-client.ts",
+        "src/__tests__/_helpers/harness-process.ts"
+      ],
+      "sourcesDigest": "3a494d0aa81295504c20d3fa4692f94662c0a50a40f1fa72134193247896dc08"
+    },
+    {
+      "slug": "tool-calling-system",
+      "name": "Tool Calling System",
+      "type": "system",
+      "sources": [
+        "src/tools/__tests__/authoring.test.ts",
+        "src/tools/__tests__/calling-engine.test.ts",
+        "src/tools/__tests__/registry.test.ts",
+        "src/tools/__tests__/self-improvement.test.ts",
+        "src/tools/__tests__/tool-definition.test.ts",
+        "src/tools/authoring.ts",
+        "src/tools/calling-engine.ts",
+        "src/tools/mod.ts",
+        "src/tools/registry.ts",
+        "src/tools/self-improvement.ts",
+        "src/tools/tool-definition.ts",
+        "src/tools/types.ts"
+      ],
+      "sourcesDigest": "d4ddd9ed2b196af7cc37305b647c0b8c03a02744ef36f7c5c0b44e3f8b572bd1"
+    },
+    {
+      "slug": "tool-self-improvement-feedback-loop",
+      "name": "Tool Self-Improvement Feedback Loop",
+      "type": "concept",
+      "sources": [
+        "src/tools/__tests__/self-improvement.test.ts",
+        "src/tools/self-improvement.ts"
+      ],
+      "sourcesDigest": "876ccd0282bef3553839aa1c273ebd185ab6b079ee6a43769401aaebb021577d"
+    },
+    {
+      "slug": "web-monitoring-dashboard",
+      "name": "Web Monitoring Dashboard",
+      "type": "system",
+      "sources": [
+        "web/components/Layout.tsx",
+        "web/fresh.config.ts",
+        "web/islands/DashboardIsland.tsx",
+        "web/islands/SessionInspectorIsland.tsx",
+        "web/main.ts",
+        "web/routes/index.tsx",
+        "web/routes/sessions/[harness]/[id].tsx"
+      ],
+      "sourcesDigest": "a121c1c7563ce9fb7c61f9a8f71d4a1442390dc99172a2b62a33b892c1835195"
+    }
+  ]
+}

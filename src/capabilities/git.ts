@@ -93,6 +93,15 @@ export interface IGitCapability extends ICapability {
 
   /** Switch branch. */
   switchBranch(name: string): Promise<CapabilityResult<void>>;
+
+  /** Get diff output (working tree by default, index when staged). */
+  getDiff(path?: string, options?: { staged?: boolean }): Promise<CapabilityResult<string>>;
+
+  /** Push changes to a remote. */
+  push(remote?: string, branch?: string): Promise<CapabilityResult<void>>;
+
+  /** Pull changes from a remote. */
+  pull(remote?: string, branch?: string): Promise<CapabilityResult<void>>;
 }
 
 // ============================================================================
@@ -337,6 +346,63 @@ export class GitCapability implements IGitCapability {
 
     try {
       await this.execute(["checkout", name]);
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
+  }
+
+  async getDiff(
+    path?: string,
+    options?: { staged?: boolean },
+  ): Promise<CapabilityResult<string>> {
+    this.ensureInitialized();
+
+    try {
+      const args: string[] = ["diff"];
+      if (options?.staged) args.push("--cached");
+      if (path) args.push(path);
+
+      const result = await this.execute(args);
+      // git diff exits 0 with empty output when there are no changes — that is a
+      // success with an empty diff, not an error.
+      return { success: true, data: result.stdout };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
+  }
+
+  async push(remote?: string, branch?: string): Promise<CapabilityResult<void>> {
+    this.ensureInitialized();
+
+    try {
+      const args: string[] = ["push"];
+      if (remote) args.push(remote);
+      if (branch) args.push(branch);
+      await this.execute(args);
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
+  }
+
+  async pull(remote?: string, branch?: string): Promise<CapabilityResult<void>> {
+    this.ensureInitialized();
+
+    try {
+      const args: string[] = ["pull"];
+      if (remote) args.push(remote);
+      if (branch) args.push(branch);
+      await this.execute(args);
       return { success: true };
     } catch (error) {
       return {

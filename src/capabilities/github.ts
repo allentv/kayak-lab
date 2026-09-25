@@ -68,6 +68,29 @@ export interface GitHubComment {
   updated_at: string;
 }
 
+/** GitHub Actions workflow. */
+export interface GitHubWorkflow {
+  id: number;
+  name: string;
+  path: string;
+  state: string;
+  /** Last run status, when the API provides it. */
+  last_run_status?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/** GitHub Actions workflow run. */
+export interface GitHubWorkflowRun {
+  id: number;
+  name?: string;
+  status: string;
+  conclusion?: string;
+  created_at: string;
+  updated_at: string;
+  run_started_at?: string;
+}
+
 // ============================================================================
 // GitHub Capability Interface
 // ============================================================================
@@ -147,6 +170,16 @@ export interface IGitHubCapability extends ICapability {
     issueNumber: number,
     body: string,
   ): Promise<CapabilityResult<GitHubComment>>;
+
+  /** List GitHub Actions workflows for a repository. */
+  listWorkflows(owner: string, repo: string): Promise<CapabilityResult<GitHubWorkflow[]>>;
+
+  /** List GitHub Actions workflow runs, optionally scoped to a workflow. */
+  getWorkflowRuns(
+    owner: string,
+    repo: string,
+    workflowId?: string,
+  ): Promise<CapabilityResult<GitHubWorkflowRun[]>>;
 }
 
 // ============================================================================
@@ -420,6 +453,43 @@ export class GitHubCapability implements IGitHubCapability {
   }
 
   // ---------------------------------------------------------------------------
+  // GitHub Actions
+  // ---------------------------------------------------------------------------
+
+  async listWorkflows(owner: string, repo: string): Promise<CapabilityResult<GitHubWorkflow[]>> {
+    this.ensureInitialized();
+
+    try {
+      const data = await this.request("GET", `/repos/${owner}/${repo}/actions/workflows`);
+      const workflows = (data.workflows as Array<Record<string, unknown>> ?? []);
+
+      return { success: true, data: workflows.map((w) => this.parseWorkflow(w)) };
+    } catch (error) {
+      return { success: false, error: `Failed to list workflows: ${error}` };
+    }
+  }
+
+  async getWorkflowRuns(
+    owner: string,
+    repo: string,
+    workflowId?: string,
+  ): Promise<CapabilityResult<GitHubWorkflowRun[]>> {
+    this.ensureInitialized();
+
+    try {
+      const path = workflowId === undefined
+        ? `/repos/${owner}/${repo}/actions/runs`
+        : `/repos/${owner}/${repo}/actions/workflows/${workflowId}/runs`;
+      const data = await this.request("GET", path);
+      const runs = (data.workflow_runs as Array<Record<string, unknown>> ?? []);
+
+      return { success: true, data: runs.map((r) => this.parseWorkflowRun(r)) };
+    } catch (error) {
+      return { success: false, error: `Failed to get workflow runs: ${error}` };
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // Private helpers
   // ---------------------------------------------------------------------------
 
@@ -446,6 +516,18 @@ export class GitHubCapability implements IGitHubCapability {
     const response = await fetch(url, init);
 
     if (!response.ok) {
+      // Rate limit responses: 403/429 with a zero remaining quota carries the
+      // reset time so callers know when to retry.
+      const remaining = response.headers.get("x-ratelimit-remaining");
+      if ((response.status === 403 || response.status === 429) && remaining === "0") {
+        const reset = response.headers.get("x-ratelimit-reset");
+        const resetIso = reset && !Number.isNaN(Number(reset))
+          ? new Date(Number(reset) * 1000).toISOString()
+          : "unknown";
+        throw new Error(
+          `GitHub API rate limit exceeded: ${remaining} requests remaining, resets at ${resetIso}`,
+        );
+      }
       const text = await response.text();
       throw new Error(`GitHub API ${response.status}: ${text}`);
     }
@@ -512,6 +594,30 @@ export class GitHubCapability implements IGitHubCapability {
       author: (user?.login as string) ?? "",
       created_at: data.created_at as string,
       updated_at: data.updated_at as string,
+    };
+  }
+
+  private parseWorkflow(data: Record<string, unknown>): GitHubWorkflow {
+    return {
+      id: data.id as number,
+      name: data.name as string,
+      path: data.path as string,
+      state: data.state as string,
+      last_run_status: (data.last_run_status as string) ?? undefined,
+      created_at: data.created_at as string,
+      updated_at: data.updated_at as string,
+    };
+  }
+
+  private parseWorkflowRun(data: Record<string, unknown>): GitHubWorkflowRun {
+    return {
+      id: data.id as number,
+      name: (data.name as string) ?? undefined,
+      status: data.status as string,
+      conclusion: (data.conclusion as string) ?? undefined,
+      created_at: data.created_at as string,
+      updated_at: data.updated_at as string,
+      run_started_at: (data.run_started_at as string) ?? undefined,
     };
   }
 
