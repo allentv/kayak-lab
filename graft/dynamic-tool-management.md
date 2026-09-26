@@ -16,52 +16,6 @@ links:
       from PatternAnalyzer to evaluate trends.
 generator:
   version: 1
-covers:
-  - symbol: createEmptyReport
-    kind: function
-    at: 'src/runtime/__tests__/dynamic-tool-registry.test.ts:L10-L18'
-  - symbol: ToolState
-    kind: interface
-    at: 'src/runtime/dynamic-tool-registry.ts:L17-L23'
-  - symbol: ToolAction
-    kind: interface
-    at: 'src/runtime/dynamic-tool-registry.ts:L26-L31'
-  - symbol: PatternMapping
-    kind: interface
-    at: 'src/runtime/dynamic-tool-registry.ts:L34-L38'
-  - symbol: ToolLifecycleHooks
-    kind: interface
-    at: 'src/runtime/dynamic-tool-registry.ts:L41-L45'
-  - symbol: IDynamicToolRegistry
-    kind: interface
-    at: 'src/runtime/dynamic-tool-registry.ts:L51-L58'
-  - symbol: DynamicToolRegistry
-    kind: class
-    at: 'src/runtime/dynamic-tool-registry.ts:L64-L232'
-  - symbol: constructor
-    kind: method
-    at: 'src/runtime/dynamic-tool-registry.ts:L86-L92'
-  - symbol: evaluatePatterns
-    kind: method
-    at: 'src/runtime/dynamic-tool-registry.ts:L94-L129'
-  - symbol: enableTool
-    kind: method
-    at: 'src/runtime/dynamic-tool-registry.ts:L131-L157'
-  - symbol: disableTool
-    kind: method
-    at: 'src/runtime/dynamic-tool-registry.ts:L159-L191'
-  - symbol: updateTool
-    kind: method
-    at: 'src/runtime/dynamic-tool-registry.ts:L193-L209'
-  - symbol: getToolState
-    kind: method
-    at: 'src/runtime/dynamic-tool-registry.ts:L211-L213'
-  - symbol: getAllToolStates
-    kind: method
-    at: 'src/runtime/dynamic-tool-registry.ts:L215-L217'
-  - symbol: executeAction
-    kind: method
-    at: 'src/runtime/dynamic-tool-registry.ts:L219-L231'
 ---
 <!-- context:generated:start -->
 ## Summary

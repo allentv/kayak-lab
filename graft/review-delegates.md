@@ -21,19 +21,6 @@ links:
     description: Each delegate implements ReviewCheck interface
 generator:
   version: 1
-covers:
-  - symbol: run
-    kind: method
-    at: 'review/delegate/deno-check.ts:L9-L47'
-  - symbol: run
-    kind: method
-    at: 'review/delegate/deno-lint.ts:L9-L45'
-  - symbol: run
-    kind: method
-    at: 'review/delegate/knip.ts:L10-L70'
-  - symbol: run
-    kind: method
-    at: 'review/delegate/madge.ts:L10-L42'
 ---
 <!-- context:generated:start -->
 ## Summary

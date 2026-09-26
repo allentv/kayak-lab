@@ -15,28 +15,6 @@ links:
     description: Queries EventStore to retrieve session events for analysis
 generator:
   version: 1
-covers:
-  - symbol: SessionSummary
-    kind: interface
-    at: 'src/analysis.ts:L14-L21'
-  - symbol: CommandStats
-    kind: interface
-    at: 'src/analysis.ts:L23-L30'
-  - symbol: AnalysisResult
-    kind: interface
-    at: 'src/analysis.ts:L32-L39'
-  - symbol: analyzeSessions
-    kind: function
-    at: 'src/analysis.ts:L48-L173'
-  - symbol: generateSuggestions
-    kind: function
-    at: 'src/analysis.ts:L178-L233'
-  - symbol: formatAnalysisReport
-    kind: function
-    at: 'src/analysis.ts:L238-L307'
-  - symbol: formatDuration
-    kind: function
-    at: 'src/analysis.ts:L313-L317'
 ---
 <!-- context:generated:start -->
 ## Summary

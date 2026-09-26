@@ -19,16 +19,6 @@ links:
     description: Each check implements ReviewCheck interface and returns Finding objects
 generator:
   version: 1
-covers:
-  - symbol: run
-    kind: method
-    at: 'review/checks/file-size.ts:L8-L29'
-  - symbol: run
-    kind: method
-    at: 'review/checks/reexports.ts:L6-L42'
-  - symbol: run
-    kind: method
-    at: 'review/checks/test-pairing.ts:L6-L33'
 ---
 <!-- context:generated:start -->
 ## Summary

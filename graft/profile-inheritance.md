@@ -18,46 +18,6 @@ links:
       function applies profile configurations to AgentRuntime.
 generator:
   version: 1
-covers:
-  - symbol: ProfileError
-    kind: class
-    at: 'src/runtime/profile-registry.ts:L13-L18'
-  - symbol: constructor
-    kind: method
-    at: 'src/runtime/profile-registry.ts:L14-L17'
-  - symbol: ProfileNotFoundError
-    kind: class
-    at: 'src/runtime/profile-registry.ts:L20-L25'
-  - symbol: constructor
-    kind: method
-    at: 'src/runtime/profile-registry.ts:L21-L24'
-  - symbol: ProfileCycleError
-    kind: class
-    at: 'src/runtime/profile-registry.ts:L27-L32'
-  - symbol: constructor
-    kind: method
-    at: 'src/runtime/profile-registry.ts:L28-L31'
-  - symbol: ProfileRegistry
-    kind: class
-    at: 'src/runtime/profile-registry.ts:L44-L119'
-  - symbol: register
-    kind: method
-    at: 'src/runtime/profile-registry.ts:L50-L52'
-  - symbol: unregister
-    kind: method
-    at: 'src/runtime/profile-registry.ts:L58-L60'
-  - symbol: get
-    kind: method
-    at: 'src/runtime/profile-registry.ts:L65-L67'
-  - symbol: list
-    kind: method
-    at: 'src/runtime/profile-registry.ts:L72-L74'
-  - symbol: resolve
-    kind: method
-    at: 'src/runtime/profile-registry.ts:L87-L89'
-  - symbol: resolveInternal
-    kind: method
-    at: 'src/runtime/profile-registry.ts:L91-L118'
 ---
 <!-- context:generated:start -->
 ## Summary

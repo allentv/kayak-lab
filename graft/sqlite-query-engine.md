@@ -15,49 +15,6 @@ links:
     description: Requires SQLitePersistenceBackend as data source for SQL queries.
 generator:
   version: 1
-covers:
-  - symbol: SQLiteQueryEngine
-    kind: class
-    at: 'src/store/sqlite-query-engine.ts:L30-L535'
-  - symbol: constructor
-    kind: method
-    at: 'src/store/sqlite-query-engine.ts:L33-L35'
-  - symbol: buildTimeRange
-    kind: method
-    at: 'src/store/sqlite-query-engine.ts:L41-L62'
-  - symbol: getToolPerformance
-    kind: method
-    at: 'src/store/sqlite-query-engine.ts:L68-L119'
-  - symbol: getErrorPatterns
-    kind: method
-    at: 'src/store/sqlite-query-engine.ts:L125-L165'
-  - symbol: getSessionSummary
-    kind: method
-    at: 'src/store/sqlite-query-engine.ts:L171-L210'
-  - symbol: getRecentSessions
-    kind: method
-    at: 'src/store/sqlite-query-engine.ts:L216-L256'
-  - symbol: getEventTypeDistribution
-    kind: method
-    at: 'src/store/sqlite-query-engine.ts:L262-L284'
-  - symbol: getAggregateToolUsage
-    kind: method
-    at: 'src/store/sqlite-query-engine.ts:L290-L331'
-  - symbol: getSessionDurationTrends
-    kind: method
-    at: 'src/store/sqlite-query-engine.ts:L337-L374'
-  - symbol: getTimeSeriesAggregation
-    kind: method
-    at: 'src/store/sqlite-query-engine.ts:L380-L417'
-  - symbol: getSessionWithMemories
-    kind: method
-    at: 'src/store/sqlite-query-engine.ts:L423-L450'
-  - symbol: getToolUsageBySession
-    kind: method
-    at: 'src/store/sqlite-query-engine.ts:L456-L493'
-  - symbol: getRollingErrorRate
-    kind: method
-    at: 'src/store/sqlite-query-engine.ts:L499-L534'
 ---
 <!-- context:generated:start -->
 ## Summary

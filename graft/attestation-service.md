@@ -21,37 +21,6 @@ links:
       type.
 generator:
   version: 1
-covers:
-  - symbol: AttestationService
-    kind: class
-    at: 'src/session/attestation-service.ts:L25-L328'
-  - symbol: constructor
-    kind: method
-    at: 'src/session/attestation-service.ts:L28-L31'
-  - symbol: loadPricing
-    kind: method
-    at: 'src/session/attestation-service.ts:L36-L41'
-  - symbol: createAttestation
-    kind: method
-    at: 'src/session/attestation-service.ts:L46-L123'
-  - symbol: getAttestation
-    kind: method
-    at: 'src/session/attestation-service.ts:L128-L139'
-  - symbol: getAttestations
-    kind: method
-    at: 'src/session/attestation-service.ts:L144-L182'
-  - symbol: aggregateModelUsage
-    kind: method
-    at: 'src/session/attestation-service.ts:L187-L236'
-  - symbol: extractProvenanceSummary
-    kind: method
-    at: 'src/session/attestation-service.ts:L241-L282'
-  - symbol: calculateDuration
-    kind: method
-    at: 'src/session/attestation-service.ts:L287-L297'
-  - symbol: extractFileChanges
-    kind: method
-    at: 'src/session/attestation-service.ts:L302-L327'
 ---
 <!-- context:generated:start -->
 ## Summary

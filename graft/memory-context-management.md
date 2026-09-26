@@ -25,37 +25,6 @@ links:
       session events.
 generator:
   version: 1
-covers:
-  - symbol: makeMemory
-    kind: function
-    at: 'src/memory/__tests__/memory.test.ts:L32-L46'
-  - symbol: handler
-    kind: function
-    at: 'src/memory/__tests__/memory.test.ts:L716-L716'
-  - symbol: createMessage
-    kind: function
-    at: 'src/memory/__tests__/provenance-context.test.ts:L26-L32'
-  - symbol: createTestGraph
-    kind: function
-    at: 'src/memory/__tests__/provenance-context.test.ts:L35-L91'
-  - symbol: createBackend
-    kind: function
-    at: 'src/memory/__tests__/retrieval-l2l3.test.ts:L13-L15'
-  - symbol: createMockRetrieveFn
-    kind: function
-    at: 'src/memory/__tests__/retrieval-l2l3.test.ts:L17-L19'
-  - symbol: MemoryConfig
-    kind: interface
-    at: 'src/memory/config.ts:L18-L29'
-  - symbol: SharedMemoryConfig
-    kind: interface
-    at: 'src/memory/config.ts:L32-L39'
-  - symbol: createMemoryConfig
-    kind: function
-    at: 'src/memory/config.ts:L82-L94'
-  - symbol: validateMemoryConfig
-    kind: function
-    at: 'src/memory/config.ts:L97-L131'
 ---
 <!-- context:generated:start -->
 ## Summary
