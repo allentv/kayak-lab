@@ -32,6 +32,7 @@ export {
   EventFormatter,
   VSCodeWebSocketClient,
   createVSCodeProjection,
+  EVENT_TYPE_COLORS,
   type IVSCodeProjection,
   type AgentState,
   type SessionTreeItem,
@@ -88,3 +89,15 @@ export {
   type ApiRoute,
   type RestApiConfig,
 } from "./rest-api.ts";
+
+export {
+  WebSocketProjectionServer,
+  type ClientSessionState,
+  type ClientState,
+  type WelcomeMessage,
+  type SubscribeMessage,
+  type UnsubscribeMessage,
+  type ReconnectMessage,
+  type BackpressureConfig,
+  type WebSocketServerConfig,
+} from "./websocket-server.ts";

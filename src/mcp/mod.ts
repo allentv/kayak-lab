@@ -52,6 +52,8 @@ export { isMCPEvent, MCPEventTypes } from "./events.ts";
 export type {
   MCPConnectedEvent,
   MCPDisconnectedEvent,
+  MCPEventBase,
+  MCPEventType,
   MCPSearchEvent,
   MCPSearchResultEvent,
   MCPServerStartedEvent,
@@ -60,3 +62,7 @@ export type {
   MCPToolResultEvent,
   MCPToolsDiscoveredEvent,
 } from "./events.ts";
+
+// Event emitter helpers
+export { wireClientEvents, wireRegistryEvents, wireSearchEvents, wireServerEvents } from "./event-emitter.ts";
+export type { AppendEventFn } from "./event-emitter.ts";

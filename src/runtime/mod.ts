@@ -88,3 +88,55 @@ export type {
   SnapshotOptions,
   MemorySnapshot,
 } from "../memory/mod.ts";
+
+// Self-observation
+export { SelfObservation } from "./self-observation.ts";
+
+export type {
+  ObservationContext,
+  ISelfObservation,
+  PatternDetection,
+} from "./self-observation.ts";
+
+// Hooks
+export {
+  HookPoint,
+  HookRegistry,
+  hookRegistry,
+} from "./hooks.ts";
+
+export type {
+  BeforeModelCallContext,
+  AfterToolExecutionContext,
+  TurnEndContext,
+  SessionStartContext,
+  SessionEndContext,
+  HookContext,
+  HookFunction,
+  HookEntry,
+} from "./hooks.ts";
+
+// Pattern analysis
+export { PatternAnalyzer } from "./pattern-analyzer.ts";
+
+export type {
+  TrendDirection,
+  ToolTrend,
+  SessionEfficiency,
+  ModelUsage,
+  ErrorCluster,
+  AnalysisReport,
+  IPatternAnalyzer,
+  PatternAnalyzerOptions,
+} from "./pattern-analyzer.ts";
+
+// Dynamic tool registry
+export { DynamicToolRegistry } from "./dynamic-tool-registry.ts";
+
+export type {
+  ToolState,
+  ToolAction,
+  PatternMapping,
+  ToolLifecycleHooks,
+  IDynamicToolRegistry,
+} from "./dynamic-tool-registry.ts";

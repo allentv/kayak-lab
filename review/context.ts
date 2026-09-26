@@ -67,20 +67,27 @@ export async function buildContext(srcRoot: string): Promise<ReviewContext> {
 /** Extract exported symbol names from content. */
 function extractExports(content: string): string[] {
   const exports: string[] = [];
+
+  // Handle multi-line export blocks: export { Foo, type Bar } from "..."
+  // Also handle export type { ... } blocks
+  // Use [\s\S] instead of . to match newlines (no s flag in older JS)
+  const blockRegex = /export\s*(?:type\s+)?\{([\s\S]*?)\}\s*(?:from\s*["'][^"']+["'])?/g;
+  let blockMatch;
+  while ((blockMatch = blockRegex.exec(content)) !== null) {
+    for (const sym of blockMatch[1].split(",")) {
+      // Strip `type` keyword: `type Foo` → `Foo`
+      const cleaned = sym.replace(/\btype\s+/, "").trim();
+      const name = cleaned.split(/\s+as\s+/)[0].trim();
+      if (name) exports.push(name);
+    }
+  }
+
   for (const line of content.split("\n")) {
     // export function name / export const name / export class name / export type name / export interface name
     const m = line.match(
       /export\s+(?:async\s+)?(?:function|const|let|var|class|type|interface|enum)\s+(\w+)/,
     );
     if (m) exports.push(m[1]);
-    // export { name1, name2 }
-    const block = line.match(/export\s*\{([^}]+)\}/);
-    if (block) {
-      for (const sym of block[1].split(",")) {
-        const name = sym.trim().split(/\s+as\s+/)[0].trim();
-        if (name) exports.push(name);
-      }
-    }
     // export default
     if (/\bexport\s+default\b/.test(line)) exports.push("default");
   }

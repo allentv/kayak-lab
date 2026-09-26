@@ -17,6 +17,7 @@ export type {
   CapabilityContext,
   CapabilityResult,
   ICapability,
+  RateLimitConfig,
 } from "./capability.ts";
 
 // Git capability
@@ -51,17 +52,48 @@ export type {
   GitHubPullRequest,
   GitHubWorkflow,
   GitHubWorkflowRun,
+  IssueState,
+  PullRequestState,
+  GitHubComment,
 } from "./github.ts";
 
 // File capability
 export { FileCapability } from "./file.ts";
 
-export type { IFileCapability } from "./file.ts";
+export type {
+  IFileCapability,
+  DirectoryEntry,
+  FileReadData,
+  FileReadOptions,
+  FileEditOptions,
+  FileWriteData,
+  FileEditData,
+} from "./file.ts";
 
 // Search capability
 export { SearchCapability } from "./search.ts";
 
-export type { ISearchCapability, GrepMatch } from "./search.ts";
+export type {
+  ISearchCapability,
+  GrepMatch,
+  GrepOptions,
+  GlobOptions,
+} from "./search.ts";
+
+// Kubernetes capability
+export { KubernetesCapability } from "./kubernetes.ts";
+
+export type {
+  IKubernetesCapability,
+  ResourceStatus,
+  ResourcePhase,
+  KubernetesPod,
+  KubernetesService,
+  KubernetesServicePort,
+  KubernetesDeployment,
+  KubernetesNamespace,
+  KubernetesEvent,
+} from "./kubernetes.ts";
 
 // Sandbox execution
 export { SandboxedShellCapability } from "./sandboxed-shell.ts";

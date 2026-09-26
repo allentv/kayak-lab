@@ -102,3 +102,29 @@ export type {
 // Config
 export { createMemoryConfig, validateMemoryConfig, DEFAULT_MEMORY_CONFIG } from "./config.ts";
 export type { MemoryConfig, SharedMemoryConfig } from "./config.ts";
+
+// Provenance Context Types
+export {
+  DEFAULT_BUDGET,
+  DEFAULT_CONFIG,
+  MessagePriority,
+  OutcomeScore,
+  estimateTokens,
+} from "./provenance-context-types.ts";
+export type {
+  CompressionResult,
+  ProvenanceContextConfig,
+  TokenBudget,
+} from "./provenance-context-types.ts";
+
+// Provenance Context Manager
+export { ProvenanceContextManager } from "./provenance-context.ts";
+
+// Retrieval Result
+export type { MemoryRetrievalResult } from "./retrieval.ts";
+
+// Emitter
+export { TypedEmitter } from "./emitter.ts";
+
+// Message Classifier
+export { MessageClassifier } from "./message-classifier.ts";
