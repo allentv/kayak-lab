@@ -4,7 +4,7 @@ This guide covers setting up SQLite as the persistence backend for kayak-lab. SQ
 
 ## Prerequisites
 
-- Deno 2.9 or later
+- Deno 2.9.7 or later
 
 ## Installation
 
