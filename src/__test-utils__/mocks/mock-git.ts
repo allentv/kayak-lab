@@ -133,6 +133,30 @@ export class MockGitCapability implements IGitCapability {
     return { success: true };
   }
 
+  async getDiff(
+    _path?: string,
+    _options?: { staged?: boolean },
+  ): Promise<CapabilityResult<string>> {
+    this.calls.push({ method: "getDiff", args: [_path, _options] });
+    return { success: true, data: "" };
+  }
+
+  async push(
+    _remote?: string,
+    _branch?: string,
+  ): Promise<CapabilityResult<void>> {
+    this.calls.push({ method: "push", args: [_remote, _branch] });
+    return { success: true };
+  }
+
+  async pull(
+    _remote?: string,
+    _branch?: string,
+  ): Promise<CapabilityResult<void>> {
+    this.calls.push({ method: "pull", args: [_remote, _branch] });
+    return { success: true };
+  }
+
   resetCalls(): void {
     this.calls = [];
   }

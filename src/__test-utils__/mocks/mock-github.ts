@@ -14,6 +14,8 @@ import type {
   GitHubIssue,
   GitHubPullRequest,
   GitHubComment,
+  GitHubWorkflow,
+  GitHubWorkflowRun,
   IssueState,
   PullRequestState,
 } from "../../capabilities/github.ts";
@@ -262,6 +264,23 @@ export class MockGitHubCapability implements IGitHubCapability {
         updated_at: new Date().toISOString(),
       },
     };
+  }
+
+  async listWorkflows(
+    _owner: string,
+    _repo: string,
+  ): Promise<CapabilityResult<GitHubWorkflow[]>> {
+    this.calls.push({ method: "listWorkflows", args: [_owner, _repo] });
+    return { success: true, data: [] };
+  }
+
+  async getWorkflowRuns(
+    _owner: string,
+    _repo: string,
+    _workflowId?: string,
+  ): Promise<CapabilityResult<GitHubWorkflowRun[]>> {
+    this.calls.push({ method: "getWorkflowRuns", args: [_owner, _repo, _workflowId] });
+    return { success: true, data: [] };
   }
 
   resetCalls(): void {
