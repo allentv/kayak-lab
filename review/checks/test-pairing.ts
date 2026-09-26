@@ -11,6 +11,9 @@ const check: ReviewCheck = {
       if (entry.path.includes("__tests__")) continue;
       // Only check files under src/
       if (!entry.path.includes("/src/")) continue;
+      // Skip barrel files (mod.ts) and pure type definitions (types.ts)
+      if (entry.path.endsWith("/mod.ts")) continue;
+      if (entry.path.endsWith("/types.ts")) continue;
 
       const hasTest = ctx.sourceToTest.has(entry.path);
       if (hasTest) continue;
