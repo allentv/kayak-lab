@@ -1,0 +1,22 @@
+# src/core/schema-registry.ts · [[schema-evolution-migration]]
+
+- MigrationFunction · type · L21-L21 — Transforms an event from one schema version to the next, handling exactly one version bump in the migration chain.
+- SchemaEntry · interface · L26-L31 — Stores a schema definition and optional migration function for a specific version of an event type.
+- SchemaRegistryError · class · L37-L46 — Base error class for schema registry operations with structured error codes and details.
+- constructor · method · L38-L45 — Creates a schema registry error with a message, error code, and optional details for debugging.
+- MigrationError · class · L48-L53 — Error thrown when migration fails due to missing migration functions or invalid version targets.
+- constructor · method · L49-L52 — Creates a migration error with a descriptive message and optional details about the failed migration.
+- IncompatibleSchemaError · class · L55-L60 — Error thrown when schema changes break backward compatibility by removing existing fields.
+- constructor · method · L56-L59 — Creates an incompatible schema error with a message and optional details about the breaking change.
+- SchemaRegistry · class · L72-L215 — Registry for event schemas and their migrations, keyed by event type and version, with compatibility checking and warning accumulation.
+- register · method · L90-L117 — Registers a schema for an event type at a specific version, warning about breaking changes without migration functions.
+- getSchema · method · L126-L131 — Retrieves the schema entry for a specific event type and version, returning undefined if not found.
+- getLatestVersion · method · L139-L151 — Finds the highest registered version number for a given event type, returning undefined if no schemas exist.
+- checkCompatibility · method · L167-L182 — Checks backward compatibility between two schemas by verifying that no existing fields are removed in the new schema.
+- getRegisteredVersions · method · L187-L193 — Returns all registered versions for an event type sorted in ascending order.
+- getWarnings · method · L198-L200 — Returns accumulated warnings about breaking schema changes registered without migration functions.
+- clearWarnings · method · L205-L207 — Clears all accumulated warnings from the registry.
+- hasSchema · method · L212-L214 — Checks if a schema is registered for a specific event type and version.
+- migrate · function · L234-L269 — Migrates a single event from its current version to a target version by chaining registered migration functions sequentially.
+- migrateEvents · function · L283-L289 — Migrates a batch of events to a target version, applying migration to each event that needs it.
+- createDefaultSchemaRegistry · function · L303-L310 — Creates a pre-configured schema registry with all known event types registered at the current schema version.

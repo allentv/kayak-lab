@@ -1,0 +1,27 @@
+# src/types/events.ts · [[event-type-taxonomy]]
+
+- EventType · type · L104-L104 — type EventType = (typeof EventTypes)[keyof typeof EventTypes];
+- BaseEvent · interface · L113-L140 — interface BaseEvent
+- EventMetadata · interface · L145-L157 — interface EventMetadata
+- SessionCreatedPayload · interface · L167-L179 — interface SessionCreatedPayload
+- ToolExecutionPayload · interface · L184-L202 — interface ToolExecutionPayload
+- ModelPayload · interface · L207-L232 — interface ModelPayload
+- UserInputPayload · interface · L237-L246 — interface UserInputPayload
+- SelfObservedPayload · interface · L251-L263 — interface SelfObservedPayload
+- PatternDetectedPayload · interface · L268-L283 — interface PatternDetectedPayload
+- ToolInvocationPayload · interface · L288-L297 — interface ToolInvocationPayload
+- ToolResultPayload · interface · L302-L319 — interface ToolResultPayload
+- ToolAuthoredPayload · interface · L324-L333 — interface ToolAuthoredPayload
+- ToolImprovementPayload · interface · L338-L345 — interface ToolImprovementPayload
+- AttestationEventPayload · type · L351-L354 — type AttestationEventPayload = AttestationEvent & { /** Index signature for Record<string, unknown> compatibility */ [key: string]: unknown; };
+- AppendEventInput · type · L368-L368 — type AppendEventInput = Omit<BaseEvent, "event_id" | "timestamp" | "schema_version">;
+- isValidEventType · function · L377-L379 — function isValidEventType(type: string): type is EventType
+- isSessionEvent · function · L384-L388 — function isSessionEvent( event: BaseEvent, ): event is BaseEvent & { event_type: "session.created" | "session.resumed" | "session.paused" | "session.completed" | "session.failed" | "session.cancelled" | "session.attestation" }
+- isToolEvent · function · L393-L397 — function isToolEvent( event: BaseEvent, ): event is BaseEvent & { event_type: "tool.execution.started" | "tool.execution.completed" | "tool.execution.failed" }
+- isModelEvent · function · L402-L406 — function isModelEvent( event: BaseEvent, ): event is BaseEvent & { event_type: "model.request" | "model.response" | "model.stream.delta" }
+- isSelfObservationEvent · function · L411-L415 — function isSelfObservationEvent( event: BaseEvent, ): event is BaseEvent & { event_type: "agent.self_observed" | "agent.pattern_detected" }
+- isToolCallingEvent · function · L420-L424 — function isToolCallingEvent( event: BaseEvent, ): event is BaseEvent & { event_type: "tool.call.invocation" | "tool.call.result" }
+- isToolAuthoredEvent · function · L429-L433 — function isToolAuthoredEvent( event: BaseEvent, ): event is BaseEvent & { event_type: "tool.authored.proposed" | "tool.authored.created" | "tool.authored.rejected" }
+- isToolImprovementEvent · function · L438-L442 — function isToolImprovementEvent( event: BaseEvent, ): event is BaseEvent & { event_type: "tool.improvement.suggested" | "tool.improvement.auto_created" | "tool.improvement.auto_improved" }
+- isMCPEvent · function · L447-L456 — function isMCPEvent( event: BaseEvent, ): event is BaseEvent & { event_type: "mcp.connected" | "mcp.disconnected" | "mcp.tools_discovered" | "mcp.tool.invocation" | "mcp.tool.result" | "mcp.server.started" | "mcp.server.stopped" | "mcp.server.tool.invocation" | "mcp.server.tool.result" | "mcp.tool.registered" | "mcp.tool.unregistered" | "mcp.tool.state_changed" | "mcp.search" | "mcp.search.result" | "mcp.error"; }
+- isMemoryEvent · function · L461-L469 — function isMemoryEvent( event: BaseEvent, ): event is BaseEvent & { event_type: "memory.operation" | "memory.stored" | "memory.fallback" | "memory.retrieved" | "memory.updated" | "memory.type" | "memory.shared" | "memory.search" | "memory.search.result"; }

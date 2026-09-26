@@ -8,7 +8,10 @@ import { existsSync } from "node:fs";
 import * as path from "node:path";
 import type { BaseEvent } from "../../types/events.ts";
 
-const FIXTURES_DIR = path.join(Deno.cwd(), "fixtures");
+const FIXTURES_DIR = path.join(
+  path.fromFileUrl(new URL(".", import.meta.url)),
+  "sessions",
+);
 
 /**
  * Loads a JSON fixture file.

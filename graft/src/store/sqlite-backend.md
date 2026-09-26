@@ -1,0 +1,26 @@
+# src/store/sqlite-backend.ts · [[event-sourcing-persistence-system]]
+
+- SQLiteConfig · interface · L22-L25 — interface SQLiteConfig
+- SQLitePersistenceBackend · class · L35-L432 — class SQLitePersistenceBackend implements IPersistenceBackend, IMemoryStorage
+- constructor · method · L40-L45 — constructor(config: SQLiteConfig)
+- initSchema · method · L51-L93 — private initSchema(): void
+- write · method · L99-L114 — write(sessionId: string, line: string): void
+- readLines · method · L116-L122 — readLines(sessionId: string): string[]
+- writeSnapshot · method · L124-L134 — writeSnapshot(sessionId: string, data: Snapshot): void
+- readSnapshot · method · L136-L144 — readSnapshot(sessionId: string): Snapshot | undefined
+- listSessions · method · L146-L152 — listSessions(): string[]
+- exists · method · L154-L161 — exists(sessionId: string): boolean
+- store · method · L167-L180 — async store(memory: AnyMemory): Promise<void>
+- retrieve · method · L182-L198 — async retrieve(id: string): Promise<AnyMemory | null>
+- delete · method · L200-L210 — async delete(id: string): Promise<boolean>
+- list · method · L212-L242 — async list(options?: StorageListOptions): Promise<AnyMemory[]>
+- isAvailable · method · L244-L246 — async isAvailable(): Promise<boolean>
+- writeScenario · method · L252-L283 — async writeScenario(agentId: string, path: string, content: string, name?: string): Promise<ScenarioMemory>
+- readScenario · method · L285-L307 — async readScenario(agentId: string, path: string): Promise<ScenarioMemory | null>
+- listScenarios · method · L309-L335 — async listScenarios(agentId: string, prefix?: string): Promise<ScenarioMemory[]>
+- deleteScenario · method · L337-L349 — async deleteScenario(agentId: string, path: string): Promise<boolean>
+- countScenarios · method · L351-L358 — async countScenarios(agentId: string): Promise<number>
+- readCore · method · L364-L385 — async readCore(agentId: string): Promise<CoreMemory | null>
+- writeCore · method · L387-L417 — async writeCore(agentId: string, sections: Record<string, string>): Promise<CoreMemory>
+- getDatabase · method · L423-L425 — getDatabase(): Database
+- close · method · L427-L431 — close(): void

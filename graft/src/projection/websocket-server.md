@@ -1,0 +1,38 @@
+# src/projection/websocket-server.ts · [[projection-system]]
+
+- Subscription · interface · L17-L21 — interface Subscription
+- ClientSessionState · interface · L24-L29 — interface ClientSessionState
+- ClientState · interface · L32-L44 — interface ClientState
+- WelcomeMessage · interface · L47-L51 — interface WelcomeMessage
+- SubscribeMessage · interface · L54-L58 — interface SubscribeMessage
+- UnsubscribeMessage · interface · L61-L63 — interface UnsubscribeMessage
+- ReconnectMessage · interface · L66-L70 — interface ReconnectMessage
+- ServerMessage · type · L73-L79 — type ServerMessage = | WelcomeMessage | { type: "event"; event: BaseEvent } | { type: "error"; code: string; message: string } | { type: "ping" } | { type: "pong" } | { type: "close"; reason: string };
+- ClientMessage · type · L82-L87 — type ClientMessage = | SubscribeMessage | UnsubscribeMessage | ReconnectMessage | { type: "ping" } | { type: "pong" };
+- BackpressureConfig · interface · L90-L95 — interface BackpressureConfig
+- WebSocketServerConfig · interface · L98-L105 — interface WebSocketServerConfig
+- RingBuffer · class · L114-L146 — class RingBuffer<T>
+- constructor · method · L118-L120 — constructor(maxSize: number)
+- push · method · L122-L127 — push(item: T): void
+- getAfter · method · L132-L134 — getAfter(index: number): T[]
+- findIndex · method · L139-L141 — findIndex(predicate: (item: T) => boolean): number
+- size · method · L143-L145 — get size(): number
+- WebSocketProjectionServer · class · L155-L556 — class WebSocketProjectionServer
+- constructor · method · L164-L173 — constructor(eventStore: IEventStore, config: WebSocketServerConfig)
+- start · method · L178-L191 — async start(): Promise<void>
+- shutdown · method · L196-L212 — async shutdown(): Promise<void>
+- handleRequest · method · L217-L223 — private handleRequest(req: Request): Response
+- handleWebSocketUpgrade · method · L228-L267 — private handleWebSocketUpgrade(req: Request): Response
+- sendWelcome · method · L272-L279 — private sendWelcome(client: ClientState): void
+- handleMessage · method · L284-L310 — private handleMessage(clientId: string, data: string): void
+- handleSubscribe · method · L315-L347 — private handleSubscribe(client: ClientState, msg: SubscribeMessage): void
+- handleUnsubscribe · method · L352-L354 — private handleUnsubscribe(client: ClientState): void
+- handleReconnect · method · L359-L392 — private handleReconnect(client: ClientState, msg: ReconnectMessage): void
+- deliverEvent · method · L399-L446 — deliverEvent(event: BaseEvent): void
+- flushClientSession · method · L452-L466 — private flushClientSession(client: ClientState, sessionId: string): void
+- enqueueEvent · method · L472-L474 — private enqueueEvent(client: ClientState, event: BaseEvent): void
+- flushClient · method · L480-L498 — private flushClient(client: ClientState): void
+- sendHeartbeats · method · L506-L528 — private sendHeartbeats(): void
+- sendToClient · method · L533-L537 — private sendToClient(client: ClientState, msg: ServerMessage): void
+- sendError · method · L542-L548 — private sendError( client: ClientState, code: string, message: string, ): void
+- clientCount · method · L553-L555 — get clientCount(): number

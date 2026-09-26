@@ -1,0 +1,47 @@
+# src/projection/web.ts · [[projection-system]]
+
+- WebSocketState · type · L17-L17 — type WebSocketState = "connected" | "disconnected" | "reconnecting";
+- SessionListItem · interface · L20-L26 — interface SessionListItem
+- EventLogItem · interface · L29-L35 — interface EventLogItem
+- UserInputResult · interface · L38-L42 — interface UserInputResult
+- EventDetail · interface · L45-L51 — interface EventDetail
+- IWebProjection · interface · L60-L90 — interface IWebProjection
+- WebRestApiConfig · interface · L97-L101 — interface WebRestApiConfig
+- WebRestApiClient · class · L106-L177 — class WebRestApiClient
+- constructor · method · L109-L111 — constructor(config: WebRestApiConfig)
+- getSessions · method · L114-L121 — async getSessions(): Promise<SessionListItem[]>
+- createSession · method · L124-L136 — async createSession(initialMessage?: string): Promise<SessionListItem>
+- getEvents · method · L139-L150 — async getEvents(sessionId: string, limit?: number, offset?: number): Promise<BaseEvent[]>
+- sendMessage · method · L153-L168 — async sendMessage(sessionId: string, message: string): Promise<UserInputResult>
+- getHeaders · method · L170-L176 — private getHeaders(): Record<string, string>
+- WebWebSocketConfig · interface · L184-L188 — interface WebWebSocketConfig
+- WebWebSocketClient · class · L194-L308 — class WebWebSocketClient
+- constructor · method · L203-L209 — constructor(config: WebWebSocketConfig)
+- connect · method · L212-L245 — connect(): void
+- subscribe · method · L248-L251 — subscribe(sessionId: string): void
+- unsubscribe · method · L254-L257 — unsubscribe(): void
+- onEvent · method · L260-L265 — onEvent(listener: (event: BaseEvent) => void): () => void
+- onStateChange · method · L268-L273 — onStateChange(listener: (state: WebSocketState) => void): () => void
+- disconnect · method · L276-L286 — disconnect(): void
+- send · method · L288-L292 — private send(msg: { type: string; session_id?: string; event_types?: string[] }): void
+- scheduleReconnect · method · L294-L303 — private scheduleReconnect(): void
+- notifyState · method · L305-L307 — private notifyState(state: WebSocketState): void
+- WebEventFormatter · class · L317-L333 — class WebEventFormatter
+- format · method · L318-L322 — format(event: BaseEvent): string
+- formatDetail · method · L324-L332 — formatDetail(event: BaseEvent): EventDetail
+- WebProjection · class · L342-L459 — class WebProjection implements IWebProjection
+- constructor · method · L354-L358 — constructor(restClient: WebRestApiClient, wsClient: WebWebSocketClient)
+- loadSessions · method · L361-L366 — async loadSessions(): Promise<SessionListItem[]>
+- createSession · method · L369-L373 — async createSession(initialMessage?: string): Promise<SessionListItem>
+- selectSession · method · L376-L380 — selectSession(sessionId: string): void
+- getEvents · method · L383-L391 — getEvents(): EventLogItem[]
+- sendMessage · method · L394-L399 — async sendMessage(message: string): Promise<UserInputResult>
+- getEventDetail · method · L402-L405 — getEventDetail(sequence: number): EventDetail | undefined
+- onSessionListChange · method · L408-L413 — onSessionListChange(listener: (sessions: SessionListItem[]) => void): () => void
+- onEvent · method · L416-L421 — onEvent(listener: (event: BaseEvent) => void): () => void
+- onConnectionStateChange · method · L424-L429 — onConnectionStateChange(listener: (state: WebSocketState) => void): () => void
+- dispose · method · L432-L437 — dispose(): void
+- start · method · L440-L454 — start(): void
+- notifySessionList · method · L456-L458 — private notifySessionList(): void
+- WebProjectionBundle · interface · L466-L470 — interface WebProjectionBundle
+- createWebProjection · function · L475-L483 — function createWebProjection( restConfig: WebRestApiConfig, wsConfig: WebWebSocketConfig, ): WebProjectionBundle

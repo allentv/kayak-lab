@@ -1,0 +1,23 @@
+# src/projection/__tests__/desktop.test.ts · [[projection-system]]
+
+- MockSystemTray · class · L16-L30 — class MockSystemTray
+- setIcon · method · L22-L22 — setIcon(path: string): void
+- setTooltip · method · L23-L23 — setTooltip(text: string): void
+- show · method · L24-L24 — show(): void
+- hide · method · L25-L25 — hide(): void
+- setContextMenu · method · L26-L28 — setContextMenu(items: Array<{ id: string; label: string; action?: () => void }>): void
+- dispose · method · L29-L29 — dispose(): void
+- MockNotificationService · class · L32-L46 — class MockNotificationService
+- show · method · L35-L37 — show(notification: { title: string; body: string }): void
+- requestPermission · method · L39-L41 — async requestPermission(): Promise<boolean>
+- isSupported · method · L43-L45 — isSupported(): boolean
+- MockKeyboardShortcutService · class · L48-L62 — class MockKeyboardShortcutService
+- register · method · L51-L53 — register(shortcut: { id: string; key: string; modifiers: string[]; action: () => void }): void
+- unregister · method · L55-L57 — unregister(id: string): void
+- unregisterAll · method · L59-L61 — unregisterAll(): void
+- createTestEvent · function · L68-L82 — function createTestEvent( type: string = EventTypes.SESSION_CREATED, sessionId = "test-session", ): BaseEvent
+- openFn · function · L99-L99 — openFn = ()
+- newSessionFn · function · L100-L100 — newSessionFn = ()
+- quitFn · function · L101-L101 — quitFn = ()
+- newSessionFn · function · L142-L142 — newSessionFn = ()
+- quickInputFn · function · L143-L143 — quickInputFn = ()

@@ -1,0 +1,25 @@
+# src/runtime/model-provider.ts · [[runtime-orchestration]]
+
+- MessageRole · type · L13-L13 — type MessageRole = "system" | "user" | "assistant" | "tool";
+- Message · interface · L16-L21 — interface Message
+- ToolDefinition · interface · L24-L28 — interface ToolDefinition
+- ModelRequest · interface · L31-L38 — interface ModelRequest
+- ToolCall · interface · L41-L45 — interface ToolCall
+- ModelResponse · interface · L48-L57 — interface ModelResponse
+- StreamDelta · interface · L60-L64 — interface StreamDelta
+- ModelProviderConfig · interface · L67-L72 — interface ModelProviderConfig
+- IModelProvider · interface · L81-L90 — interface IModelProvider
+- ModelError · class · L96-L110 — class ModelError extends Error
+- constructor · method · L100-L109 — constructor( message: string, provider?: string, cause?: Error, )
+- ProviderNotFoundError · class · L112-L117 — class ProviderNotFoundError extends ModelError
+- constructor · method · L113-L116 — constructor(provider: string)
+- ModelTimeoutError · class · L119-L124 — class ModelTimeoutError extends ModelError
+- constructor · method · L120-L123 — constructor(provider: string, timeoutMs: number)
+- ModelManager · class · L133-L270 — class ModelManager
+- register · method · L141-L146 — register(provider: IModelProvider): void
+- setDefaultProvider · method · L151-L156 — setDefaultProvider(name: string): void
+- setFallbackProviders · method · L161-L168 — setFallbackProviders(names: string[]): void
+- getProvider · method · L173-L183 — getProvider(name?: string): IModelProvider
+- invoke · method · L188-L209 — async invoke( request: ModelRequest, providerName?: string, ): Promise<ModelResponse>
+- stream · method · L214-L236 — async *stream( request: ModelRequest, providerName?: string, ): AsyncIterable<StreamDelta>
+- getProviderChain · method · L241-L269 — private *getProviderChain( preferred?: string, ): Generator<IModelProvider>

@@ -1,0 +1,22 @@
+# src/cross-cutting/identity/provider.ts · [[identity-authorization]]
+
+- TokenAuthProviderConfig · interface · L19-L24 — interface TokenAuthProviderConfig
+- base64UrlDecode · function · L30-L38 — function base64UrlDecode(input: string): Uint8Array
+- base64UrlEncode · function · L40-L44 — function base64UrlEncode(bytes: Uint8Array): string
+- hmacSign · function · L46-L60 — async function hmacSign( secret: string, data: string, ): Promise<string>
+- hmacVerify · function · L62-L77 — async function hmacVerify( secret: string, data: string, signature: string, ): Promise<boolean>
+- decodeBase64UrlJson · function · L79-L87 — function decodeBase64UrlJson(b64: string): Record<string, unknown> | null
+- TokenAuthProvider · class · L99-L232 — class TokenAuthProvider implements IIdentityProvider
+- constructor · method · L104-L106 — constructor(config: TokenAuthProviderConfig)
+- authenticate · method · L117-L129 — async authenticate(token: string): Promise<AuthResult>
+- getUser · method · L132-L134 — async getUser(id: string): Promise<User | null>
+- validateToken · method · L142-L148 — async validateToken(token: string): Promise<boolean>
+- addUser · method · L151-L153 — addUser(user: User): void
+- addApiKey · method · L156-L158 — addApiKey(key: string, userId: string): void
+- authenticateJwt · method · L162-L205 — private async authenticateJwt(token: string): Promise<AuthResult>
+- authenticateApiKey · method · L207-L219 — private async authenticateApiKey(key: string): Promise<AuthResult>
+- validateJwtFormat · method · L221-L231 — private validateJwtFormat(token: string): boolean
+- buildJwtToken · function · L243-L264 — async function buildJwtToken( secret: string, payload: Record<string, unknown>, options?: { issuer?: string; expiresInSec?: number }, ): Promise<string>
+- RoleBasedAccessControl · class · L276-L304 — class RoleBasedAccessControl
+- defineCapability · method · L284-L286 — defineCapability(capability: string, roles: string[]): void
+- authorize · method · L294-L303 — authorize(user: User, capability: string, action: string): boolean

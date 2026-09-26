@@ -1,0 +1,37 @@
+# src/projection/rest-api.ts · [[projection-system]]
+
+- ApiError · interface · L19-L23 — interface ApiError
+- SessionResponse · interface · L26-L34 — interface SessionResponse
+- EventListResponse · interface · L37-L42 — interface EventListResponse
+- MessageRequest · interface · L45-L48 — interface MessageRequest
+- MessageResponse · interface · L51-L56 — interface MessageResponse
+- RouteHandler · type · L59-L62 — type RouteHandler = ( request: Request, params: Record<string, string>, ) => Promise<Response> | Response;
+- ApiRoute · interface · L65-L70 — interface ApiRoute
+- RestApiConfig · interface · L73-L77 — interface RestApiConfig
+- ApiKeyAuth · class · L86-L116 — class ApiKeyAuth
+- constructor · method · L90-L93 — constructor(apiKey: string, enabled = true)
+- authorize · method · L96-L107 — authorize(request: Request): boolean
+- unauthorizedResponse · method · L110-L115 — unauthorizedResponse(): Response
+- RestApiRouter · class · L125-L206 — class RestApiRouter
+- constructor · method · L130-L135 — constructor(config: RestApiConfig)
+- route · method · L138-L140 — route(method: string, path: string, handler: RouteHandler, requiresAuth = true): void
+- handle · method · L143-L177 — async handle(request: Request): Promise<Response>
+- matchPath · method · L180-L190 — private matchPath(routePath: string, requestPath: string): boolean
+- extractParams · method · L193-L205 — private extractParams(routePath: string, requestPath: string): Record<string, string>
+- RestApiProjection · class · L215-L510 — class RestApiProjection
+- constructor · method · L222-L234 — constructor( sessionManager: ISessionManager, eventStore: IEventStore, config: RestApiConfig, attestationService?: AttestationService, )
+- setProvenanceGraph · method · L237-L239 — setProvenanceGraph(sessionId: string, graph: ProvenanceGraph): void
+- handleRequest · method · L242-L244 — async handleRequest(request: Request): Promise<Response>
+- registerRoutes · method · L246-L268 — private registerRoutes(): void
+- listSessions · method · L271-L283 — private listSessions(_request: Request, _params: Record<string, string>): Response
+- createSession · method · L286-L306 — private async createSession(request: Request, _params: Record<string, string>): Promise<Response>
+- getSession · method · L309-L324 — private getSession(_request: Request, params: Record<string, string>): Response
+- deleteSession · method · L327-L339 — private deleteSession(_request: Request, params: Record<string, string>): Response
+- listEvents · method · L342-L361 — private listEvents(request: Request, params: Record<string, string>): Response
+- getEvent · method · L364-L377 — private getEvent(_request: Request, params: Record<string, string>): Response
+- sendMessage · method · L380-L424 — private async sendMessage(request: Request, params: Record<string, string>): Promise<Response>
+- getAttestation · method · L427-L443 — private async getAttestation(_request: Request, params: Record<string, string>): Promise<Response>
+- listAttestations · method · L446-L465 — private async listAttestations(request: Request, _params: Record<string, string>): Promise<Response>
+- getProvenance · method · L468-L475 — private getProvenance(_request: Request, params: Record<string, string>): Response
+- getProvenanceNodes · method · L478-L493 — private getProvenanceNodes(request: Request, params: Record<string, string>): Response
+- getProvenanceChain · method · L496-L509 — private getProvenanceChain(_request: Request, params: Record<string, string>): Response

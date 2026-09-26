@@ -1,0 +1,21 @@
+# src/memory/types.ts · [[memory-system]] [[memory-tiering-l1-l2-l3]]
+
+- MemoryType · type · L13-L13 — Enumerates the six memory categories in the system: short-term, long-term, episodic, semantic, scenario, and core memory types.
+- MemoryStatus · type · L16-L16 — Defines the lifecycle states of a memory entry: active for current use, archived for historical storage, and deleted for removal.
+- InteractionDirection · type · L19-L19 — Specifies the direction of interactions recorded in episodic memory: user-to-agent, agent-to-user, or agent-to-agent communication flows.
+- MemoryEntry · interface · L28-L45 — Base interface for all memory entries providing common fields like unique ID, content, timestamps, status, and metadata for provider-specific data.
+- ShortTermMemory · interface · L54-L58 — Represents session-scoped memory that expires and is lost on restart, used for temporary data storage during active sessions.
+- LongTermMemory · interface · L67-L73 — Defines persistent memory that survives across sessions with importance scoring and access counting for retrieval prioritization.
+- EpisodicMemory · interface · L82-L92 — Records specific interactions between participants with directional context, timestamps, and summaries for reconstructing conversation history.
+- SemanticMemory · interface · L101-L109 — Stores factual knowledge with confidence scoring and optional source attribution for verifiable information retention.
+- ScenarioMemory · interface · L119-L127 — L2 memory type for path-addressable structured knowledge documents that store learned patterns and how-to guides as markdown files.
+- CoreMemory · interface · L137-L143 — L3 singleton memory per agent that stores stable identity attributes like name, goals, constraints, and personality in structured sections.
+- AnyMemory · type · L150-L150 — Union type that represents any memory entry in the system, enabling type-safe handling of all six memory categories.
+- CreateShortTermInput · interface · L157-L163 — Input structure for creating short-term memories with optional expiration time and metadata for session-bound temporary storage.
+- CreateLongTermInput · interface · L166-L172 — Input structure for creating long-term memories with optional importance scoring for persistent knowledge retention.
+- CreateEpisodicInput · interface · L175-L184 — Input structure for creating episodic memories that capture interaction details including participants, direction, and summary.
+- CreateSemanticInput · interface · L187-L195 — Input structure for creating semantic memories that store facts with confidence levels and optional source attribution.
+- CreateScenarioInput · interface · L198-L206 — Input structure for creating scenario memories with path addressing, display names, and agent ownership for structured knowledge storage.
+- CreateCoreInput · interface · L209-L215 — Input structure for creating core memories that define agent identity through structured sections of goals, constraints, and personality.
+- CreateMemoryInput · type · L218-L224 — Union type for all memory creation inputs, enabling type-safe creation of any memory category in the system.
+- UpdateMemoryInput · interface · L227-L236 — Input structure for updating memory entries with optional type-specific fields like expiration, importance, or fact confidence.

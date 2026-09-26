@@ -1,0 +1,24 @@
+# src/capabilities/file.ts · [[concrete-capabilities]] [[security-first-sandboxing]]
+
+- DirectoryEntry · interface · L24-L27 — Represents a single file or directory entry in a directory listing with name and type information.
+- FileReadData · type · L30-L33 — Defines the possible result types from file reads: plain text, base64-encoded binary with metadata, or directory listings.
+- FileReadOptions · interface · L36-L39 — Specifies options for range-based file reading with 1-indexed, inclusive line selection.
+- FileEditOptions · interface · L42-L44 — Controls whether string replacements in file edits should replace all occurrences or just the first.
+- FileWriteData · interface · L47-L50 — Contains the result data after a successful file write operation, including path and byte count.
+- FileEditData · interface · L52-L55 — Contains the result data after a successful file edit operation, including path and number of replacements made.
+- IFileCapability · interface · L64-L79 — Defines the interface for file operations that must be implemented by file capability providers.
+- toBase64 · function · L112-L120 — Encodes binary data to base64 in chunks to avoid call stack overflow when processing large files.
+- looksBinary · function · L123-L128 — Detects binary files by checking for NUL bytes, which never appear in valid text content.
+- mimeTypeFor · function · L130-L133 — Determines the MIME type for a file based on its extension, defaulting to octet-stream for unknown types.
+- FileCapability · class · L138-L382 — Implements sandboxed file operations with security checks to prevent directory traversal and enforce size limits.
+- initialize · method · L148-L151 — Sets up the file capability with the execution context and prepares for sandboxed operations.
+- dispose · method · L153-L156 — Cleans up the file capability by clearing context and root references when no longer needed.
+- read · method · L158-L229 — Reads file content with safety checks, handling directories, binary detection, and line range selection.
+- write · method · L231-L263 — Writes content to a file with directory creation and symlink safety checks to prevent sandbox escapes.
+- edit · method · L265-L322 — Performs surgical string replacements in files with validation for empty strings and multiple occurrences.
+- resolveWithinRoot · method · L329-L334 — Resolves user-provided paths against the sandbox root while rejecting directory traversal attempts.
+- assertRealPathInsideRoot · method · L340-L353 — Verifies that symlinks resolve within the sandbox root to prevent security breaches through link traversal.
+- getRealRoot · method · L355-L365 — Obtains the real path of the sandbox root, resolving symlinks once and caching the result for efficiency.
+- assertInside · method · L367-L375 — Validates that a target path is contained within the sandbox root using relative path analysis.
+- ensureInitialized · method · L377-L381 — Ensures the capability has been properly initialized before allowing any file operations.
+- selectLines · function · L392-L408 — Extracts a 1-indexed, inclusive line range from text content for partial file reading.

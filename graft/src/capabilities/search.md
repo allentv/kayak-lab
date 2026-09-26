@@ -1,0 +1,41 @@
+# src/capabilities/search.ts · [[concrete-capabilities]]
+
+- GrepMatch · interface · L35-L40 — Represents a single line matched by grep search with file location and content.
+- GrepOptions · interface · L43-L48 — Configures grep search behavior including case sensitivity and file glob filtering.
+- GlobOptions · interface · L51-L56 — Configures glob file search behavior for hidden files and gitignore rules.
+- ISearchCapability · interface · L65-L78 — Defines the interface for codebase search operations that must be implemented by search capabilities.
+- IgnoreRule · interface · L85-L90 — Represents a single parsed gitignore pattern with its matching logic and negation flag.
+- IgnoreRules · class · L96-L116 — Encapsulates parsed gitignore rules for a specific directory and determines if paths match them.
+- constructor · method · L97-L102 — Creates an IgnoreRules instance for a directory with its parsed gitignore patterns.
+- matchOutcome · method · L108-L115 — Determines whether a relative path matches any gitignore rule in this directory, with last-matching-rule semantics.
+- gitignoreGlobToSource · function · L119-L138 — Converts gitignore glob patterns to regex source strings, handling ** wildcards and path segments.
+- loadIgnoreRules · function · L141-L169 — Loads and parses .gitignore files from a directory, converting patterns to regex rules.
+- GitignoreIndex · class · L177-L211 — Manages gitignore rule loading and path exclusion decisions with caching and proper precedence.
+- constructor · method · L180-L181 — Creates a GitignoreIndex for a root directory to evaluate gitignore rules.
+- rulesFor · method · L183-L191 — Retrieves gitignore rules for a directory, loading and caching them if not already loaded.
+- isIgnored · method · L193-L210 — Determines if a path is ignored by consulting gitignore rules from deepest to root directory with proper precedence.
+- FilterOptions · interface · L218-L223 — Specifies filtering preferences for file listings regarding hidden files and gitignore rules.
+- listAllFiles · function · L230-L251 — Recursively lists all regular files under a root directory, skipping symlinks and unreadable directories.
+- filterFiles · function · L258-L267 — Applies hidden file and gitignore filtering to a list of file paths relative to a root directory.
+- filterByGlob · function · L274-L278 — Filters files by a glob pattern using ripgrep semantics for path separator handling.
+- ExternalTools · interface · L285-L288 — Records availability status of preferred external search tools (ripgrep and fd).
+- detectExternalTools · function · L294-L299 — Probes for ripgrep and fd availability by spawning them to verify they work with Deno.Command.
+- spawnWorks · function · L302-L309 — Tests whether a command-line tool can be successfully spawned by Deno.Command.
+- runExternalTool · function · L315-L327 — Executes an external search tool and handles exit codes, treating no matches as success but errors as failures.
+- RgSubmatch · interface · L330-L333 — Represents a submatch location within a line from ripgrep JSON output.
+- RgMatchData · interface · L335-L340 — Contains match details from ripgrep JSON output including file path, line number, and content.
+- RgEvent · interface · L342-L345 — Wraps ripgrep JSON event data with type discrimination for parsing.
+- parseRgJson · function · L348-L369 — Parses ripgrep's JSON output into GrepMatch objects, filtering for match events and extracting data.
+- compareMatches · function · L371-L379 — Compares two grep matches for deterministic sorting by file, line, and column.
+- SearchCapability · class · L393-L574 — Implements codebase search with external tool fallback and uniform filtering semantics.
+- constructor · method · L407-L408 — Creates a SearchCapability instance with optional fallback forcing for testing.
+- initialize · method · L410-L412 — Initializes the search capability with context from the capability system.
+- dispose · method · L414-L417 — Cleans up the search capability by clearing context and tool cache.
+- grep · method · L419-L447 — Searches for regex pattern matches in files, using ripgrep when available or falling back to pure TypeScript.
+- glob · method · L449-L487 — Finds files matching a glob pattern with consistent hidden/gitignore filtering across external and fallback implementations.
+- ensureInitialized · method · L493-L497 — Ensures the capability has been initialized before performing operations.
+- workingDirectory · method · L499-L501 — Returns the working directory for search operations from context or current directory.
+- probe · method · L504-L507 — Probes for external tool availability once per capability instance with caching.
+- rgGrep · method · L510-L523 — Executes grep search using ripgrep with JSON output parsing for match extraction.
+- fallbackGrep · method · L526-L573 — Implements grep search using pure TypeScript file walking and line-by-line regex matching.
+- runListFiles · function · L577-L580 — Runs external tools (rg/fd) to list files and parses their output into relative paths.

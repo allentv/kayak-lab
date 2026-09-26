@@ -1,0 +1,28 @@
+# src/memory/search.ts · [[memory-system]]
+
+- MemorySearchEvent · interface · L16-L21 — interface MemorySearchEvent
+- MemorySearchResultEvent · interface · L24-L29 — interface MemorySearchResultEvent
+- MemorySearchEvents · interface · L32-L35 — interface MemorySearchEvents
+- SearchType · type · L42-L42 — type SearchType = "semantic" | "keyword" | "combined";
+- SearchFilters · interface · L45-L52 — interface SearchFilters
+- SearchConfig · interface · L55-L62 — interface SearchConfig
+- SearchOptions · interface · L65-L74 — interface SearchOptions
+- SearchResult · interface · L77-L80 — interface SearchResult
+- IMemorySearch · interface · L89-L107 — interface IMemorySearch
+- MemorySearch · class · L120-L313 — class MemorySearch extends TypedEmitter<MemorySearchEvents> implements IMemorySearch
+- constructor · method · L128-L136 — constructor(memories?: AnyMemory[], config?: Partial<SearchConfig>)
+- setMemories · method · L139-L141 — setMemories(memories: AnyMemory[]): void
+- addMemory · method · L144-L151 — addMemory(memory: AnyMemory): void
+- removeMemory · method · L154-L156 — removeMemory(id: string): void
+- semanticSearch · method · L158-L168 — async semanticSearch(query: string, options?: SearchOptions): Promise<SearchResult[]>
+- keywordSearch · method · L170-L181 — async keywordSearch(query: string, options?: SearchOptions): Promise<SearchResult[]>
+- combinedSearch · method · L183-L200 — async combinedSearch(query: string, options?: SearchOptions): Promise<SearchResult[]>
+- search · method · L202-L212 — async search(query: string, options?: SearchOptions): Promise<SearchResult[]>
+- configure · method · L214-L216 — configure(config: Partial<SearchConfig>): void
+- getConfig · method · L218-L220 — getConfig(): SearchConfig
+- applyFilters · method · L224-L239 — private applyFilters(filters?: SearchFilters): AnyMemory[]
+- semanticScore · method · L245-L258 — private semanticScore(query: string, memory: AnyMemory): number
+- keywordScore · method · L263-L273 — private keywordScore(keywords: string[], memory: AnyMemory): number
+- tokenize · method · L275-L280 — private tokenize(text: string): string[]
+- rankAndLimit · method · L282-L299 — private rankAndLimit(results: SearchResult[], options?: SearchOptions): Promise<SearchResult[]>
+- emitSearchEvent · method · L301-L312 — private emitSearchEvent( query: string, searchType: SearchType, filters?: SearchFilters, ): void

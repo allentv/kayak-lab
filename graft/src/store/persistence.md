@@ -1,0 +1,28 @@
+# src/store/persistence.ts · [[event-sourcing-persistence-system]]
+
+- IPersistenceBackend · interface · L24-L65 — interface IPersistenceBackend
+- PersistenceConfig · interface · L74-L80 — interface PersistenceConfig
+- FilePersistenceBackend · class · L89-L167 — class FilePersistenceBackend implements IPersistenceBackend
+- constructor · method · L92-L94 — constructor(dataDir: string)
+- write · method · L96-L106 — write(sessionId: string, line: string): void
+- readLines · method · L108-L116 — readLines(sessionId: string): string[]
+- writeSnapshot · method · L118-L128 — writeSnapshot(sessionId: string, data: Snapshot): void
+- readSnapshot · method · L130-L138 — readSnapshot(sessionId: string): Snapshot | undefined
+- listSessions · method · L140-L157 — listSessions(): string[]
+- exists · method · L159-L166 — exists(sessionId: string): boolean
+- PersistentEventStore · class · L177-L309 — class PersistentEventStore
+- constructor · method · L182-L185 — constructor(config: PersistenceConfig)
+- store · method · L187-L195 — store(event: BaseEvent): void
+- getEvents · method · L197-L200 — getEvents(sessionId: string): readonly BaseEvent[]
+- getEventsInRange · method · L202-L206 — getEventsInRange(sessionId: string, from: number, to: number): readonly BaseEvent[]
+- getLastEvent · method · L208-L211 — getLastEvent(sessionId: string): BaseEvent | undefined
+- hasSession · method · L213-L215 — hasSession(sessionId: string): boolean
+- getSessionIds · method · L217-L219 — getSessionIds(): string[]
+- createSnapshot · method · L221-L236 — createSnapshot(sessionId: string, state: Record<string, unknown>): Snapshot
+- getLatestSnapshot · method · L238-L240 — getLatestSnapshot(sessionId: string): Snapshot | undefined
+- getEventsAfterSnapshot · method · L242-L247 — getEventsAfterSnapshot(sessionId: string, snapshot: Snapshot): readonly BaseEvent[]
+- flush · method · L249-L251 — flush(): void
+- buildCausalGraph · method · L253-L258 — buildCausalGraph( sessionId: string, ): Map<string, { event: BaseEvent; children: string[] }>
+- findDownstream · method · L260-L267 — findDownstream(eventId: string): BaseEvent[]
+- findIndependentChains · method · L269-L272 — findIndependentChains(sessionId: string): string[][]
+- recover · method · L274-L308 — recover(): void

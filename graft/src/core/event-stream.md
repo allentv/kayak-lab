@@ -1,0 +1,23 @@
+# src/core/event-stream.ts · [[event-sourcing-session-lifecycle]]
+
+- EventStreamError · class · L20-L29 — Base error class for all event stream errors with structured error codes and optional details.
+- constructor · method · L21-L28 — Constructs a structured event stream error with message, error code, and optional details.
+- SequenceError · class · L31-L40 — Error thrown when an event's sequence number doesn't match the expected value for a session.
+- constructor · method · L32-L39 — Creates a sequence error with the expected and actual sequence numbers for a specific session.
+- ValidationError · class · L42-L47 — Error thrown when event validation fails, such as invalid event types.
+- constructor · method · L43-L46 — Creates a validation error with a message and optional details about the validation failure.
+- SessionNotFoundError · class · L49-L54 — Error thrown when attempting to access a session that doesn't exist.
+- constructor · method · L50-L53 — Creates a session not found error for a specific session ID.
+- IEventStream · interface · L63-L106 — Interface defining the contract for event stream operations including appending events, retrieving events, and session management.
+- EventStream · class · L121-L300 — In-memory implementation of an event stream that enforces immutability, strict ordering, session isolation, and event type validation.
+- append · method · L145-L181 — Appends an event to a session's stream after validating event type and sequence number, then notifies subscribers.
+- getEvents · method · L184-L190 — Retrieves all events for a session as an immutable array.
+- getEventsInRange · method · L193-L202 — Retrieves events for a session within a specific sequence number range as an immutable array.
+- getLastEvent · method · L205-L208 — Gets the most recent event for a session, if any exists.
+- getCurrentSequence · method · L211-L213 — Returns the current sequence number for a session (one less than the next expected sequence).
+- hasSession · method · L216-L218 — Checks whether a session exists in the event stream.
+- getSessionIds · method · L221-L223 — Returns an array of all session IDs currently stored in the event stream.
+- onAppend · method · L234-L266 — Subscribes to new event appends, supporting both global and session-scoped subscriptions via overloaded signatures.
+- notifySubscribers · method · L272-L285 — Notifies all subscribers (global and session-scoped) when a new event is appended.
+- totalEvents · method · L288-L294 — Calculates the total number of events across all sessions in the event stream.
+- sessionCount · method · L297-L299 — Returns the number of sessions currently stored in the event stream.

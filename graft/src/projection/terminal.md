@@ -1,0 +1,33 @@
+# src/projection/terminal.ts · [[projection-system]]
+
+- TerminalStyle · interface · L20-L33 — interface TerminalStyle
+- IEventRenderer · interface · L36-L39 — interface IEventRenderer
+- InputHandler · type · L42-L42 — type InputHandler = (input: string) => void | Promise<void>;
+- TerminalProjectionOptions · interface · L45-L54 — interface TerminalProjectionOptions
+- DefaultEventRenderer · class · L63-L167 — class DefaultEventRenderer implements IEventRenderer
+- constructor · method · L66-L68 — constructor(colors = true)
+- render · method · L70-L84 — render(event: BaseEvent): string
+- getStyleForEventType · method · L86-L103 — private getStyleForEventType(type: EventType): TerminalStyle
+- getPrefixForEventType · method · L105-L108 — private getPrefixForEventType(type: EventType): string
+- formatTimestamp · method · L110-L117 — private formatTimestamp(timestamp: string): string
+- formatPayload · method · L119-L132 — private formatPayload(payload: Record<string, unknown>): string
+- colorize · method · L134-L152 — private colorize(text: string, style: TerminalStyle): string
+- getColorCode · method · L154-L166 — private getColorCode(color: string): string
+- TerminalProjection · class · L179-L296 — class TerminalProjection
+- constructor · method · L186-L197 — constructor( protocol: IProjectionProtocol, options: TerminalProjectionOptions = {}, )
+- start · method · L205-L223 — async start( sessionId: string, filterOptions?: SubscriptionOptions, ): Promise<void>
+- callback · function · L210-L212 — callback: EventDeliveryCallback = (event)
+- stop · method · L228-L235 — async stop(): Promise<void>
+- onInput · method · L242-L244 — onInput(handler: InputHandler): void
+- removeInputHandler · method · L251-L253 — removeInputHandler(handler: InputHandler): void
+- getSubscription · method · L258-L260 — getSubscription(): Subscription | null
+- write · method · L267-L276 — write(message: string): void
+- renderEvent · method · L278-L281 — private renderEvent(event: BaseEvent): void
+- setupInputHandling · method · L283-L291 — private async setupInputHandling(): Promise<void>
+- teardownInputHandling · method · L293-L295 — private async teardownInputHandling(): Promise<void>
+- StreamingDisplay · class · L307-L357 — class StreamingDisplay
+- constructor · method · L312-L315 — constructor(terminal: TerminalProjection, maxLines = 100)
+- addLine · method · L322-L331 — addLine(line: string): void
+- clear · method · L336-L339 — clear(): void
+- getBuffer · method · L344-L346 — getBuffer(): readonly string[]
+- redraw · method · L348-L356 — private redraw(): void

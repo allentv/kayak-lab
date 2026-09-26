@@ -1,0 +1,27 @@
+# src/memory/provider.ts · [[memory-system]] [[memory-tiering-l1-l2-l3]]
+
+- MemoryProviderType · type · L23-L23 — Enumeration of supported memory provider implementations (mem0, hindsight, custom) for pluggable storage backends.
+- MemoryProviderConfig · interface · L26-L31 — Configuration object specifying which provider to use and its custom settings for memory operations.
+- MemoryOperationEvent · interface · L38-L46 — Event payload emitted for observability after each memory operation, recording operation type, provider, and metadata.
+- MemoryProviderEvents · interface · L49-L51 — Event map defining the memory_operation event emitted by the provider for monitoring and logging.
+- IMemoryProvider · interface · L66-L95 — Provider-agnostic interface defining core memory operations (retain, recall, reflect, delete, list) plus scenario and core memory methods.
+- ReflectOptions · interface · L98-L107 — Search options for filtering memory reflection queries by type, relevance, session scope, and result limits.
+- ListOptions · interface · L110-L119 — Listing options for filtering memories by type, status, session scope, and limiting result count.
+- MemoryProvider · class · L131-L350 — Concrete provider implementation that wraps a storage backend, emits operation events, and creates memory entries with defaults.
+- constructor · method · L136-L141 — Initializes the provider with configuration and optional storage backend, setting up event emission.
+- providerType · method · L143-L145 — Getter exposing the configured provider type identifier for runtime inspection.
+- config · method · L147-L152 — Getter returning a deep copy of the provider configuration to prevent mutation.
+- retain · method · L154-L166 — Stores a new memory entry by emitting an event, applying defaults, and delegating to the storage backend.
+- recall · method · L168-L175 — Retrieves a memory by ID after emitting an event, delegating to the storage backend.
+- reflect · method · L177-L184 — Searches memories matching a query after emitting an event, delegating to the storage backend.
+- delete · method · L186-L193 — Deletes a memory by ID after emitting an event, delegating to the storage backend.
+- _list · method · L195-L202 — Internal listing method that emits an event and delegates to the storage backend.
+- list · method · L205-L207 — Public alias for _list that ensures interface compliance with the IMemoryProvider contract.
+- writeScenario · method · L213-L221 — Writes scenario memory content for an agent at a given path after validating storage backend.
+- readScenario · method · L223-L231 — Reads scenario memory for an agent at a given path after validating storage backend.
+- listScenarios · method · L233-L241 — Lists scenario memories for an agent optionally filtered by prefix after validating storage backend.
+- deleteScenario · method · L243-L251 — Deletes scenario memory for an agent at a given path after validating storage backend.
+- countScenarios · method · L253-L261 — Counts scenario memories for an agent after validating storage backend.
+- readCore · method · L267-L275 — Reads core memory sections for an agent after validating storage backend.
+- writeCore · method · L277-L285 — Writes core memory sections for an agent after validating storage backend.
+- createMemoryEntry · method · L290-L349 — Creates a typed memory entry with defaults (ID, timestamps, status) and type-specific fields based on input.

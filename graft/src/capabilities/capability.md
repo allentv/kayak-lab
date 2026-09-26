@@ -1,0 +1,21 @@
+# src/capabilities/capability.ts · [[capability-framework]] [[capability-lifecycle-enforcement]]
+
+- RateLimitConfig · interface · L15-L22 — Configures token-bucket rate limiting for capabilities to control burst size and refill rates.
+- CapabilityDefinition · interface · L25-L31 — Defines metadata for registering capabilities including name, description, version, and optional rate limiting.
+- CapabilityContext · interface · L34-L38 — Provides execution context for capabilities including session identifiers and optional working directories and environment variables.
+- CapabilityResult · interface · L41-L46 — Standardizes success/failure outcomes for capability executions with optional data, error details, and metadata.
+- ICapability · interface · L55-L64 — Base contract that all capabilities must implement for initialization, disposal, and providing their definition.
+- CapabilityError · class · L70-L79 — Base error class for capability-related failures that includes the capability name and optional underlying cause.
+- constructor · method · L71-L78 — Constructs a capability error with a message, capability name, and optional underlying cause.
+- CapabilityNotInitializedError · class · L81-L86 — Specialized error thrown when attempting to use a capability that hasn't been properly initialized.
+- constructor · method · L82-L85 — Creates an error indicating a specific capability hasn't been initialized.
+- CapabilityExecutionError · class · L88-L97 — Error thrown when a capability operation fails during execution, capturing the operation name and cause.
+- constructor · method · L89-L96 — Constructs an execution error for a failed capability operation with the operation name and optional cause.
+- CapabilityRegistry · class · L106-L169 — Central registry that manages capability lifecycle including registration, initialization, disposal, and lookup.
+- register · method · L113-L115 — Adds a capability implementation to the registry using its definition name as the key.
+- unregister · method · L120-L123 — Removes a capability from the registry and clears its initialization state, returning whether it existed.
+- get · method · L128-L130 — Retrieves a capability by name from the registry, returning undefined if not found.
+- getAll · method · L135-L137 — Returns all registered capabilities as an array for enumeration or batch operations.
+- initializeAll · method · L142-L149 — Initializes all uninitialized capabilities in the registry with the provided context, tracking which have been initialized.
+- disposeAll · method · L154-L161 — Disposes all initialized capabilities in the registry, cleaning up resources and removing them from the initialized set.
+- isInitialized · method · L166-L168 — Checks whether a specific capability has been initialized by looking it up in the initialized set.

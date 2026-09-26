@@ -1,0 +1,27 @@
+# src/capabilities/git.ts · [[concrete-capabilities]]
+
+- FileStatus · type · L20-L27 — Represents the possible states of a file in Git (untracked, modified, staged, deleted, renamed, copied, or conflicted).
+- GitFileChange · interface · L30-L34 — Describes a single file change in Git with its path, status, and optional old path for renames.
+- GitBranch · interface · L37-L42 — Represents a Git branch with its name, current status, remote flag, and upstream tracking information.
+- GitCommit · interface · L45-L50 — Represents a Git commit with its hash, author, date, and message for tracking changes over time.
+- GitStatus · interface · L53-L60 — Provides a comprehensive snapshot of repository state including branch info, changes, stash count, and sync status.
+- IGitCapability · interface · L69-L105 — Defines the interface for all Git operations that the capability must implement, ensuring consistent version control functionality.
+- GitCapability · class · L114-L481 — Implements Git operations by executing real Git commands via Deno.Command, providing version control capabilities to the application.
+- initialize · method · L123-L125 — Sets up the Git capability by storing the execution context for subsequent command execution.
+- dispose · method · L127-L129 — Cleans up the Git capability by clearing the stored execution context.
+- getStatus · method · L131-L196 — Retrieves comprehensive repository status including branch information, file changes, stash count, and sync metrics.
+- getChanges · method · L198-L206 — Returns only the file changes from the repository status, filtering out other status information.
+- stage · method · L208-L220 — Adds specified files to the staging area using git add, preparing them for commit.
+- unstage · method · L222-L234 — Removes specified files from the staging area using git reset HEAD, undoing the staging operation.
+- commit · method · L236-L260 — Creates a new commit with the given message and returns the commit details including hash and metadata.
+- getHistory · method · L262-L293 — Retrieves recent commit history with configurable limit, parsing Git log output into structured commit objects.
+- getBranches · method · L295-L328 — Lists all local and remote branches, identifying the current branch and upstream relationships.
+- createBranch · method · L330-L342 — Creates a new branch with the specified name using git branch command.
+- switchBranch · method · L344-L356 — Switches to the specified branch using git checkout command.
+- getDiff · method · L358-L379 — Shows differences between working tree, staged changes, or specific files using git diff.
+- push · method · L381-L396 — Pushes local commits to a remote repository, optionally specifying remote and branch.
+- pull · method · L398-L413 — Fetches and merges changes from a remote repository, optionally specifying remote and branch.
+- execute · method · L419-L438 — Executes Git commands via Deno.Command with proper error handling and output decoding.
+- getCurrentBranch · method · L440-L447 — Determines the current branch name using git rev-parse --abbrev-ref HEAD.
+- parseFileStatus · method · L449-L474 — Maps Git porcelain status codes to FileStatus enum values, handling both index and work tree states.
+- ensureInitialized · method · L476-L480 — Validates that the capability has been initialized before allowing Git operations to proceed.

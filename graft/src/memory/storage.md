@@ -1,0 +1,71 @@
+# src/memory/storage.ts · [[memory-system]]
+
+- MemoryStoredEvent · interface · L16-L20 — Event payload emitted when a memory is successfully stored, containing the memory ID and backend used.
+- MemoryFallbackEvent · interface · L23-L29 — Event payload emitted when storage fails on one backend and falls back to another, capturing the reason and transition details.
+- MemoryStorageEvents · interface · L32-L35 — Interface defining the two event types that storage implementations can emit: memory_stored and memory_fallback.
+- StorageBackend · type · L42-L42 — Union type enumerating all possible storage backend identifiers for memory persistence.
+- MemoryStorageConfig · interface · L45-L52 — Configuration structure for memory storage, specifying primary backend, fallback chain order, and backend-specific settings.
+- StorageBackendConfig · interface · L55-L58 — Per-backend configuration structure containing enabled flag and arbitrary settings for storage backend customization.
+- IMemoryStorage · interface · L67-L114 — Core interface defining all memory storage operations including CRUD for memories, scenario memories, and core memories.
+- StorageListOptions · interface · L117-L121 — Options for filtering and paginating memory list queries by type, session ID, and result limit.
+- InMemoryStorage · class · L131-L254 — Fast, non-persistent storage implementation using JavaScript Maps for in-process memory storage that loses data on process exit.
+- store · method · L137-L144 — Stores a memory entry in the in-memory map and emits a storage event with the memory ID and timestamp.
+- retrieve · method · L146-L149 — Retrieves a memory by ID from the in-memory map, returning a copy or null if not found.
+- delete · method · L151-L153 — Deletes a memory by ID from the in-memory map and returns whether the deletion succeeded.
+- list · method · L155-L172 — Lists memories with optional filtering by type and session ID, sorted by creation date with pagination support.
+- isAvailable · method · L174-L176 — Always returns true since in-memory storage is always available within the current process.
+- writeScenario · method · L179-L200 — Creates or updates a scenario memory for an agent at a specific path, generating IDs and timestamps as needed.
+- readScenario · method · L202-L206 — Reads a scenario memory by agent ID and path from the scenarios map, returning a copy or null.
+- listScenarios · method · L208-L212 — Lists all scenarios for an agent, optionally filtered by path prefix, sorted alphabetically by path.
+- deleteScenario · method · L214-L217 — Deletes a scenario memory by agent ID and path from the scenarios map.
+- countScenarios · method · L219-L221 — Counts how many scenarios exist for a given agent ID in the scenarios map.
+- readCore · method · L224-L227 — Reads core memory for an agent from the cores map, returning a copy or null.
+- writeCore · method · L229-L248 — Creates or updates core memory for an agent with the given sections, generating IDs and timestamps as needed.
+- size · method · L251-L253 — Getter that returns the total number of stored memories in the in-memory map for testing purposes.
+- PersistentStorage · class · L265-L376 — Persistent storage implementation that saves memories to a JSON file, providing durability across process restarts.
+- constructor · method · L272-L275 — Initializes persistent storage with a file path for JSON persistence, defaulting to './memory-store.json'.
+- store · method · L277-L286 — Stores a memory entry after ensuring the file is loaded, persists to disk, and emits a storage event.
+- retrieve · method · L288-L292 — Retrieves a memory by ID from the loaded file data after ensuring the storage is ready.
+- delete · method · L294-L299 — Deletes a memory by ID from the loaded data and persists the change to disk if successful.
+- list · method · L301-L319 — Lists memories from the loaded file data with optional filtering and pagination, sorted by creation date.
+- isAvailable · method · L321-L323 — Always returns true since file-based persistent storage is considered always available.
+- size · method · L325-L327 — Getter that returns the total number of stored memories in the persistent map for testing purposes.
+- writeScenario · method · L330-L332 — Throws an error indicating scenario storage is not implemented in the persistent file store.
+- readScenario · method · L333-L333 — Always returns null since scenario storage is not implemented in the persistent file store.
+- listScenarios · method · L334-L334 — Always returns empty array since scenario storage is not implemented in the persistent file store.
+- deleteScenario · method · L335-L335 — Always returns false since scenario storage is not implemented in the persistent file store.
+- countScenarios · method · L336-L336 — Always returns 0 since scenario storage is not implemented in the persistent file store.
+- readCore · method · L339-L339 — Always returns null since core memory storage is not implemented in the persistent file store.
+- writeCore · method · L340-L342 — Throws an error indicating core memory storage is not implemented in the persistent file store.
+- ensureLoaded · method · L344-L353 — Ensures the JSON file is loaded into memory, handling concurrent load requests and preventing redundant loads.
+- persist · method · L355-L358 — Serializes the memory map to JSON and writes it to the configured file path for persistence.
+- load · method · L360-L375 — Loads memories from the JSON file, handling file corruption by starting fresh and ignoring missing files.
+- DistributedStorage · class · L387-L435 — Placeholder distributed storage implementation that requires explicit enabling and throws errors when unavailable.
+- store · method · L391-L393 — Throws an error if distributed storage is not available, otherwise does nothing (placeholder).
+- retrieve · method · L395-L397 — Always returns null since distributed storage is a placeholder implementation.
+- delete · method · L399-L401 — Always returns false since distributed storage is a placeholder implementation.
+- list · method · L403-L405 — Always returns empty array since distributed storage is a placeholder implementation.
+- isAvailable · method · L407-L409 — Returns whether distributed storage has been explicitly enabled via the enable() method.
+- writeScenario · method · L412-L414 — Throws an error indicating distributed storage is not available for scenario operations.
+- readScenario · method · L415-L415 — Always returns null since distributed storage is a placeholder implementation for scenarios.
+- listScenarios · method · L416-L416 — Always returns empty array since distributed storage is a placeholder implementation for scenarios.
+- deleteScenario · method · L417-L417 — Always returns false since distributed storage is a placeholder implementation for scenarios.
+- countScenarios · method · L418-L418 — Always returns 0 since distributed storage is a placeholder implementation for scenarios.
+- readCore · method · L421-L421 — Always returns null since distributed storage is a placeholder implementation for core memory.
+- writeCore · method · L422-L424 — Throws an error indicating distributed storage is not available for core memory operations.
+- enable · method · L427-L429 — Enables distributed storage by setting the availability flag to true for testing purposes.
+- disable · method · L432-L434 — Disables distributed storage by setting the availability flag to false for testing purposes.
+- FallbackStorage · class · L447-L596 — Storage wrapper that attempts operations on multiple backends in sequence, falling back when one fails or is unavailable.
+- constructor · method · L451-L462 — Initializes fallback storage with a chain of backends and forwards their events to the parent emitter.
+- store · method · L464-L497 — Attempts to store a memory on each backend in order, emitting fallback events when switching due to failure or unavailability.
+- retrieve · method · L499-L511 — Attempts to retrieve a memory from each available backend in order until one succeeds or all fail.
+- delete · method · L513-L526 — Attempts to delete a memory from each available backend, returning true if any succeeds.
+- list · method · L528-L539 — Attempts to list memories from the first available backend, falling through if unavailable.
+- isAvailable · method · L541-L546 — Returns true if any backend in the fallback chain is available, providing overall system availability.
+- writeScenario · method · L549-L554 — Delegates scenario writing to the first available backend in the fallback chain.
+- readScenario · method · L555-L560 — Attempts to read a scenario from each available backend in order until one succeeds or all fail.
+- listScenarios · method · L561-L566 — Delegates scenario listing to the first available backend in the fallback chain.
+- deleteScenario · method · L567-L575 — Attempts to delete a scenario from each available backend, returning true if any succeeds.
+- countScenarios · method · L576-L581 — Delegates scenario counting to the first available backend in the fallback chain.
+- readCore · method · L584-L589 — Attempts to read core memory from each available backend in order until one succeeds or all fail.
+- writeCore · method · L590-L595 — Delegates core memory writing to the first available backend in the fallback chain.

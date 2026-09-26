@@ -1,0 +1,21 @@
+# src/tools/registry.ts · [[tool-calling-system]]
+
+- ToolRegistryError · class · L22-L27 — class ToolRegistryError extends Error
+- constructor · method · L23-L26 — constructor(message: string)
+- ToolNotRegisteredError · class · L29-L34 — class ToolNotRegisteredError extends ToolRegistryError
+- constructor · method · L30-L33 — constructor(name: string)
+- ToolRegistryEvents · interface · L41-L53 — interface ToolRegistryEvents
+- IToolRegistry · interface · L62-L79 — interface IToolRegistry
+- ToolRegistry · class · L89-L216 — class ToolRegistry implements IToolRegistry
+- constructor · method · L94-L97 — constructor(events?: ToolRegistryEvents)
+- register · method · L99-L111 — register(definition: IToolDefinition, handler: ToolHandler): void
+- unregister · method · L113-L119 — unregister(name: string): boolean
+- list · method · L121-L123 — list(): ToolRegistration[]
+- get · method · L125-L131 — get(name: string): ToolRegistration
+- has · method · L133-L135 — has(name: string): boolean
+- enable · method · L137-L146 — enable(name: string): void
+- disable · method · L148-L157 — disable(name: string): void
+- isEnabled · method · L159-L162 — isEnabled(name: string): boolean
+- findByCapability · method · L164-L170 — findByCapability(capabilityId: string): ToolRegistration[]
+- findByCategory · method · L172-L176 — findByCategory(categoryId: string): ToolRegistration[]
+- invoke · method · L178-L215 — async invoke( toolCallId: string, toolName: string, params: Record<string, unknown>, context: Omit<ToolHandlerContext, "tool_call_id" | "timeout_ms">, ): Promise<ToolResult>

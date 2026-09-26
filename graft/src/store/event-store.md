@@ -1,0 +1,26 @@
+# src/store/event-store.ts · [[event-sourcing-persistence-system]]
+
+- Snapshot · interface · L23-L28 — interface Snapshot
+- IEventStore · interface · L34-L66 — interface IEventStore
+- EventStore · class · L72-L200 — class EventStore implements IEventStore
+- constructor · method · L77-L79 — constructor(schemaRegistry?: SchemaRegistry)
+- store · method · L81-L85 — store(event: BaseEvent): void
+- migrateIfNeeded · method · L87-L97 — private migrateIfNeeded(events: readonly BaseEvent[]): readonly BaseEvent[]
+- getEvents · method · L99-L102 — getEvents(sessionId: string): readonly BaseEvent[]
+- getEventsInRange · method · L104-L112 — getEventsInRange( sessionId: string, from: number, to: number, ): readonly BaseEvent[]
+- getLastEvent · method · L114-L117 — getLastEvent(sessionId: string): BaseEvent | undefined
+- hasSession · method · L119-L121 — hasSession(sessionId: string): boolean
+- getSessionIds · method · L123-L125 — getSessionIds(): string[]
+- createSnapshot · method · L127-L146 — createSnapshot( sessionId: string, state: Record<string, unknown>, ): Snapshot
+- getLatestSnapshot · method · L148-L151 — getLatestSnapshot(sessionId: string): Snapshot | undefined
+- getEventsAfterSnapshot · method · L153-L161 — getEventsAfterSnapshot( sessionId: string, snapshot: Snapshot, ): readonly BaseEvent[]
+- flush · method · L163-L165 — flush(): void
+- buildCausalGraph · method · L167-L172 — buildCausalGraph( sessionId: string, ): Map<string, { event: BaseEvent; children: string[] }>
+- findDownstream · method · L174-L182 — findDownstream(eventId: string): BaseEvent[]
+- findIndependentChains · method · L184-L187 — findIndependentChains(sessionId: string): string[][]
+- totalEvents · method · L189-L195 — get totalEvents(): number
+- sessionCount · method · L197-L199 — get sessionCount(): number
+- EventStoreBridge · class · L214-L267 — class EventStoreBridge
+- constructor · method · L218-L229 — constructor( private readonly eventStream: EventStream, eventStoreOrConfig?: EventStore | PersistenceConfig, )
+- connect · method · L237-L259 — connect( onEvent?: (event: BaseEvent) => void, ): () => void
+- storeEvent · method · L264-L266 — storeEvent(event: BaseEvent): void

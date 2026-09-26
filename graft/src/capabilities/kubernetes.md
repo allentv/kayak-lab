@@ -1,0 +1,35 @@
+# src/capabilities/kubernetes.ts · [[concrete-capabilities]]
+
+- ResourceStatus · type · L21-L21 — Represents the lifecycle state of a Kubernetes resource such as a pod.
+- ResourcePhase · type · L24-L24 — Represents the operational phase of a Kubernetes namespace.
+- KubernetesPod · interface · L27-L36 — Defines the structure for Kubernetes pod information including status, IP, and restart count.
+- KubernetesService · interface · L39-L47 — Defines the structure for Kubernetes service information including type, cluster IP, and ports.
+- KubernetesServicePort · interface · L50-L55 — Defines the structure for individual ports exposed by a Kubernetes service.
+- KubernetesDeployment · interface · L58-L66 — Defines the structure for Kubernetes deployment information including replica counts and availability.
+- KubernetesNamespace · interface · L69-L74 — Defines the structure for Kubernetes namespace information including status and labels.
+- KubernetesEvent · interface · L77-L83 — Defines the structure for Kubernetes events that track resource state changes and warnings.
+- IKubernetesCapability · interface · L92-L154 — Defines the interface for Kubernetes operations that applications can use to interact with a cluster.
+- KubernetesCapability · class · L166-L594 — Implements Kubernetes API operations using fetch with authentication and error handling.
+- initialize · method · L179-L197 — Sets up Kubernetes API connection by reading environment variables and service account tokens.
+- dispose · method · L199-L202 — Cleans up Kubernetes capability by clearing context and token.
+- listPods · method · L204-L216 — Retrieves all pods in a namespace from the Kubernetes API.
+- getPod · method · L218-L228 — Retrieves a specific pod by name from the Kubernetes API.
+- getPodLogs · method · L230-L265 — Retrieves logs from a pod with optional filtering by container, tail lines, and time window.
+- listServices · method · L267-L279 — Retrieves all services in a namespace from the Kubernetes API.
+- getService · method · L281-L291 — Retrieves a specific service by name from the Kubernetes API.
+- listDeployments · method · L293-L305 — Retrieves all deployments in a namespace from the Kubernetes API.
+- getDeployment · method · L307-L317 — Retrieves a specific deployment by name from the Kubernetes API.
+- scaleDeployment · method · L319-L338 — Changes the replica count of a deployment and returns the updated deployment.
+- listNamespaces · method · L340-L351 — Retrieves all namespaces from the Kubernetes API.
+- getNamespace · method · L353-L362 — Retrieves a specific namespace by name from the Kubernetes API.
+- getEvents · method · L364-L382 — Retrieves events associated with a specific Kubernetes resource.
+- applyManifest · method · L384-L401 — Creates or updates a Kubernetes resource from a YAML/JSON manifest.
+- deleteResource · method · L403-L418 — Deletes a Kubernetes resource by type and name.
+- request · method · L424-L457 — Makes authenticated HTTP requests to the Kubernetes API with proper error handling.
+- parsePod · method · L459-L483 — Transforms raw Kubernetes API pod data into the typed KubernetesPod structure.
+- parseService · method · L485-L503 — Transforms raw Kubernetes API service data into the typed KubernetesService structure.
+- parseDeployment · method · L505-L518 — Transforms raw Kubernetes API deployment data into the typed KubernetesDeployment structure.
+- parseNamespace · method · L520-L529 — Transforms raw Kubernetes API namespace data into the typed KubernetesNamespace structure.
+- parseEvent · method · L531-L539 — Transforms raw Kubernetes API event data into the typed KubernetesEvent structure.
+- getApiPath · method · L541-L587 — Constructs the appropriate API path for a Kubernetes resource based on its kind and API version.
+- ensureInitialized · method · L589-L593 — Ensures the capability has been initialized before performing operations.

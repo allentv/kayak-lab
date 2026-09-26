@@ -1,0 +1,41 @@
+# src/projection/vscode.ts · [[projection-system]]
+
+- AgentState · type · L17-L17 — type AgentState = "active" | "idle" | "error";
+- SessionTreeItem · interface · L44-L51 — interface SessionTreeItem
+- TreeItem · interface · L54-L60 — interface TreeItem
+- IOutputChannel · interface · L63-L69 — interface IOutputChannel
+- IStatusBarItem · interface · L72-L80 — interface IStatusBarItem
+- IVSCodeProjection · interface · L89-L107 — interface IVSCodeProjection
+- SessionTreeDataProvider · class · L116-L161 — class SessionTreeDataProvider
+- onDidChangeTreeData · method · L121-L128 — onDidChangeTreeData(listener: () => void): () => void
+- getTreeItem · method · L131-L139 — getTreeItem(element: SessionTreeItem): TreeItem
+- getChildren · method · L142-L147 — getChildren(element?: SessionTreeItem): SessionTreeItem[]
+- refresh · method · L150-L160 — refresh(sessions: Session[], eventCounts: Map<string, number>): void
+- EventFormatter · class · L170-L184 — class EventFormatter
+- format · method · L172-L178 — format(event: BaseEvent): string
+- getColor · method · L181-L183 — getColor(eventType: EventType): string | undefined
+- VSCodeProjection · class · L193-L272 — class VSCodeProjection implements IVSCodeProjection
+- constructor · method · L200-L209 — constructor( treeDataProvider: SessionTreeDataProvider, outputChannel: IOutputChannel, statusBar: IStatusBarItem, )
+- renderEvent · method · L212-L221 — renderEvent(event: BaseEvent): void
+- updateSessionList · method · L224-L228 — updateSessionList(sessions: Session[]): void
+- updateStatusBar · method · L231-L250 — updateStatusBar(state: AgentState, sessionName?: string): void
+- setFilters · method · L253-L255 — setFilters(types: Set<string>): void
+- clearOutput · method · L258-L260 — clearOutput(): void
+- showOutput · method · L263-L265 — showOutput(): void
+- dispose · method · L268-L271 — dispose(): void
+- ClientMessage · type · L279-L284 — type ClientMessage = | { type: "subscribe"; session_id?: string; event_types?: string[] } | { type: "unsubscribe" } | { type: "reconnect"; session_id: string; last_event_id: string } | { type: "ping" } | { type: "pong" };
+- ServerMessage · type · L287-L293 — type ServerMessage = | { type: "welcome"; client_id: string; server_time: string } | { type: "event"; event: BaseEvent } | { type: "error"; code: string; message: string } | { type: "ping" } | { type: "pong" } | { type: "close"; reason: string };
+- VSCodeWebSocketClientConfig · interface · L296-L300 — interface VSCodeWebSocketClientConfig
+- VSCodeWebSocketClient · class · L306-L416 — class VSCodeWebSocketClient
+- constructor · method · L314-L320 — constructor(config: VSCodeWebSocketClientConfig)
+- connect · method · L323-L355 — connect(): void
+- subscribe · method · L358-L360 — subscribe(sessionId: string, eventTypes?: string[]): void
+- unsubscribe · method · L363-L365 — unsubscribe(): void
+- onEvent · method · L368-L373 — onEvent(listener: (event: BaseEvent) => void): () => void
+- onStateChange · method · L376-L381 — onStateChange(listener: (state: "connected" | "disconnected" | "reconnecting") => void): () => void
+- disconnect · method · L384-L394 — disconnect(): void
+- send · method · L396-L400 — private send(msg: ClientMessage): void
+- scheduleReconnect · method · L402-L411 — private scheduleReconnect(): void
+- notifyState · method · L413-L415 — private notifyState(state: "connected" | "disconnected" | "reconnecting"): void
+- VSCodeProjectionBundle · interface · L423-L426 — interface VSCodeProjectionBundle
+- createVSCodeProjection · function · L431-L457 — function createVSCodeProjection( treeDataProvider: SessionTreeDataProvider, outputChannel: IOutputChannel, statusBar: IStatusBarItem, wsConfig: VSCodeWebSocketClientConfig, ): VSCodeProjectionBundle

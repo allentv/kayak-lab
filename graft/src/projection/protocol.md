@@ -1,0 +1,27 @@
+# src/projection/protocol.ts · [[projection-system]]
+
+- SubscriptionId · type · L15-L15 — type SubscriptionId = string;
+- ProjectionState · type · L18-L18 — type ProjectionState = "active" | "paused" | "closed";
+- EventFilter · interface · L21-L28 — interface EventFilter
+- SubscriptionOptions · interface · L31-L38 — interface SubscriptionOptions
+- Subscription · interface · L41-L52 — interface Subscription
+- EventDeliveryCallback · type · L55-L58 — type EventDeliveryCallback = ( event: BaseEvent, subscription: Subscription, ) => void | Promise<void>;
+- DeliveryErrorCallback · type · L61-L64 — type DeliveryErrorCallback = ( error: Error, subscription: Subscription, ) => void;
+- IProjectionProtocol · interface · L73-L129 — interface IProjectionProtocol
+- ProjectionProtocol · class · L141-L423 — class ProjectionProtocol implements IProjectionProtocol
+- constructor · method · L149-L151 — constructor(eventStream: IEventStream)
+- subscribe · method · L153-L198 — subscribe( session_id: string, callback: EventDeliveryCallback, options?: SubscriptionOptions, ): Subscription
+- unsubscribe · method · L200-L226 — unsubscribe(subscription_id: SubscriptionId): void
+- pause · method · L228-L240 — pause(subscription_id: SubscriptionId): void
+- resume · method · L242-L255 — resume(subscription_id: SubscriptionId): void
+- getSubscription · method · L257-L268 — getSubscription(subscription_id: SubscriptionId): Subscription | undefined
+- getSubscriptionsForSession · method · L270-L281 — getSubscriptionsForSession(session_id: string): Subscription[]
+- onError · method · L283-L285 — onError(handler: DeliveryErrorCallback): void
+- deliverExistingEvents · method · L287-L300 — private async deliverExistingEvents(state: SubscriptionState): Promise<void>
+- startEventMonitoring · method · L302-L340 — private startEventMonitoring(state: SubscriptionState): void
+- poll · function · L304-L336 — poll = async ()
+- deliverEvent · method · L342-L372 — private async deliverEvent( event: BaseEvent, state: SubscriptionState, ): Promise<void>
+- matchesFilter · method · L374-L402 — private matchesFilter( event: BaseEvent, filter: EventFilter | undefined, ): boolean
+- handleError · method · L404-L418 — private handleError(error: Error, state: SubscriptionState): void
+- generateSubscriptionId · method · L420-L422 — private generateSubscriptionId(): SubscriptionId
+- SubscriptionState · interface · L430-L439 — interface SubscriptionState

@@ -1,0 +1,39 @@
+# src/runtime/agent-runtime.ts · [[hook-based-extensibility]] [[runtime-orchestration]]
+
+- AgentConfig · interface · L54-L71 — interface AgentConfig
+- AgentState · interface · L74-L79 — interface AgentState
+- AgentEvents · interface · L82-L90 — interface AgentEvents
+- AgentError · class · L96-L107 — class AgentError extends Error
+- constructor · method · L99-L106 — constructor( message: string, cause?: Error, )
+- AgentNotRunningError · class · L109-L114 — class AgentNotRunningError extends AgentError
+- constructor · method · L110-L113 — constructor()
+- ContextManager · class · L123-L182 — class ContextManager
+- constructor · method · L127-L129 — constructor(maxMessages: number = 100)
+- add · method · L134-L137 — add(message: Message): void
+- getAll · method · L142-L144 — getAll(): Message[]
+- length · method · L149-L151 — get length(): number
+- clear · method · L156-L158 — clear(): void
+- trim · method · L163-L181 — private trim(): void
+- AgentRuntime · class · L192-L1092 — class AgentRuntime
+- constructor · method · L223-L261 — constructor( eventStream: IEventStream, sessionManager: ISessionManager, modelManager: ModelManager, toolRegistry: ToolRegistry, config: AgentConfig = {}, events: AgentEvents = {}, selfObservation?: ISelfObservation, newToolRegistry?: INewToolRegistry, memoryComponents?: { provider?: IMemoryProvider; retrieval?: IMemoryRetrieval; update?: IMemoryUpdate; shared?: ISharedMemory; }, provenanceOptions?: { dataDir?: string; }, hookRegistry?: HookRegistry, )
+- start · method · L266-L317 — async start(sessionId?: string): Promise<string>
+- stop · method · L322-L346 — async stop(): Promise<void>
+- processInput · method · L351-L383 — async processInput(input: string): Promise<string>
+- processInputStreaming · method · L388-L422 — async *processInputStreaming( input: string, ): AsyncIterable<string | StreamDelta>
+- getState · method · L427-L429 — getState(): AgentState | null
+- getContext · method · L434-L436 — getContext(): Message[]
+- getHookRegistry · method · L441-L443 — getHookRegistry(): HookRegistry
+- runLoop · method · L452-L615 — private async runLoop(goalNodeId?: string): Promise<string>
+- runLoopStreaming · method · L620-L827 — private async *runLoopStreaming(goalNodeId?: string): AsyncIterable<string | StreamDelta>
+- buildModelRequest · method · L832-L858 — private buildModelRequest(): ModelRequest
+- executeToolCalls · method · L865-L967 — private async executeToolCalls(toolCalls: ToolCall[]): Promise<ToolResult[]>
+- toolTimeoutPromise · method · L973-L979 — private toolTimeoutPromise<T>(ms: number, toolCall: ToolCall): Promise<T>
+- retrieveMemory · method · L989-L995 — async retrieveMemory(options?: RetrievalOptions): Promise<AnyMemory[]>
+- storeMemory · method · L1000-L1005 — async storeMemory(input: CreateMemoryInput): Promise<AnyMemory | null>
+- autoStoreMemory · method · L1010-L1015 — async autoStoreMemory(input: CreateMemoryInput): Promise<AnyMemory | null>
+- updateMemory · method · L1020-L1025 — async updateMemory(id: string, input: UpdateMemoryInput): Promise<AnyMemory | null>
+- getMemorySnapshot · method · L1030-L1035 — async getMemorySnapshot(options?: SnapshotOptions): Promise<MemorySnapshot | null>
+- referenceMemory · method · L1040-L1045 — async referenceMemory(memoryId: string): Promise<AnyMemory | null>
+- hasMemory · method · L1050-L1055 — hasMemory(): boolean
+- setMemoryComponents · method · L1060-L1070 — setMemoryComponents(components: { provider?: IMemoryProvider; retrieval?: IMemoryRetrieval; update?: IMemoryUpdate; shared?: ISharedMemory; }): void
+- appendEvent · method · L1075-L1091 — private async appendEvent( eventType: string, payload: Record<string, unknown>, ): Promise<void>

@@ -1,0 +1,29 @@
+# src/core/config.ts
+
+- PersistenceConfig · interface · L15-L18 — interface PersistenceConfig
+- CapabilityConfig · interface · L21-L25 — interface CapabilityConfig
+- TelemetryConfig · interface · L28-L31 — interface TelemetryConfig
+- AppConfig · interface · L34-L38 — interface AppConfig
+- ConfigValidationError · interface · L41-L44 — interface ConfigValidationError
+- ConfigValidationResult · type · L47-L49 — type ConfigValidationResult = | { valid: true; config: AppConfig } | { valid: false; errors: ConfigValidationError[] };
+- validateConfig · function · L78-L142 — function validateConfig(raw: unknown): ConfigValidationResult
+- mergeConfig · function · L151-L171 — function mergeConfig(target: AppConfig, source: Partial<AppConfig>): AppConfig
+- parseEnvOverrides · function · L177-L209 — function parseEnvOverrides(envPrefix = "KAYAK_"): Record<string, unknown>
+- loadConfig · function · L216-L245 — async function loadConfig(configDir: string): Promise<AppConfig>
+- parseYaml · function · L255-L294 — function parseYaml(content: string): Record<string, unknown>
+- parseYamlArray · function · L296-L300 — function parseYamlArray(value: string): unknown[]
+- parseYamlValue · function · L302-L313 — function parseYamlValue(value: string): unknown
+- maskSecrets · function · L331-L346 — function maskSecrets(config: AppConfig): AppConfig
+- maskObj · function · L334-L342 — function maskObj(obj: Record<string, unknown>): void
+- configToString · function · L351-L353 — function configToString(config: AppConfig): string
+- ConfigChangeListener · type · L360-L360 — type ConfigChangeListener = (config: AppConfig) => void;
+- TimerHandle · type · L363-L363 — type TimerHandle = ReturnType<typeof setTimeout>;
+- ConfigWatcher · class · L371-L474 — class ConfigWatcher
+- constructor · method · L379-L382 — constructor(configDir: string, initialConfig: AppConfig)
+- config · method · L387-L389 — get config(): AppConfig
+- onChange · method · L395-L400 — onChange(listener: ConfigChangeListener): () => void
+- start · method · L405-L415 — async start(): Promise<void>
+- stop · method · L420-L424 — stop(): void
+- updateConfig · method · L429-L432 — updateConfig(config: AppConfig): void
+- handleFileChange · method · L437-L460 — private async handleFileChange(event: Deno.FsEvent): Promise<void>
+- notifyListeners · method · L465-L473 — private notifyListeners(): void

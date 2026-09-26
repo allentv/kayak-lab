@@ -1,0 +1,21 @@
+# src/__test-utils__/mocks/mock-github.ts
+
+- MockGitHubCapabilityConfig · interface · L23-L29 — interface MockGitHubCapabilityConfig
+- MockGitHubCapability · class · L31-L289 — class MockGitHubCapability implements IGitHubCapability
+- constructor · method · L43-L45 — constructor(config: MockGitHubCapabilityConfig = {})
+- initialize · method · L47-L52 — async initialize(_context: CapabilityContext): Promise<void>
+- dispose · method · L54-L56 — async dispose(): Promise<void>
+- getRepository · method · L58-L70 — async getRepository(): Promise<CapabilityResult<GitHubRepository>>
+- listIssues · method · L72-L83 — async listIssues(options?: { state?: IssueState; labels?: string[]; assignee?: string; limit?: number; }): Promise<CapabilityResult<GitHubIssue[]>>
+- getIssue · method · L85-L102 — async getIssue(number: number): Promise<CapabilityResult<GitHubIssue>>
+- createIssue · method · L104-L125 — async createIssue(issue: { title: string; body?: string; labels?: string[]; assignees?: string[]; }): Promise<CapabilityResult<GitHubIssue>>
+- updateIssue · method · L127-L152 — async updateIssue( number: number, update: { title?: string; body?: string; state?: IssueState; labels?: string[]; assignees?: string[]; }, ): Promise<CapabilityResult<GitHubIssue>>
+- listPullRequests · method · L154-L163 — async listPullRequests(options?: { state?: PullRequestState; limit?: number; }): Promise<CapabilityResult<GitHubPullRequest[]>>
+- getPullRequest · method · L165-L185 — async getPullRequest( number: number, ): Promise<CapabilityResult<GitHubPullRequest>>
+- createPullRequest · method · L187-L209 — async createPullRequest(pr: { title: string; body?: string; head: string; base: string; }): Promise<CapabilityResult<GitHubPullRequest>>
+- mergePullRequest · method · L211-L233 — async mergePullRequest( number: number, options?: { merge_method?: "merge" | "squash" | "rebase"; commit_title?: string; }, ): Promise<CapabilityResult<GitHubPullRequest>>
+- listIssueComments · method · L235-L247 — async listIssueComments( _issueNumber: number, _limit?: number, ): Promise<CapabilityResult<GitHubComment[]>>
+- createIssueComment · method · L249-L267 — async createIssueComment( _issueNumber: number, body: string, ): Promise<CapabilityResult<GitHubComment>>
+- listWorkflows · method · L269-L275 — async listWorkflows( _owner: string, _repo: string, ): Promise<CapabilityResult<GitHubWorkflow[]>>
+- getWorkflowRuns · method · L277-L284 — async getWorkflowRuns( _owner: string, _repo: string, _workflowId?: string, ): Promise<CapabilityResult<GitHubWorkflowRun[]>>
+- resetCalls · method · L286-L288 — resetCalls(): void

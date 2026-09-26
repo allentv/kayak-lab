@@ -1,0 +1,34 @@
+# src/capabilities/github.ts · [[concrete-capabilities]]
+
+- IssueState · type · L21-L21 — Defines the possible states of a GitHub issue as either open or closed.
+- PullRequestState · type · L24-L24 — Defines the possible states of a GitHub pull request as open, closed, or merged.
+- GitHubIssue · interface · L27-L37 — Represents a GitHub issue with its metadata including number, title, state, assignees, labels, and timestamps.
+- GitHubPullRequest · interface · L40-L51 — Represents a GitHub pull request with its metadata including number, title, state, head/base branches, merge status, and timestamps.
+- GitHubRepository · interface · L54-L60 — Represents a GitHub repository with its name, description, privacy status, and default branch.
+- GitHubComment · interface · L63-L69 — Represents a comment on a GitHub issue with its content, author, and timestamps.
+- GitHubWorkflow · interface · L72-L81 — Represents a GitHub Actions workflow with its ID, name, path, state, and timestamps.
+- GitHubWorkflowRun · interface · L84-L92 — Represents a GitHub Actions workflow run with its ID, status, conclusion, and timestamps.
+- IGitHubCapability · interface · L101-L183 — Defines the interface for GitHub operations including repository access, issue/PR management, comments, and workflow actions.
+- GitHubCapability · class · L192-L629 — Implements GitHub REST API operations with proper authentication, error handling, and rate limit management.
+- initialize · method · L206-L220 — Sets up the GitHub capability by reading required environment variables (token, owner, repo) and validating their presence.
+- dispose · method · L222-L228 — Cleans up the GitHub capability by resetting all stored credentials and configuration to their default values.
+- getRepository · method · L230-L248 — Fetches repository information from GitHub API and maps it to the local repository interface.
+- listIssues · method · L250-L278 — Lists GitHub issues with optional filtering by state, labels, assignee, and limit, while excluding pull requests that GitHub returns as issues.
+- getIssue · method · L280-L289 — Retrieves a specific GitHub issue by its number and parses the API response into the local issue format.
+- createIssue · method · L291-L310 — Creates a new GitHub issue with the provided title, body, labels, and assignees.
+- updateIssue · method · L312-L336 — Updates an existing GitHub issue with optional changes to title, body, state, labels, or assignees.
+- listPullRequests · method · L338-L357 — Lists GitHub pull requests with optional filtering by state and limit.
+- getPullRequest · method · L359-L368 — Retrieves a specific GitHub pull request by its number and parses the API response.
+- createPullRequest · method · L370-L389 — Creates a new GitHub pull request with the provided title, body, head, and base branches.
+- mergePullRequest · method · L391-L412 — Merges a pull request using the specified merge method, then fetches the updated PR state to confirm success.
+- listIssueComments · method · L414-L435 — Lists comments on a GitHub issue with optional limit for pagination control.
+- createIssueComment · method · L437-L453 — Creates a new comment on a GitHub issue with the provided body text.
+- listWorkflows · method · L459-L470 — Lists GitHub Actions workflows for a specified repository.
+- getWorkflowRuns · method · L472-L490 — Lists GitHub Actions workflow runs, optionally scoped to a specific workflow ID.
+- request · method · L496-L541 — Handles authenticated HTTP requests to GitHub API with proper headers, rate limit detection, and error handling.
+- parseIssue · method · L543-L559 — Parses raw GitHub API issue data into the structured GitHubIssue interface, extracting nested user, label, and assignee information.
+- parsePR · method · L561-L586 — Parses raw GitHub API pull request data into the structured GitHubPullRequest interface, determining the correct state based on merge status.
+- parseComment · method · L588-L598 — Parses raw GitHub API comment data into the structured GitHubComment interface.
+- parseWorkflow · method · L600-L610 — Parses raw GitHub API workflow data into the structured GitHubWorkflow interface.
+- parseWorkflowRun · method · L612-L622 — Parses raw GitHub API workflow run data into the structured GitHubWorkflowRun interface.
+- ensureInitialized · method · L624-L628 — Ensures the GitHub capability is properly initialized before any API operation, throwing an error if required credentials are missing.
