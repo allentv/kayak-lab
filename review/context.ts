@@ -51,10 +51,10 @@ export async function buildContext(srcRoot: string): Promise<ReviewContext> {
     if (path.includes("__tests__")) continue;
     if (!entry.path.includes("/src/")) continue;
 
+    // src/foo.ts → src/__tests__/foo.test.ts
     const testPath = path
       .replace(/\/src\//, "/src/")
-      .replace(/\.ts$/, ".test.ts")
-      .replace(/([^/]+)\.ts$/, "__tests__/$1.test.ts");
+      .replace(/\/([^/]+)\.ts$/, "/__tests__/$1.test.ts");
 
     if (files.has(testPath)) {
       sourceToTest.set(path, testPath);
