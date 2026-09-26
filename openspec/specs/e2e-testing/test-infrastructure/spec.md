@@ -1,6 +1,7 @@
-# e2e-testing/test-infrastructure Specification
+# test-infrastructure Specification
 
 ## Purpose
+
 Reusable test helpers for starting the harness as a subprocess, making typed HTTP requests, and connecting WebSocket clients — all without importing from `src/`.
 
 ## Requirements
@@ -32,6 +33,14 @@ The test infrastructure SHALL provide a typed client for all harness API endpoin
 #### Scenario: Health check
 - **WHEN** `client.getHealth()` is called
 - **THEN** it returns `{ status: string, uptime: number, session_count: number, event_count: number }`
+
+#### Scenario: Create session
+- **WHEN** `client.createSession(description?)` is called
+- **THEN** it sends `POST /api/sessions` and returns the created session summary
+
+#### Scenario: Patch session
+- **WHEN** `client.patchSession(id, action, error?)` is called
+- **THEN** it sends `PATCH /api/sessions/:id` with the action payload and returns the updated session summary; throws `HttpError` on non-2xx responses
 
 #### Scenario: List sessions
 - **WHEN** `client.getSessions()` is called
@@ -76,3 +85,12 @@ The test infrastructure SHALL provide a WebSocket client that can connect, subsc
 #### Scenario: Disconnect
 - **WHEN** `client.close()` is called
 - **THEN** the WebSocket is closed and the connection is cleaned up
+
+#### Scenario: Send message
+- **WHEN** `client.send(message)` is called with a JSON object
+- **THEN** the message is sent as a JSON string over the WebSocket
+
+#### Scenario: Collect events with timeout
+- **WHEN** `client.collectEvents(count, timeoutMs)` is called
+- **THEN** it waits for `count` events or `timeoutMs` milliseconds, whichever comes first
+- **THEN** returns the collected events (possibly fewer than `count` if timeout)
