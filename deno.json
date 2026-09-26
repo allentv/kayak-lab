@@ -27,7 +27,7 @@
     "lint": "deno lint",
     "check": "deno check src/**/*.ts",
     "verify": "deno task check && deno task lint && deno task test",
-    "review": "deno run -A review/cli.ts"
+    "review": "deno run -A tools/review/cli.ts"
   },
   "lint": {
     "rules": {

@@ -3,10 +3,10 @@ import { loadChecks, loadDelegates } from "./registry.ts";
 import { formatFindings } from "./formatter.ts";
 import type { Finding } from "./types.ts";
 
-const ROOT_DIR = new URL("../", import.meta.url).pathname;
+const ROOT_DIR = new URL("../../", import.meta.url).pathname;
 const SRC_DIR = `${ROOT_DIR}src`;
-const CHECKS_DIR = `${ROOT_DIR}review/checks`;
-const DELEGATE_DIR = `${ROOT_DIR}review/delegate`;
+const CHECKS_DIR = `${ROOT_DIR}tools/review/checks`;
+const DELEGATE_DIR = `${ROOT_DIR}tools/review/delegate`;
 
 function parseArgs(args: string[]): {
   only: string[];
