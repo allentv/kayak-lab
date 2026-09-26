@@ -21,6 +21,70 @@ links:
       are operational.
 generator:
   version: 1
+covers:
+  - symbol: createEventStoreHealthCheck
+    kind: function
+    at: 'src/core/component-health.ts:L16-L39'
+  - symbol: createCapabilityHealthCheck
+    kind: function
+    at: 'src/core/component-health.ts:L45-L79'
+  - symbol: createWebSocketHealthCheck
+    kind: function
+    at: 'src/core/component-health.ts:L85-L126'
+  - symbol: ComponentHealth
+    kind: interface
+    at: 'src/core/health.ts:L13-L22'
+  - symbol: AggregateStatus
+    kind: type
+    at: 'src/core/health.ts:L25-L25'
+  - symbol: HealthCheckResult
+    kind: interface
+    at: 'src/core/health.ts:L28-L35'
+  - symbol: ErrorResponse
+    kind: interface
+    at: 'src/core/health.ts:L38-L45'
+  - symbol: HealthCheckFn
+    kind: type
+    at: 'src/core/health.ts:L52-L52'
+  - symbol: HealthRegistry
+    kind: class
+    at: 'src/core/health.ts:L63-L158'
+  - symbol: constructor
+    kind: method
+    at: 'src/core/health.ts:L67-L69'
+  - symbol: register
+    kind: method
+    at: 'src/core/health.ts:L74-L76'
+  - symbol: deregister
+    kind: method
+    at: 'src/core/health.ts:L81-L83'
+  - symbol: check
+    kind: method
+    at: 'src/core/health.ts:L89-L117'
+  - symbol: runCheck
+    kind: method
+    at: 'src/core/health.ts:L122-L146'
+  - symbol: timeoutPromise
+    kind: method
+    at: 'src/core/health.ts:L151-L157'
+  - symbol: createHealthHandler
+    kind: function
+    at: 'src/core/health.ts:L167-L187'
+  - symbol: handleHealth
+    kind: function
+    at: 'src/core/health.ts:L189-L200'
+  - symbol: handleReady
+    kind: function
+    at: 'src/core/health.ts:L202-L213'
+  - symbol: handleAlive
+    kind: function
+    at: 'src/core/health.ts:L215-L223'
+  - symbol: errorResponse
+    kind: function
+    at: 'src/core/health.ts:L232-L245'
+  - symbol: errorHttpResponse
+    kind: function
+    at: 'src/core/health.ts:L250-L263'
 ---
 <!-- context:generated:start -->
 ## Summary

@@ -23,6 +23,154 @@ links:
     description: Concrete runtimes enforce these security constraints
 generator:
   version: 1
+covers:
+  - symbol: DirectoryEntry
+    kind: interface
+    at: 'src/capabilities/file.ts:L24-L27'
+  - symbol: FileReadData
+    kind: type
+    at: 'src/capabilities/file.ts:L30-L33'
+  - symbol: FileReadOptions
+    kind: interface
+    at: 'src/capabilities/file.ts:L36-L39'
+  - symbol: FileEditOptions
+    kind: interface
+    at: 'src/capabilities/file.ts:L42-L44'
+  - symbol: FileWriteData
+    kind: interface
+    at: 'src/capabilities/file.ts:L47-L50'
+  - symbol: FileEditData
+    kind: interface
+    at: 'src/capabilities/file.ts:L52-L55'
+  - symbol: IFileCapability
+    kind: interface
+    at: 'src/capabilities/file.ts:L64-L79'
+  - symbol: toBase64
+    kind: function
+    at: 'src/capabilities/file.ts:L112-L120'
+  - symbol: looksBinary
+    kind: function
+    at: 'src/capabilities/file.ts:L123-L128'
+  - symbol: mimeTypeFor
+    kind: function
+    at: 'src/capabilities/file.ts:L130-L133'
+  - symbol: FileCapability
+    kind: class
+    at: 'src/capabilities/file.ts:L138-L382'
+  - symbol: initialize
+    kind: method
+    at: 'src/capabilities/file.ts:L148-L151'
+  - symbol: dispose
+    kind: method
+    at: 'src/capabilities/file.ts:L153-L156'
+  - symbol: read
+    kind: method
+    at: 'src/capabilities/file.ts:L158-L229'
+  - symbol: write
+    kind: method
+    at: 'src/capabilities/file.ts:L231-L263'
+  - symbol: edit
+    kind: method
+    at: 'src/capabilities/file.ts:L265-L322'
+  - symbol: resolveWithinRoot
+    kind: method
+    at: 'src/capabilities/file.ts:L329-L334'
+  - symbol: assertRealPathInsideRoot
+    kind: method
+    at: 'src/capabilities/file.ts:L340-L353'
+  - symbol: getRealRoot
+    kind: method
+    at: 'src/capabilities/file.ts:L355-L365'
+  - symbol: assertInside
+    kind: method
+    at: 'src/capabilities/file.ts:L367-L375'
+  - symbol: ensureInitialized
+    kind: method
+    at: 'src/capabilities/file.ts:L377-L381'
+  - symbol: selectLines
+    kind: function
+    at: 'src/capabilities/file.ts:L392-L408'
+  - symbol: DockerRuntimeConfig
+    kind: interface
+    at: 'src/capabilities/sandbox/docker-runtime.ts:L34-L41'
+  - symbol: DockerRuntime
+    kind: class
+    at: 'src/capabilities/sandbox/docker-runtime.ts:L46-L374'
+  - symbol: constructor
+    kind: method
+    at: 'src/capabilities/sandbox/docker-runtime.ts:L50-L53'
+  - symbol: execute
+    kind: method
+    at: 'src/capabilities/sandbox/docker-runtime.ts:L55-L130'
+  - symbol: healthCheck
+    kind: method
+    at: 'src/capabilities/sandbox/docker-runtime.ts:L132-L271'
+  - symbol: setup
+    kind: method
+    at: 'src/capabilities/sandbox/docker-runtime.ts:L273-L282'
+  - symbol: buildDockerArgs
+    kind: method
+    at: 'src/capabilities/sandbox/docker-runtime.ts:L287-L348'
+  - symbol: extractOutput
+    kind: method
+    at: 'src/capabilities/sandbox/docker-runtime.ts:L353-L373'
+  - symbol: GVisorRuntimeConfig
+    kind: interface
+    at: 'src/capabilities/sandbox/gvisor-runtime.ts:L11-L16'
+  - symbol: GVisorRuntime
+    kind: class
+    at: 'src/capabilities/sandbox/gvisor-runtime.ts:L21-L72'
+  - symbol: constructor
+    kind: method
+    at: 'src/capabilities/sandbox/gvisor-runtime.ts:L22-L27'
+  - symbol: healthCheck
+    kind: method
+    at: 'src/capabilities/sandbox/gvisor-runtime.ts:L29-L71'
+  - symbol: ShellExecOptions
+    kind: interface
+    at: 'src/capabilities/shell.ts:L20-L31'
+  - symbol: ShellExecResult
+    kind: interface
+    at: 'src/capabilities/shell.ts:L34-L45'
+  - symbol: ShellEnvironment
+    kind: interface
+    at: 'src/capabilities/shell.ts:L48-L54'
+  - symbol: IShellCapability
+    kind: interface
+    at: 'src/capabilities/shell.ts:L63-L81'
+  - symbol: ShellCapability
+    kind: class
+    at: 'src/capabilities/shell.ts:L120-L335'
+  - symbol: initialize
+    kind: method
+    at: 'src/capabilities/shell.ts:L131-L134'
+  - symbol: dispose
+    kind: method
+    at: 'src/capabilities/shell.ts:L136-L138'
+  - symbol: exec
+    kind: method
+    at: 'src/capabilities/shell.ts:L140-L237'
+  - symbol: getEnvironment
+    kind: method
+    at: 'src/capabilities/shell.ts:L239-L258'
+  - symbol: commandExists
+    kind: method
+    at: 'src/capabilities/shell.ts:L260-L278'
+  - symbol: getWorkingDirectory
+    kind: method
+    at: 'src/capabilities/shell.ts:L280-L283'
+  - symbol: setWorkingDirectory
+    kind: method
+    at: 'src/capabilities/shell.ts:L285-L308'
+  - symbol: checkBlocked
+    kind: method
+    at: 'src/capabilities/shell.ts:L310-L318'
+  - symbol: checkDangerous
+    kind: method
+    at: 'src/capabilities/shell.ts:L320-L328'
+  - symbol: ensureInitialized
+    kind: method
+    at: 'src/capabilities/shell.ts:L330-L334'
 ---
 <!-- context:generated:start -->
 ## Summary

@@ -1,8 +1,8 @@
 {
   "meta": {
     "version": 1,
-    "nodeCount": 2096,
-    "edgeCount": 3982,
+    "nodeCount": 2120,
+    "edgeCount": 4103,
     "languages": [
       "tsx",
       "typescript"
@@ -87,13 +87,13 @@
       "name": "test-pairing.ts",
       "kind": "file",
       "path": "review/checks/test-pairing.ts",
-      "span": "L1-L34",
+      "span": "L1-L37",
       "signature": null,
       "exported": true,
       "origin": "ast",
-      "body_hash": "e92a5e9d8ceb1e0f22efaf345cd6df7fb79f351a22803d1a8249951feafb9373",
-      "chars": 919,
-      "summary_state": "ready",
+      "body_hash": "322f984354e3503c7261369fcf15fe6b08933a69719cb482c78dc77659fe1cb3",
+      "chars": 1098,
+      "summary_state": "stale",
       "summary": "A review check that identifies source files lacking corresponding test files to ensure test coverage for production code.",
       "crux": null
     },
@@ -102,12 +102,12 @@
       "name": "run",
       "kind": "method",
       "path": "review/checks/test-pairing.ts",
-      "span": "L6-L30",
+      "span": "L6-L33",
       "signature": "async run(ctx: ReviewContext): Promise<Finding[]>",
       "exported": false,
       "origin": "ast",
-      "body_hash": "19c49fe19342efcbc711ccfeb53db84c451c0a9d98f3f116845ea7952906d390",
-      "summary_state": "ready",
+      "body_hash": "1143d434af480dbba1da839a40dcd771198e5a2edeb8cfaf42e1fdfcb03382cf",
+      "summary_state": "stale",
       "summary": "Scans source files in the codebase and reports findings for those without matching test files to maintain testing standards.",
       "crux": {
         "code": "    for (const [, entry] of ctx.files) {\n      // Skip test files themselves\n      if (entry.path.includes(\"__tests__\")) continue;\n      // Only check files under src/\n      if (!entry.path.includes(\"/src/\")) continue;\n\n      const hasTest = ctx.sourceToTest.has(entry.path);\n      if (hasTest) continue;",
@@ -176,13 +176,13 @@
       "name": "context.ts",
       "kind": "file",
       "path": "review/context.ts",
-      "span": "L1-L101",
+      "span": "L1-L108",
       "signature": null,
       "exported": true,
       "origin": "ast",
-      "body_hash": "cab2714df3803615fcf6dc1e27cc6e648e0c71eaebfc8cdfea7571f02e1d129a",
-      "chars": 3387,
-      "summary_state": "ready",
+      "body_hash": "3031365953376e015f152a6fc8252b9c668c1dcb9028f96ab135d3d97637ccd3",
+      "chars": 3759,
+      "summary_state": "stale",
       "summary": "This module provides utilities for scanning a TypeScript source directory and building a review context that maps source files to their tests and tracks import dependencies.",
       "crux": null
     },
@@ -195,8 +195,8 @@
       "signature": "async function buildContext(srcRoot: string): Promise<ReviewContext>",
       "exported": true,
       "origin": "ast",
-      "body_hash": "21f48a67ef415afb5d4b230b1863085216a8b7704a4c157c01a74cb05336c033",
-      "summary_state": "ready",
+      "body_hash": "bdd8515abe541648bc796c654e4a293e012bfa84b889f66a03921e124da5fb56",
+      "summary_state": "stale",
       "summary": "Scans a source directory recursively to collect all TypeScript files, reads their contents, extracts exports and imports, and builds a mapping between source files and their corresponding test files.",
       "crux": {
         "code": "  for (const [path, entry] of files) {\n    if (path.includes(\"__tests__\")) continue;\n    if (!entry.path.includes(\"/src/\")) continue;\n\n    const testPath = path\n      .replace(/\\/src\\//, \"/src/\")\n      .replace(/\\.ts$/, \".test.ts\")\n      .replace(/([^/]+)\\.ts$/, \"__tests__/$1.test.ts\");\n\n    if (files.has(testPath)) {\n      sourceToTest.set(path, testPath);\n    }",
@@ -208,12 +208,12 @@
       "name": "extractExports",
       "kind": "function",
       "path": "review/context.ts",
-      "span": "L68-L88",
+      "span": "L68-L95",
       "signature": "function extractExports(content: string): string[]",
       "exported": false,
       "origin": "ast",
-      "body_hash": "be7e0b1119c7811212e6b52c6b76a0d595c77ed7dd4801794c16ea9e19dcfccd",
-      "summary_state": "ready",
+      "body_hash": "cbcca8231dae9ac2ca515137e098ae8299c1c03bbb912afdef0e5b4dfe6072e1",
+      "summary_state": "stale",
       "summary": "Parses TypeScript/JavaScript source code to extract all exported symbol names including functions, constants, classes, types, interfaces, enums, and default exports.",
       "crux": {
         "code": "    const m = line.match(\n      /export\\s+(?:async\\s+)?(?:function|const|let|var|class|type|interface|enum)\\s+(\\w+)/,\n    );\n    if (m) exports.push(m[1]);\n    // export { name1, name2 }\n    const block = line.match(/export\\s*\\{([^}]+)\\}/);\n    if (block) {\n      for (const sym of block[1].split(\",\")) {\n        const name = sym.trim().split(/\\s+as\\s+/)[0].trim();\n        if (name) exports.push(name);\n      }\n    }",
@@ -225,7 +225,7 @@
       "name": "extractImports",
       "kind": "function",
       "path": "review/context.ts",
-      "span": "L91-L100",
+      "span": "L98-L107",
       "signature": "function extractImports(content: string): string[]",
       "exported": false,
       "origin": "ast",
@@ -1590,12 +1590,12 @@
       "name": "mock-git.ts",
       "kind": "file",
       "path": "src/__test-utils__/mocks/mock-git.ts",
-      "span": "L1-L140",
+      "span": "L1-L164",
       "signature": null,
       "exported": true,
       "origin": "ast",
-      "body_hash": "81245185b8f21c741b6509752a1da9a1be54d5c1bff5951c70aa2046e8e91086",
-      "chars": 3443,
+      "body_hash": "0c19eac2b104dded211331555556370cc58f674326119ab3616ffd9b3541a821",
+      "chars": 4070,
       "summary_state": "pending",
       "summary": null,
       "crux": null
@@ -1605,11 +1605,11 @@
       "name": "MockGitCapability",
       "kind": "class",
       "path": "src/__test-utils__/mocks/mock-git.ts",
-      "span": "L27-L139",
+      "span": "L27-L163",
       "signature": "class MockGitCapability implements IGitCapability",
       "exported": true,
       "origin": "ast",
-      "body_hash": "0064c503f3465121eb61fd61e8b4c8981ae4b429111d4e3f3fa39591459c9af7",
+      "body_hash": "01559c0a53a06de650f1c4e7c4ad4f3228dd73b1894255ec4a3d3ac4255ea9e9",
       "summary_state": "pending",
       "summary": null,
       "crux": null
@@ -1705,6 +1705,21 @@
       "owner": "MockGitCapability"
     },
     {
+      "id": "src/__test-utils__/mocks/mock-git.ts#MockGitCapability.getDiff",
+      "name": "getDiff",
+      "kind": "method",
+      "path": "src/__test-utils__/mocks/mock-git.ts",
+      "span": "L136-L142",
+      "signature": "async getDiff( _path?: string, _options?: { staged?: boolean }, ): Promise<CapabilityResult<string>>",
+      "exported": true,
+      "origin": "ast",
+      "body_hash": "93f908196c3a366768e562ba3d76c590511abca86689cca9ab596231e1e145cb",
+      "summary_state": "pending",
+      "summary": null,
+      "crux": null,
+      "owner": "MockGitCapability"
+    },
+    {
       "id": "src/__test-utils__/mocks/mock-git.ts#MockGitCapability.getHistory",
       "name": "getHistory",
       "kind": "method",
@@ -1750,11 +1765,41 @@
       "owner": "MockGitCapability"
     },
     {
+      "id": "src/__test-utils__/mocks/mock-git.ts#MockGitCapability.pull",
+      "name": "pull",
+      "kind": "method",
+      "path": "src/__test-utils__/mocks/mock-git.ts",
+      "span": "L152-L158",
+      "signature": "async pull( _remote?: string, _branch?: string, ): Promise<CapabilityResult<void>>",
+      "exported": true,
+      "origin": "ast",
+      "body_hash": "6ea900eb29bbf1ec966d5a8776d627b3d792e480cccf22322eb5e1b9ffe1e26b",
+      "summary_state": "pending",
+      "summary": null,
+      "crux": null,
+      "owner": "MockGitCapability"
+    },
+    {
+      "id": "src/__test-utils__/mocks/mock-git.ts#MockGitCapability.push",
+      "name": "push",
+      "kind": "method",
+      "path": "src/__test-utils__/mocks/mock-git.ts",
+      "span": "L144-L150",
+      "signature": "async push( _remote?: string, _branch?: string, ): Promise<CapabilityResult<void>>",
+      "exported": true,
+      "origin": "ast",
+      "body_hash": "ae9c95bd6a9a4b5ed956f75780d72c90d3d89591896b9eae9e59420d45c66206",
+      "summary_state": "pending",
+      "summary": null,
+      "crux": null,
+      "owner": "MockGitCapability"
+    },
+    {
       "id": "src/__test-utils__/mocks/mock-git.ts#MockGitCapability.resetCalls",
       "name": "resetCalls",
       "kind": "method",
       "path": "src/__test-utils__/mocks/mock-git.ts",
-      "span": "L136-L138",
+      "span": "L160-L162",
       "signature": "resetCalls(): void",
       "exported": true,
       "origin": "ast",
@@ -1828,12 +1873,12 @@
       "name": "mock-github.ts",
       "kind": "file",
       "path": "src/__test-utils__/mocks/mock-github.ts",
-      "span": "L1-L271",
+      "span": "L1-L290",
       "signature": null,
       "exported": true,
       "origin": "ast",
-      "body_hash": "c7210bc2cfbd7e40d8c09d395f8355c2b5047a56f1cdf09a424e05e6ce6872c3",
-      "chars": 7033,
+      "body_hash": "f5ca97b4b82befdb77e88233faf896970eee4b3cece8be98abed0c4ba5fb8f9c",
+      "chars": 7580,
       "summary_state": "pending",
       "summary": null,
       "crux": null
@@ -1843,11 +1888,11 @@
       "name": "MockGitHubCapability",
       "kind": "class",
       "path": "src/__test-utils__/mocks/mock-github.ts",
-      "span": "L29-L270",
+      "span": "L31-L289",
       "signature": "class MockGitHubCapability implements IGitHubCapability",
       "exported": true,
       "origin": "ast",
-      "body_hash": "be40b6cf35c8d4b788eedbb7091f85106fc064aa9c364baf2a8ff5d67acda3c8",
+      "body_hash": "866411d77764e53e11d16eb532493642dd398f64af1c6a5fc3fff25c912ffb6d",
       "summary_state": "pending",
       "summary": null,
       "crux": null
@@ -1857,7 +1902,7 @@
       "name": "constructor",
       "kind": "method",
       "path": "src/__test-utils__/mocks/mock-github.ts",
-      "span": "L41-L43",
+      "span": "L43-L45",
       "signature": "constructor(config: MockGitHubCapabilityConfig = {})",
       "exported": true,
       "origin": "ast",
@@ -1872,7 +1917,7 @@
       "name": "createIssue",
       "kind": "method",
       "path": "src/__test-utils__/mocks/mock-github.ts",
-      "span": "L102-L123",
+      "span": "L104-L125",
       "signature": "async createIssue(issue: { title: string; body?: string; labels?: string[]; assignees?: string[]; }): Promise<CapabilityResult<GitHubIssue>>",
       "exported": true,
       "origin": "ast",
@@ -1887,7 +1932,7 @@
       "name": "createIssueComment",
       "kind": "method",
       "path": "src/__test-utils__/mocks/mock-github.ts",
-      "span": "L247-L265",
+      "span": "L249-L267",
       "signature": "async createIssueComment( _issueNumber: number, body: string, ): Promise<CapabilityResult<GitHubComment>>",
       "exported": true,
       "origin": "ast",
@@ -1902,7 +1947,7 @@
       "name": "createPullRequest",
       "kind": "method",
       "path": "src/__test-utils__/mocks/mock-github.ts",
-      "span": "L185-L207",
+      "span": "L187-L209",
       "signature": "async createPullRequest(pr: { title: string; body?: string; head: string; base: string; }): Promise<CapabilityResult<GitHubPullRequest>>",
       "exported": true,
       "origin": "ast",
@@ -1917,7 +1962,7 @@
       "name": "dispose",
       "kind": "method",
       "path": "src/__test-utils__/mocks/mock-github.ts",
-      "span": "L52-L54",
+      "span": "L54-L56",
       "signature": "async dispose(): Promise<void>",
       "exported": true,
       "origin": "ast",
@@ -1932,7 +1977,7 @@
       "name": "getIssue",
       "kind": "method",
       "path": "src/__test-utils__/mocks/mock-github.ts",
-      "span": "L83-L100",
+      "span": "L85-L102",
       "signature": "async getIssue(number: number): Promise<CapabilityResult<GitHubIssue>>",
       "exported": true,
       "origin": "ast",
@@ -1947,7 +1992,7 @@
       "name": "getPullRequest",
       "kind": "method",
       "path": "src/__test-utils__/mocks/mock-github.ts",
-      "span": "L163-L183",
+      "span": "L165-L185",
       "signature": "async getPullRequest( number: number, ): Promise<CapabilityResult<GitHubPullRequest>>",
       "exported": true,
       "origin": "ast",
@@ -1962,7 +2007,7 @@
       "name": "getRepository",
       "kind": "method",
       "path": "src/__test-utils__/mocks/mock-github.ts",
-      "span": "L56-L68",
+      "span": "L58-L70",
       "signature": "async getRepository(): Promise<CapabilityResult<GitHubRepository>>",
       "exported": true,
       "origin": "ast",
@@ -1973,11 +2018,26 @@
       "owner": "MockGitHubCapability"
     },
     {
+      "id": "src/__test-utils__/mocks/mock-github.ts#MockGitHubCapability.getWorkflowRuns",
+      "name": "getWorkflowRuns",
+      "kind": "method",
+      "path": "src/__test-utils__/mocks/mock-github.ts",
+      "span": "L277-L284",
+      "signature": "async getWorkflowRuns( _owner: string, _repo: string, _workflowId?: string, ): Promise<CapabilityResult<GitHubWorkflowRun[]>>",
+      "exported": true,
+      "origin": "ast",
+      "body_hash": "3ad4bccfb2e1366850cea8785441d579cef3e2cfc0bad4166abd8aa748db02f1",
+      "summary_state": "pending",
+      "summary": null,
+      "crux": null,
+      "owner": "MockGitHubCapability"
+    },
+    {
       "id": "src/__test-utils__/mocks/mock-github.ts#MockGitHubCapability.initialize",
       "name": "initialize",
       "kind": "method",
       "path": "src/__test-utils__/mocks/mock-github.ts",
-      "span": "L45-L50",
+      "span": "L47-L52",
       "signature": "async initialize(_context: CapabilityContext): Promise<void>",
       "exported": true,
       "origin": "ast",
@@ -1992,7 +2052,7 @@
       "name": "listIssueComments",
       "kind": "method",
       "path": "src/__test-utils__/mocks/mock-github.ts",
-      "span": "L233-L245",
+      "span": "L235-L247",
       "signature": "async listIssueComments( _issueNumber: number, _limit?: number, ): Promise<CapabilityResult<GitHubComment[]>>",
       "exported": true,
       "origin": "ast",
@@ -2007,7 +2067,7 @@
       "name": "listIssues",
       "kind": "method",
       "path": "src/__test-utils__/mocks/mock-github.ts",
-      "span": "L70-L81",
+      "span": "L72-L83",
       "signature": "async listIssues(options?: { state?: IssueState; labels?: string[]; assignee?: string; limit?: number; }): Promise<CapabilityResult<GitHubIssue[]>>",
       "exported": true,
       "origin": "ast",
@@ -2022,7 +2082,7 @@
       "name": "listPullRequests",
       "kind": "method",
       "path": "src/__test-utils__/mocks/mock-github.ts",
-      "span": "L152-L161",
+      "span": "L154-L163",
       "signature": "async listPullRequests(options?: { state?: PullRequestState; limit?: number; }): Promise<CapabilityResult<GitHubPullRequest[]>>",
       "exported": true,
       "origin": "ast",
@@ -2033,11 +2093,26 @@
       "owner": "MockGitHubCapability"
     },
     {
+      "id": "src/__test-utils__/mocks/mock-github.ts#MockGitHubCapability.listWorkflows",
+      "name": "listWorkflows",
+      "kind": "method",
+      "path": "src/__test-utils__/mocks/mock-github.ts",
+      "span": "L269-L275",
+      "signature": "async listWorkflows( _owner: string, _repo: string, ): Promise<CapabilityResult<GitHubWorkflow[]>>",
+      "exported": true,
+      "origin": "ast",
+      "body_hash": "166f642adee1710abaa6b42d9f3253aaac7999a9d5b6864e5ee3f4a6bdff3932",
+      "summary_state": "pending",
+      "summary": null,
+      "crux": null,
+      "owner": "MockGitHubCapability"
+    },
+    {
       "id": "src/__test-utils__/mocks/mock-github.ts#MockGitHubCapability.mergePullRequest",
       "name": "mergePullRequest",
       "kind": "method",
       "path": "src/__test-utils__/mocks/mock-github.ts",
-      "span": "L209-L231",
+      "span": "L211-L233",
       "signature": "async mergePullRequest( number: number, options?: { merge_method?: \"merge\" | \"squash\" | \"rebase\"; commit_title?: string; }, ): Promise<CapabilityResult<GitHubPullRequest>>",
       "exported": true,
       "origin": "ast",
@@ -2052,7 +2127,7 @@
       "name": "resetCalls",
       "kind": "method",
       "path": "src/__test-utils__/mocks/mock-github.ts",
-      "span": "L267-L269",
+      "span": "L286-L288",
       "signature": "resetCalls(): void",
       "exported": true,
       "origin": "ast",
@@ -2067,7 +2142,7 @@
       "name": "updateIssue",
       "kind": "method",
       "path": "src/__test-utils__/mocks/mock-github.ts",
-      "span": "L125-L150",
+      "span": "L127-L152",
       "signature": "async updateIssue( number: number, update: { title?: string; body?: string; state?: IssueState; labels?: string[]; assignees?: string[]; }, ): Promise<CapabilityResult<GitHubIssue>>",
       "exported": true,
       "origin": "ast",
@@ -2082,7 +2157,7 @@
       "name": "MockGitHubCapabilityConfig",
       "kind": "interface",
       "path": "src/__test-utils__/mocks/mock-github.ts",
-      "span": "L21-L27",
+      "span": "L23-L29",
       "signature": "interface MockGitHubCapabilityConfig",
       "exported": true,
       "origin": "ast",
@@ -2861,6 +2936,91 @@
       "origin": "ast",
       "body_hash": "599e893c38e21c102c3af40440c990fa540fef8a801e1d468704ba704f459006",
       "chars": 6137,
+      "summary_state": "pending",
+      "summary": null,
+      "crux": null
+    },
+    {
+      "id": "src/__tests__/integration-coding-harness.test.ts",
+      "name": "integration-coding-harness.test.ts",
+      "kind": "file",
+      "path": "src/__tests__/integration-coding-harness.test.ts",
+      "span": "L1-L507",
+      "signature": null,
+      "exported": true,
+      "origin": "ast",
+      "body_hash": "1fb2b6c4b8309c8cfbb69b56a9bd3caf955adffa07467818fbd4ddd214cda12b",
+      "chars": 17747,
+      "summary_state": "pending",
+      "summary": null,
+      "crux": null
+    },
+    {
+      "id": "src/__tests__/integration-coding-harness.test.ts#fileHandler",
+      "name": "fileHandler",
+      "kind": "function",
+      "path": "src/__tests__/integration-coding-harness.test.ts",
+      "span": "L86-L112",
+      "signature": "fileHandler = async ( params: unknown, _context: ToolContext, )",
+      "exported": false,
+      "origin": "ast",
+      "body_hash": "444752d247e8542372ca85e7b37616b0d42e38cff1cadc8df51c575eeb1303ca",
+      "summary_state": "pending",
+      "summary": null,
+      "crux": null
+    },
+    {
+      "id": "src/__tests__/integration-coding-harness.test.ts#gitHandler",
+      "name": "gitHandler",
+      "kind": "function",
+      "path": "src/__tests__/integration-coding-harness.test.ts",
+      "span": "L214-L230",
+      "signature": "gitHandler = async ( _params: unknown, _context: ToolContext, )",
+      "exported": false,
+      "origin": "ast",
+      "body_hash": "9659e672cbdaf60f09109751cc4b0c5999169ee4134e0152993418f969983390",
+      "summary_state": "pending",
+      "summary": null,
+      "crux": null
+    },
+    {
+      "id": "src/__tests__/integration-coding-harness.test.ts#makeTempDir",
+      "name": "makeTempDir",
+      "kind": "function",
+      "path": "src/__tests__/integration-coding-harness.test.ts",
+      "span": "L45-L47",
+      "signature": "async function makeTempDir(prefix: string): Promise<string>",
+      "exported": false,
+      "origin": "ast",
+      "body_hash": "cdf6eb5eea5b79ff2acbff449e29d83a16a12001a26e086dcaaa86d8680f2a82",
+      "summary_state": "pending",
+      "summary": null,
+      "crux": null
+    },
+    {
+      "id": "src/__tests__/integration-coding-harness.test.ts#removeDir",
+      "name": "removeDir",
+      "kind": "function",
+      "path": "src/__tests__/integration-coding-harness.test.ts",
+      "span": "L50-L52",
+      "signature": "async function removeDir(dir: string): Promise<void>",
+      "exported": false,
+      "origin": "ast",
+      "body_hash": "3731fe0b6117f113634ee1417b9b9668dddcca06024bfe32e5c3462e911d2f13",
+      "summary_state": "pending",
+      "summary": null,
+      "crux": null
+    },
+    {
+      "id": "src/__tests__/integration-coding-harness.test.ts#tempDbPath",
+      "name": "tempDbPath",
+      "kind": "function",
+      "path": "src/__tests__/integration-coding-harness.test.ts",
+      "span": "L55-L57",
+      "signature": "function tempDbPath(dir: string): string",
+      "exported": false,
+      "origin": "ast",
+      "body_hash": "464d2da3c765a3c9c75414efbc16eafa39651995d7fc92578e6acab12384d1bd",
       "summary_state": "pending",
       "summary": null,
       "crux": null
@@ -5456,12 +5616,12 @@
       "name": "mod.ts",
       "kind": "file",
       "path": "src/capabilities/mod.ts",
-      "span": "L1-L84",
+      "span": "L1-L116",
       "signature": null,
       "exported": true,
       "origin": "ast",
-      "body_hash": "b0c300d8b4fb07b3383c35ebdb81b7e386974ab564bb72eb58292aeeee7b01a9",
-      "chars": 1662,
+      "body_hash": "c91499b84829286695db29c223d9ede3bcdefd624ac637583130f49d6e5cee23",
+      "chars": 2187,
       "summary_state": "pending",
       "summary": null,
       "crux": null
@@ -6881,12 +7041,12 @@
       "name": "cli.ts",
       "kind": "file",
       "path": "src/cli.ts",
-      "span": "L1-L416",
+      "span": "L1-L833",
       "signature": null,
       "exported": true,
       "origin": "ast",
-      "body_hash": "45d10ec443e3d1d91f79ec470559d2077795900535455617f5a9c131aad0f24b",
-      "chars": 12579,
+      "body_hash": "724fd21bcfd49f455b9fee0c0b8a3676917f5c490b91c4254fb3ac5a7f3438ab",
+      "chars": 28125,
       "summary_state": "pending",
       "summary": null,
       "crux": null
@@ -6896,7 +7056,7 @@
       "name": "analyze",
       "kind": "function",
       "path": "src/cli.ts",
-      "span": "L333-L376",
+      "span": "L750-L793",
       "signature": "async function analyze(projectDir: string, exportJson: boolean): Promise<void>",
       "exported": false,
       "origin": "ast",
@@ -6910,7 +7070,7 @@
       "name": "CliArgs",
       "kind": "interface",
       "path": "src/cli.ts",
-      "span": "L36-L40",
+      "span": "L40-L44",
       "signature": "interface CliArgs",
       "exported": false,
       "origin": "ast",
@@ -6924,7 +7084,7 @@
       "name": "detectProject",
       "kind": "function",
       "path": "src/cli.ts",
-      "span": "L83-L126",
+      "span": "L87-L130",
       "signature": "async function detectProject(dir: string): Promise<ProjectInfo>",
       "exported": false,
       "origin": "ast",
@@ -6938,11 +7098,11 @@
       "name": "HarnessComponents",
       "kind": "interface",
       "path": "src/cli.ts",
-      "span": "L132-L140",
+      "span": "L136-L145",
       "signature": "interface HarnessComponents",
       "exported": false,
       "origin": "ast",
-      "body_hash": "e0254b2ddbeaab9c78c69a2b2dc543519140a14c5c63db990b5b20cbf011a238",
+      "body_hash": "72742226bdb3cb39ecd2157a392373e8dfc2b7f42527562c1ea37f79ab35f54e",
       "summary_state": "pending",
       "summary": null,
       "crux": null
@@ -6952,11 +7112,25 @@
       "name": "initializeHarness",
       "kind": "function",
       "path": "src/cli.ts",
-      "span": "L142-L226",
+      "span": "L147-L643",
       "signature": "async function initializeHarness( projectDir: string, _projectInfo: ProjectInfo, ): Promise<HarnessComponents>",
       "exported": false,
       "origin": "ast",
-      "body_hash": "516cad9d4db010eee5143ab376006b0221fbbfb12d95f83e5de2ceb7ba88b2b2",
+      "body_hash": "8c85e54b1f5a364203124f5e441191cc113de4250c863c239713260430cd5c21",
+      "summary_state": "pending",
+      "summary": null,
+      "crux": null
+    },
+    {
+      "id": "src/cli.ts#initializeHarness.fileHandler",
+      "name": "fileHandler",
+      "kind": "function",
+      "path": "src/cli.ts",
+      "span": "L396-L450",
+      "signature": "fileHandler: ToolHandler = async ( params, _context: ToolContext, )",
+      "exported": false,
+      "origin": "ast",
+      "body_hash": "f837ae4434a6d63adc48732da9e4a60d3018e327bb983e841c891cde0d73dbd5",
       "summary_state": "pending",
       "summary": null,
       "crux": null
@@ -6966,7 +7140,7 @@
       "name": "gitHandler",
       "kind": "function",
       "path": "src/cli.ts",
-      "span": "L194-L206",
+      "span": "L372-L384",
       "signature": "gitHandler: ToolHandler<{ command: string }, string> = async ( _params, _context: ToolContext, )",
       "exported": false,
       "origin": "ast",
@@ -6976,11 +7150,53 @@
       "crux": null
     },
     {
+      "id": "src/cli.ts#initializeHarness.githubHandler",
+      "name": "githubHandler",
+      "kind": "function",
+      "path": "src/cli.ts",
+      "span": "L534-L615",
+      "signature": "githubHandler: ToolHandler = async ( params, _context: ToolContext, )",
+      "exported": false,
+      "origin": "ast",
+      "body_hash": "0f1bfda57ef5304f875601f45a76588ca08b56eaae606bf43f90f24191b0d8c1",
+      "summary_state": "pending",
+      "summary": null,
+      "crux": null
+    },
+    {
+      "id": "src/cli.ts#initializeHarness.invoke",
+      "name": "invoke",
+      "kind": "method",
+      "path": "src/cli.ts",
+      "span": "L227-L273",
+      "signature": "async invoke(request: ModelRequest): Promise<ModelResponse>",
+      "exported": false,
+      "origin": "ast",
+      "body_hash": "d0a643893154d0a3123378ee0d7510f25366304d9b5455d9de5f90b75b2df4aa",
+      "summary_state": "pending",
+      "summary": null,
+      "crux": null
+    },
+    {
+      "id": "src/cli.ts#initializeHarness.searchHandler",
+      "name": "searchHandler",
+      "kind": "function",
+      "path": "src/cli.ts",
+      "span": "L469-L511",
+      "signature": "searchHandler: ToolHandler = async ( params, _context: ToolContext, )",
+      "exported": false,
+      "origin": "ast",
+      "body_hash": "4ae18feeae4677a256a0180de6817afb58308b39deeb9c7889c42081fb22aa33",
+      "summary_state": "pending",
+      "summary": null,
+      "crux": null
+    },
+    {
       "id": "src/cli.ts#initializeHarness.shellHandler",
       "name": "shellHandler",
       "kind": "function",
       "path": "src/cli.ts",
-      "span": "L169-L183",
+      "span": "L347-L361",
       "signature": "shellHandler: ToolHandler<{ command: string }, string> = async ( params, _context: ToolContext, )",
       "exported": false,
       "origin": "ast",
@@ -6990,11 +7206,25 @@
       "crux": null
     },
     {
+      "id": "src/cli.ts#initializeHarness.stream",
+      "name": "stream",
+      "kind": "method",
+      "path": "src/cli.ts",
+      "span": "L274-L340",
+      "signature": "async *stream(request: ModelRequest): AsyncIterable<StreamDelta>",
+      "exported": false,
+      "origin": "ast",
+      "body_hash": "a59806c48ef3c07c7cc069567f1648a978458964c1d319d7324cd3f40af1cda3",
+      "summary_state": "pending",
+      "summary": null,
+      "crux": null
+    },
+    {
       "id": "src/cli.ts#main",
       "name": "main",
       "kind": "function",
       "path": "src/cli.ts",
-      "span": "L382-L410",
+      "span": "L799-L827",
       "signature": "async function main(): Promise<void>",
       "exported": false,
       "origin": "ast",
@@ -7008,7 +7238,7 @@
       "name": "parseArgs",
       "kind": "function",
       "path": "src/cli.ts",
-      "span": "L46-L70",
+      "span": "L50-L74",
       "signature": "function parseArgs(args: string[]): CliArgs",
       "exported": false,
       "origin": "ast",
@@ -7022,7 +7252,7 @@
       "name": "ProjectInfo",
       "kind": "interface",
       "path": "src/cli.ts",
-      "span": "L76-L81",
+      "span": "L80-L85",
       "signature": "interface ProjectInfo",
       "exported": false,
       "origin": "ast",
@@ -7036,11 +7266,11 @@
       "name": "runRepl",
       "kind": "function",
       "path": "src/cli.ts",
-      "span": "L232-L327",
+      "span": "L649-L744",
       "signature": "async function runRepl( components: HarnessComponents, projectInfo: ProjectInfo, projectDir: string, ): Promise<void>",
       "exported": false,
       "origin": "ast",
-      "body_hash": "323617b0c81b22ec83e936de72f002510214b37fa6b0d41e3f0e6f0dea9bb1ad",
+      "body_hash": "6a87fd1594e0e49b5065fe29a3df162de4b60bcb052e8261581be1c607d54560",
       "summary_state": "pending",
       "summary": null,
       "crux": null
@@ -13500,12 +13730,12 @@
       "name": "mod.ts",
       "kind": "file",
       "path": "src/mcp/mod.ts",
-      "span": "L1-L63",
+      "span": "L1-L69",
       "signature": null,
       "exported": true,
       "origin": "ast",
-      "body_hash": "23dd7552d4a61e3dac2736a2a01af2553964ca7044059902d6a852376f843174",
-      "chars": 1436,
+      "body_hash": "9a24a15acef6d8eba0604a4478dc91741b5ccbf5415de7c56e579dea5084ee5a",
+      "chars": 1662,
       "summary_state": "pending",
       "summary": null,
       "crux": null
@@ -14918,6 +15148,91 @@
       "crux": null
     },
     {
+      "id": "src/memory/__tests__/message-classifier.test.ts",
+      "name": "message-classifier.test.ts",
+      "kind": "file",
+      "path": "src/memory/__tests__/message-classifier.test.ts",
+      "span": "L1-L329",
+      "signature": null,
+      "exported": true,
+      "origin": "ast",
+      "body_hash": "6e6be10055b976081ed0aff88192e86b7f3ee203f0c20c7aa141be4dbb89e76b",
+      "chars": 12158,
+      "summary_state": "pending",
+      "summary": null,
+      "crux": null
+    },
+    {
+      "id": "src/memory/__tests__/message-classifier.test.ts#assistantMsg",
+      "name": "assistantMsg",
+      "kind": "function",
+      "path": "src/memory/__tests__/message-classifier.test.ts",
+      "span": "L20-L22",
+      "signature": "function assistantMsg(content: string): Message",
+      "exported": false,
+      "origin": "ast",
+      "body_hash": "d90e72cd019d383382cf159f8d4179d44d40cd6de565165e587649f8d7044404",
+      "summary_state": "pending",
+      "summary": null,
+      "crux": null
+    },
+    {
+      "id": "src/memory/__tests__/message-classifier.test.ts#makeGraph",
+      "name": "makeGraph",
+      "kind": "function",
+      "path": "src/memory/__tests__/message-classifier.test.ts",
+      "span": "L28-L48",
+      "signature": "function makeGraph( nodes: { id: string; type: ProvenanceNodeType; meta?: Record<string, unknown> }[], edges: { from: string; to: string }[], ): ProvenanceGraphData",
+      "exported": false,
+      "origin": "ast",
+      "body_hash": "0e793f44bad5bd021a97487e3301d9291ffbbac157ea0b45cca5df9f95cfa634",
+      "summary_state": "pending",
+      "summary": null,
+      "crux": null
+    },
+    {
+      "id": "src/memory/__tests__/message-classifier.test.ts#systemMsg",
+      "name": "systemMsg",
+      "kind": "function",
+      "path": "src/memory/__tests__/message-classifier.test.ts",
+      "span": "L12-L14",
+      "signature": "function systemMsg(content = \"system prompt\"): Message",
+      "exported": false,
+      "origin": "ast",
+      "body_hash": "3eb6a489fdbfb1492c568f419c594b4d6523728a7cedd9ced07eb1aad0dea277",
+      "summary_state": "pending",
+      "summary": null,
+      "crux": null
+    },
+    {
+      "id": "src/memory/__tests__/message-classifier.test.ts#toolMsg",
+      "name": "toolMsg",
+      "kind": "function",
+      "path": "src/memory/__tests__/message-classifier.test.ts",
+      "span": "L24-L26",
+      "signature": "function toolMsg(content: string, toolCallId = \"call-1\"): Message",
+      "exported": false,
+      "origin": "ast",
+      "body_hash": "bd9f41f173050896f9406133bf50097ba64a632f5a8e0bdd53cfeae9046d17c1",
+      "summary_state": "pending",
+      "summary": null,
+      "crux": null
+    },
+    {
+      "id": "src/memory/__tests__/message-classifier.test.ts#userMsg",
+      "name": "userMsg",
+      "kind": "function",
+      "path": "src/memory/__tests__/message-classifier.test.ts",
+      "span": "L16-L18",
+      "signature": "function userMsg(content: string): Message",
+      "exported": false,
+      "origin": "ast",
+      "body_hash": "7429fade358532d3b9748725731f81fb10a699ea1977d2af606f07ae1336892e",
+      "summary_state": "pending",
+      "summary": null,
+      "crux": null
+    },
+    {
       "id": "src/memory/__tests__/provenance-context.test.ts",
       "name": "provenance-context.test.ts",
       "kind": "file",
@@ -15496,12 +15811,12 @@
       "name": "mod.ts",
       "kind": "file",
       "path": "src/memory/mod.ts",
-      "span": "L1-L105",
+      "span": "L1-L131",
       "signature": null,
       "exported": true,
       "origin": "ast",
-      "body_hash": "2be384d1f6871cc76345f7f3e02313a46e85e3f154d9218cdc2fef15e517c9b5",
-      "chars": 2078,
+      "body_hash": "287bdd3b63281c84defd31c4a69707edb163943732d10b5e27a758d3a515e949",
+      "chars": 2684,
       "summary_state": "pending",
       "summary": null,
       "crux": null
@@ -19953,12 +20268,12 @@
       "name": "mod.ts",
       "kind": "file",
       "path": "src/projection/mod.ts",
-      "span": "L1-L91",
+      "span": "L1-L104",
       "signature": null,
       "exported": true,
       "origin": "ast",
-      "body_hash": "dd46e4d84375723319f84a29b2e0ec3c07c4f787c41ff6a1cb928db5fdca1e16",
-      "chars": 1933,
+      "body_hash": "ccc65a2c97303727b611ac49c3dfd0ebb67a15bcd28e3e9eebadd456587bb82a",
+      "chars": 2229,
       "summary_state": "pending",
       "summary": null,
       "crux": null
@@ -25178,12 +25493,12 @@
       "name": "mod.ts",
       "kind": "file",
       "path": "src/runtime/mod.ts",
-      "span": "L1-L91",
+      "span": "L1-L143",
       "signature": null,
       "exported": true,
       "origin": "ast",
-      "body_hash": "aa2d2d0afab21ade69f85ea0881a16e8632e59d17124fdebf56b872bb5e86a1c",
-      "chars": 1641,
+      "body_hash": "932fc71674120172b39520acbc1a1b03881ec7646760e20972f841bf52c9950b",
+      "chars": 2616,
       "summary_state": "pending",
       "summary": null,
       "crux": null
@@ -26939,6 +27254,35 @@
       "origin": "ast",
       "body_hash": "12fba6676c1a992d11869b35d689db83434d4296e56899a2f18d67b81ec84e40",
       "chars": 259,
+      "summary_state": "pending",
+      "summary": null,
+      "crux": null
+    },
+    {
+      "id": "src/store/__tests__/causal-graph.test.ts",
+      "name": "causal-graph.test.ts",
+      "kind": "file",
+      "path": "src/store/__tests__/causal-graph.test.ts",
+      "span": "L1-L187",
+      "signature": null,
+      "exported": true,
+      "origin": "ast",
+      "body_hash": "a760f069a3c9dae57c6479b20ae2787bc8ee61eb9de1a262f6df9f28ddbf0d42",
+      "chars": 5753,
+      "summary_state": "pending",
+      "summary": null,
+      "crux": null
+    },
+    {
+      "id": "src/store/__tests__/causal-graph.test.ts#makeEvent",
+      "name": "makeEvent",
+      "kind": "function",
+      "path": "src/store/__tests__/causal-graph.test.ts",
+      "span": "L14-L31",
+      "signature": "function makeEvent( id: string, causalParents: string[] = [], overrides: Partial<BaseEvent> = {}, ): BaseEvent",
+      "exported": false,
+      "origin": "ast",
+      "body_hash": "1f46709dd7cd918a52e46ee458b74d1076c9955a5ddfab17ca53c73a096b50b3",
       "summary_state": "pending",
       "summary": null,
       "crux": null
@@ -32647,6 +32991,12 @@
     },
     {
       "source": "src/__test-utils__/mocks/mock-git.ts#MockGitCapability",
+      "target": "src/__test-utils__/mocks/mock-git.ts#MockGitCapability.getDiff",
+      "relation": "contains",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__test-utils__/mocks/mock-git.ts#MockGitCapability",
       "target": "src/__test-utils__/mocks/mock-git.ts#MockGitCapability.getHistory",
       "relation": "contains",
       "confidence": "extracted"
@@ -32660,6 +33010,18 @@
     {
       "source": "src/__test-utils__/mocks/mock-git.ts#MockGitCapability",
       "target": "src/__test-utils__/mocks/mock-git.ts#MockGitCapability.initialize",
+      "relation": "contains",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__test-utils__/mocks/mock-git.ts#MockGitCapability",
+      "target": "src/__test-utils__/mocks/mock-git.ts#MockGitCapability.pull",
+      "relation": "contains",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__test-utils__/mocks/mock-git.ts#MockGitCapability",
+      "target": "src/__test-utils__/mocks/mock-git.ts#MockGitCapability.push",
       "relation": "contains",
       "confidence": "extracted"
     },
@@ -32767,6 +33129,12 @@
     },
     {
       "source": "src/__test-utils__/mocks/mock-github.ts#MockGitHubCapability",
+      "target": "src/__test-utils__/mocks/mock-github.ts#MockGitHubCapability.getWorkflowRuns",
+      "relation": "contains",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__test-utils__/mocks/mock-github.ts#MockGitHubCapability",
       "target": "src/__test-utils__/mocks/mock-github.ts#MockGitHubCapability.initialize",
       "relation": "contains",
       "confidence": "extracted"
@@ -32786,6 +33154,12 @@
     {
       "source": "src/__test-utils__/mocks/mock-github.ts#MockGitHubCapability",
       "target": "src/__test-utils__/mocks/mock-github.ts#MockGitHubCapability.listPullRequests",
+      "relation": "contains",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__test-utils__/mocks/mock-github.ts#MockGitHubCapability",
+      "target": "src/__test-utils__/mocks/mock-github.ts#MockGitHubCapability.listWorkflows",
       "relation": "contains",
       "confidence": "extracted"
     },
@@ -33388,6 +33762,270 @@
       "target": "src/store/event-store.ts#EventStore",
       "relation": "references",
       "confidence": "extracted"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/__tests__/integration-coding-harness.test.ts#makeTempDir",
+      "relation": "calls",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/__tests__/integration-coding-harness.test.ts#removeDir",
+      "relation": "calls",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/__tests__/integration-coding-harness.test.ts#tempDbPath",
+      "relation": "calls",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/analysis.ts#analyzeSessions",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/analysis.ts#formatAnalysisReport",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/capabilities/capability.ts#CapabilityRegistry.register",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/core/event-stream.ts#EventStream.append",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/core/session-manager.ts#SessionManager.createSession",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/store/event-store.ts#EventStore.store",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/store/event-store.ts#EventStoreBridge.connect",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/store/sqlite-backend.ts#SQLitePersistenceBackend.readLines",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/store/sqlite-backend.ts#SQLitePersistenceBackend.write",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/__tests__/integration-coding-harness.test.ts#fileHandler",
+      "relation": "contains",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/__tests__/integration-coding-harness.test.ts#gitHandler",
+      "relation": "contains",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/__tests__/integration-coding-harness.test.ts#makeTempDir",
+      "relation": "contains",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/__tests__/integration-coding-harness.test.ts#removeDir",
+      "relation": "contains",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/__tests__/integration-coding-harness.test.ts#tempDbPath",
+      "relation": "contains",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "@std/assert",
+      "relation": "imports",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/analysis.ts",
+      "relation": "imports",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/capabilities/capability.ts",
+      "relation": "imports",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/capabilities/file.ts",
+      "relation": "imports",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/capabilities/git.ts",
+      "relation": "imports",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/capabilities/shell.ts",
+      "relation": "imports",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/core/event-stream.ts",
+      "relation": "imports",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/core/session-manager.ts",
+      "relation": "imports",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/runtime/tool-registry.ts",
+      "relation": "imports",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/store/event-store.ts",
+      "relation": "imports",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/store/sqlite-backend.ts",
+      "relation": "imports",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/types/events.ts",
+      "relation": "imports",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "uuid",
+      "relation": "imports",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/capabilities/capability.ts#CapabilityRegistry",
+      "relation": "references",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/capabilities/file.ts#FileCapability",
+      "relation": "references",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/capabilities/git.ts#GitCapability",
+      "relation": "references",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/capabilities/shell.ts#ShellCapability",
+      "relation": "references",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/core/event-stream.ts#EventStream",
+      "relation": "references",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/core/session-manager.ts#SessionManager",
+      "relation": "references",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/runtime/tool-registry.ts#ToolRegistry",
+      "relation": "references",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/store/event-store.ts#EventStore",
+      "relation": "references",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/store/event-store.ts#EventStoreBridge",
+      "relation": "references",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts",
+      "target": "src/store/sqlite-backend.ts#SQLitePersistenceBackend",
+      "relation": "references",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts#fileHandler",
+      "target": "src/capabilities/file.ts#FileCapability.initialize",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts#fileHandler",
+      "target": "src/capabilities/file.ts#FileCapability.read",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts#gitHandler",
+      "target": "src/capabilities/git.ts#GitCapability.getStatus",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/__tests__/integration-coding-harness.test.ts#gitHandler",
+      "target": "src/capabilities/git.ts#GitCapability.initialize",
+      "relation": "calls",
+      "confidence": "inferred"
     },
     {
       "source": "src/analysis.ts",
@@ -36763,7 +37401,25 @@
     },
     {
       "source": "src/cli.ts",
+      "target": "src/capabilities/file.ts",
+      "relation": "imports",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/cli.ts",
       "target": "src/capabilities/git.ts",
+      "relation": "imports",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/cli.ts",
+      "target": "src/capabilities/github.ts",
+      "relation": "imports",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/cli.ts",
+      "target": "src/capabilities/search.ts",
       "relation": "imports",
       "confidence": "extracted"
     },
@@ -36806,6 +37462,12 @@
     {
       "source": "src/cli.ts",
       "target": "src/runtime/tool-registry.ts",
+      "relation": "imports",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/cli.ts",
+      "target": "src/store/event-store.ts",
       "relation": "imports",
       "confidence": "extracted"
     },
@@ -36859,7 +37521,43 @@
     },
     {
       "source": "src/cli.ts#initializeHarness",
+      "target": "src/runtime/model-provider.ts#ModelManager.register",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/cli.ts#initializeHarness",
+      "target": "src/store/event-store.ts#EventStoreBridge.connect",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/cli.ts#initializeHarness",
+      "target": "src/cli.ts#initializeHarness.fileHandler",
+      "relation": "contains",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/cli.ts#initializeHarness",
       "target": "src/cli.ts#initializeHarness.gitHandler",
+      "relation": "contains",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/cli.ts#initializeHarness",
+      "target": "src/cli.ts#initializeHarness.githubHandler",
+      "relation": "contains",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/cli.ts#initializeHarness",
+      "target": "src/cli.ts#initializeHarness.invoke",
+      "relation": "contains",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/cli.ts#initializeHarness",
+      "target": "src/cli.ts#initializeHarness.searchHandler",
       "relation": "contains",
       "confidence": "extracted"
     },
@@ -36871,13 +37569,37 @@
     },
     {
       "source": "src/cli.ts#initializeHarness",
+      "target": "src/cli.ts#initializeHarness.stream",
+      "relation": "contains",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/cli.ts#initializeHarness",
       "target": "src/capabilities/capability.ts#CapabilityRegistry",
       "relation": "references",
       "confidence": "extracted"
     },
     {
       "source": "src/cli.ts#initializeHarness",
+      "target": "src/capabilities/file.ts#FileCapability",
+      "relation": "references",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/cli.ts#initializeHarness",
       "target": "src/capabilities/git.ts#GitCapability",
+      "relation": "references",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/cli.ts#initializeHarness",
+      "target": "src/capabilities/github.ts#GitHubCapability",
+      "relation": "references",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/cli.ts#initializeHarness",
+      "target": "src/capabilities/search.ts#SearchCapability",
       "relation": "references",
       "confidence": "extracted"
     },
@@ -36919,6 +37641,12 @@
     },
     {
       "source": "src/cli.ts#initializeHarness",
+      "target": "src/store/event-store.ts#EventStoreBridge",
+      "relation": "references",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/cli.ts#initializeHarness",
       "target": "src/store/persistence.ts#PersistentEventStore",
       "relation": "references",
       "confidence": "extracted"
@@ -36930,6 +37658,30 @@
       "confidence": "extracted"
     },
     {
+      "source": "src/cli.ts#initializeHarness.fileHandler",
+      "target": "src/capabilities/file.ts#FileCapability.edit",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/cli.ts#initializeHarness.fileHandler",
+      "target": "src/capabilities/file.ts#FileCapability.initialize",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/cli.ts#initializeHarness.fileHandler",
+      "target": "src/capabilities/file.ts#FileCapability.read",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/cli.ts#initializeHarness.fileHandler",
+      "target": "src/capabilities/file.ts#FileCapability.write",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
       "source": "src/cli.ts#initializeHarness.gitHandler",
       "target": "src/capabilities/git.ts#GitCapability.getStatus",
       "relation": "calls",
@@ -36938,6 +37690,66 @@
     {
       "source": "src/cli.ts#initializeHarness.gitHandler",
       "target": "src/capabilities/git.ts#GitCapability.initialize",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/cli.ts#initializeHarness.githubHandler",
+      "target": "src/capabilities/github.ts#GitHubCapability.createIssue",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/cli.ts#initializeHarness.githubHandler",
+      "target": "src/capabilities/github.ts#GitHubCapability.getIssue",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/cli.ts#initializeHarness.githubHandler",
+      "target": "src/capabilities/github.ts#GitHubCapability.getPullRequest",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/cli.ts#initializeHarness.githubHandler",
+      "target": "src/capabilities/github.ts#GitHubCapability.getRepository",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/cli.ts#initializeHarness.githubHandler",
+      "target": "src/capabilities/github.ts#GitHubCapability.initialize",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/cli.ts#initializeHarness.githubHandler",
+      "target": "src/capabilities/github.ts#GitHubCapability.listIssues",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/cli.ts#initializeHarness.githubHandler",
+      "target": "src/capabilities/github.ts#GitHubCapability.listPullRequests",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/cli.ts#initializeHarness.searchHandler",
+      "target": "src/capabilities/search.ts#SearchCapability.glob",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/cli.ts#initializeHarness.searchHandler",
+      "target": "src/capabilities/search.ts#SearchCapability.grep",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/cli.ts#initializeHarness.searchHandler",
+      "target": "src/capabilities/search.ts#SearchCapability.initialize",
       "relation": "calls",
       "confidence": "inferred"
     },
@@ -43298,6 +44110,210 @@
     {
       "source": "src/memory/__tests__/memory.test.ts",
       "target": "src/memory/emitter.ts#TypedEmitter",
+      "relation": "references",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/memory/__tests__/message-classifier.test.ts#assistantMsg",
+      "relation": "calls",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/memory/__tests__/message-classifier.test.ts#makeGraph",
+      "relation": "calls",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/memory/__tests__/message-classifier.test.ts#systemMsg",
+      "relation": "calls",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/memory/__tests__/message-classifier.test.ts#toolMsg",
+      "relation": "calls",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/memory/__tests__/message-classifier.test.ts#userMsg",
+      "relation": "calls",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/memory/message-classifier.ts#MessageClassifier.findNodeForMessage",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/memory/message-classifier.ts#MessageClassifier.getBasePriority",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/memory/message-classifier.ts#MessageClassifier.getChildNodes",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/memory/message-classifier.ts#MessageClassifier.getProvenanceGraph",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/memory/message-classifier.ts#MessageClassifier.hasDescendantOfType",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/memory/message-classifier.ts#MessageClassifier.isCommitmentMessage",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/memory/message-classifier.ts#MessageClassifier.isDeadEnd",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/memory/message-classifier.ts#MessageClassifier.isExplorationMessage",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/memory/message-classifier.ts#MessageClassifier.isFailedOutcome",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/memory/message-classifier.ts#MessageClassifier.isGoalMessage",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/memory/message-classifier.ts#MessageClassifier.isGraphSufficient",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/memory/message-classifier.ts#MessageClassifier.isSuccessfulOutcome",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/memory/message-classifier.ts#MessageClassifier.isVerificationMessage",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/memory/message-classifier.ts#MessageClassifier.scoreMessage",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/memory/message-classifier.ts#MessageClassifier.setProvenanceGraph",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/memory/__tests__/message-classifier.test.ts#assistantMsg",
+      "relation": "contains",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/memory/__tests__/message-classifier.test.ts#makeGraph",
+      "relation": "contains",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/memory/__tests__/message-classifier.test.ts#systemMsg",
+      "relation": "contains",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/memory/__tests__/message-classifier.test.ts#toolMsg",
+      "relation": "contains",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/memory/__tests__/message-classifier.test.ts#userMsg",
+      "relation": "contains",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "@std/assert",
+      "relation": "imports",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/memory/message-classifier.ts",
+      "relation": "imports",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/memory/provenance-context-types.ts",
+      "relation": "imports",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/provenance/types.ts",
+      "relation": "imports",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/runtime/model-provider.ts",
+      "relation": "imports",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/memory/message-classifier.ts#MessageClassifier",
+      "relation": "references",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/memory/provenance-context-types.ts#MessagePriority",
+      "relation": "references",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/memory/provenance-context-types.ts#OutcomeScore",
+      "relation": "references",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/memory/__tests__/message-classifier.test.ts",
+      "target": "src/provenance/types.ts#ProvenanceNodeType",
       "relation": "references",
       "confidence": "extracted"
     },
@@ -52107,6 +53123,60 @@
       "source": "src/session/attestation-service.ts#AttestationService.getAttestations",
       "target": "src/session/attestation-service.ts#AttestationService.getAttestation",
       "relation": "calls",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/store/__tests__/causal-graph.test.ts",
+      "target": "src/store/__tests__/causal-graph.test.ts#makeEvent",
+      "relation": "calls",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/store/__tests__/causal-graph.test.ts",
+      "target": "src/store/causal-graph.ts#buildCausalGraph",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/store/__tests__/causal-graph.test.ts",
+      "target": "src/store/causal-graph.ts#findDownstream",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/store/__tests__/causal-graph.test.ts",
+      "target": "src/store/causal-graph.ts#findIndependentChains",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/store/__tests__/causal-graph.test.ts",
+      "target": "src/store/causal-graph.ts#getCausalParents",
+      "relation": "calls",
+      "confidence": "inferred"
+    },
+    {
+      "source": "src/store/__tests__/causal-graph.test.ts",
+      "target": "src/store/__tests__/causal-graph.test.ts#makeEvent",
+      "relation": "contains",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/store/__tests__/causal-graph.test.ts",
+      "target": "@std/assert",
+      "relation": "imports",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/store/__tests__/causal-graph.test.ts",
+      "target": "src/store/causal-graph.ts",
+      "relation": "imports",
+      "confidence": "extracted"
+    },
+    {
+      "source": "src/store/__tests__/causal-graph.test.ts",
+      "target": "src/types/events.ts",
+      "relation": "imports",
       "confidence": "extracted"
     },
     {

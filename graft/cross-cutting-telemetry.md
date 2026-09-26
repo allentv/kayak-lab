@@ -27,6 +27,121 @@ links:
       attachUserToMetadata.
 generator:
   version: 1
+covers:
+  - symbol: StructuredLogger
+    kind: class
+    at: 'src/cross-cutting/telemetry/logger.ts:L17-L91'
+  - symbol: constructor
+    kind: method
+    at: 'src/cross-cutting/telemetry/logger.ts:L21-L26'
+  - symbol: debug
+    kind: method
+    at: 'src/cross-cutting/telemetry/logger.ts:L28-L30'
+  - symbol: info
+    kind: method
+    at: 'src/cross-cutting/telemetry/logger.ts:L32-L34'
+  - symbol: warn
+    kind: method
+    at: 'src/cross-cutting/telemetry/logger.ts:L36-L38'
+  - symbol: error
+    kind: method
+    at: 'src/cross-cutting/telemetry/logger.ts:L40-L42'
+  - symbol: setSessionId
+    kind: method
+    at: 'src/cross-cutting/telemetry/logger.ts:L44-L46'
+  - symbol: getEntries
+    kind: method
+    at: 'src/cross-cutting/telemetry/logger.ts:L48-L50'
+  - symbol: clear
+    kind: method
+    at: 'src/cross-cutting/telemetry/logger.ts:L52-L54'
+  - symbol: log
+    kind: method
+    at: 'src/cross-cutting/telemetry/logger.ts:L56-L86'
+  - symbol: formatJson
+    kind: method
+    at: 'src/cross-cutting/telemetry/logger.ts:L88-L90'
+  - symbol: MetricsCollector
+    kind: class
+    at: 'src/cross-cutting/telemetry/metrics.ts:L10-L144'
+  - symbol: constructor
+    kind: method
+    at: 'src/cross-cutting/telemetry/metrics.ts:L16-L18'
+  - symbol: increment
+    kind: method
+    at: 'src/cross-cutting/telemetry/metrics.ts:L24-L27'
+  - symbol: decrement
+    kind: method
+    at: 'src/cross-cutting/telemetry/metrics.ts:L29-L32'
+  - symbol: gauge
+    kind: method
+    at: 'src/cross-cutting/telemetry/metrics.ts:L38-L54'
+  - symbol: histogram
+    kind: method
+    at: 'src/cross-cutting/telemetry/metrics.ts:L60-L69'
+  - symbol: getCounter
+    kind: method
+    at: 'src/cross-cutting/telemetry/metrics.ts:L75-L77'
+  - symbol: getGauge
+    kind: method
+    at: 'src/cross-cutting/telemetry/metrics.ts:L79-L82'
+  - symbol: getHistogram
+    kind: method
+    at: 'src/cross-cutting/telemetry/metrics.ts:L84-L89'
+  - symbol: toPrometheus
+    kind: method
+    at: 'src/cross-cutting/telemetry/metrics.ts:L95-L121'
+  - symbol: reset
+    kind: method
+    at: 'src/cross-cutting/telemetry/metrics.ts:L123-L127'
+  - symbol: metricKey
+    kind: method
+    at: 'src/cross-cutting/telemetry/metrics.ts:L133-L143'
+  - symbol: TraceManager
+    kind: class
+    at: 'src/cross-cutting/telemetry/tracing.ts:L10-L115'
+  - symbol: createTrace
+    kind: method
+    at: 'src/cross-cutting/telemetry/tracing.ts:L13-L17'
+  - symbol: startSpan
+    kind: method
+    at: 'src/cross-cutting/telemetry/tracing.ts:L19-L39'
+  - symbol: endSpan
+    kind: method
+    at: 'src/cross-cutting/telemetry/tracing.ts:L41-L54'
+  - symbol: getTrace
+    kind: method
+    at: 'src/cross-cutting/telemetry/tracing.ts:L56-L58'
+  - symbol: getTraceContext
+    kind: method
+    at: 'src/cross-cutting/telemetry/tracing.ts:L60-L65'
+  - symbol: toOpenTelemetry
+    kind: method
+    at: 'src/cross-cutting/telemetry/tracing.ts:L67-L110'
+  - symbol: generateId
+    kind: method
+    at: 'src/cross-cutting/telemetry/tracing.ts:L112-L114'
+  - symbol: LogLevel
+    kind: type
+    at: 'src/cross-cutting/telemetry/types.ts:L10-L10'
+  - symbol: LogEntry
+    kind: interface
+    at: 'src/cross-cutting/telemetry/types.ts:L13-L20'
+  - symbol: LoggerConfig
+    kind: interface
+    at: 'src/cross-cutting/telemetry/types.ts:L23-L27'
+  - symbol: MetricValue
+    kind: interface
+    at: 'src/cross-cutting/telemetry/types.ts:L34-L39'
+  - symbol: MetricsConfig
+    kind: interface
+    at: 'src/cross-cutting/telemetry/types.ts:L42-L44'
+  - symbol: Span
+    kind: interface
+    at: 'src/cross-cutting/telemetry/types.ts:L51-L60'
+  - symbol: TraceContext
+    kind: interface
+    at: 'src/cross-cutting/telemetry/types.ts:L63-L66'
 ---
 <!-- context:generated:start -->
 ## Summary

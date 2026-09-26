@@ -27,6 +27,151 @@ links:
       throws CircuitOpenError which extends AppError.
 generator:
   version: 1
+covers:
+  - symbol: OverflowPolicy
+    kind: type
+    at: 'src/core/bounded-queue.ts:L9-L13'
+  - symbol: BoundedQueueConfig
+    kind: interface
+    at: 'src/core/bounded-queue.ts:L16-L21'
+  - symbol: BoundedQueue
+    kind: class
+    at: 'src/core/bounded-queue.ts:L26-L157'
+  - symbol: constructor
+    kind: method
+    at: 'src/core/bounded-queue.ts:L31-L33'
+  - symbol: push
+    kind: method
+    at: 'src/core/bounded-queue.ts:L39-L65'
+  - symbol: waitAndPush
+    kind: method
+    at: 'src/core/bounded-queue.ts:L70-L93'
+  - symbol: checkSpace
+    kind: function
+    at: 'src/core/bounded-queue.ts:L83-L90'
+  - symbol: shift
+    kind: method
+    at: 'src/core/bounded-queue.ts:L99-L101'
+  - symbol: peek
+    kind: method
+    at: 'src/core/bounded-queue.ts:L106-L108'
+  - symbol: size
+    kind: method
+    at: 'src/core/bounded-queue.ts:L113-L115'
+  - symbol: remaining
+    kind: method
+    at: 'src/core/bounded-queue.ts:L120-L122'
+  - symbol: isFull
+    kind: method
+    at: 'src/core/bounded-queue.ts:L127-L129'
+  - symbol: clear
+    kind: method
+    at: 'src/core/bounded-queue.ts:L134-L136'
+  - symbol: toArray
+    kind: method
+    at: 'src/core/bounded-queue.ts:L141-L143'
+  - symbol: resolveWaiter
+    kind: method
+    at: 'src/core/bounded-queue.ts:L148-L156'
+  - symbol: CircuitState
+    kind: type
+    at: 'src/core/circuit-breaker.ts:L21-L21'
+  - symbol: CircuitBreakerOptions
+    kind: interface
+    at: 'src/core/circuit-breaker.ts:L27-L34'
+  - symbol: CircuitOpenError
+    kind: class
+    at: 'src/core/circuit-breaker.ts:L49-L65'
+  - symbol: constructor
+    kind: method
+    at: 'src/core/circuit-breaker.ts:L50-L64'
+  - symbol: CircuitBreaker
+    kind: class
+    at: 'src/core/circuit-breaker.ts:L79-L165'
+  - symbol: constructor
+    kind: method
+    at: 'src/core/circuit-breaker.ts:L86-L91'
+  - symbol: getState
+    kind: method
+    at: 'src/core/circuit-breaker.ts:L94-L103'
+  - symbol: getFailureCount
+    kind: method
+    at: 'src/core/circuit-breaker.ts:L106-L108'
+  - symbol: reset
+    kind: method
+    at: 'src/core/circuit-breaker.ts:L111-L116'
+  - symbol: execute
+    kind: method
+    at: 'src/core/circuit-breaker.ts:L122-L137'
+  - symbol: onSuccess
+    kind: method
+    at: 'src/core/circuit-breaker.ts:L139-L150'
+  - symbol: onFailure
+    kind: method
+    at: 'src/core/circuit-breaker.ts:L152-L164'
+  - symbol: FallbackResult
+    kind: interface
+    at: 'src/core/fallback.ts:L18-L23'
+  - symbol: executeWithFallback
+    kind: function
+    at: 'src/core/fallback.ts:L38-L58'
+  - symbol: TokenBucketConfig
+    kind: interface
+    at: 'src/core/rate-limiter.ts:L9-L18'
+  - symbol: TokenBucket
+    kind: class
+    at: 'src/core/rate-limiter.ts:L26-L109'
+  - symbol: constructor
+    kind: method
+    at: 'src/core/rate-limiter.ts:L34-L40'
+  - symbol: tryConsume
+    kind: method
+    at: 'src/core/rate-limiter.ts:L46-L54'
+  - symbol: waitAndConsume
+    kind: method
+    at: 'src/core/rate-limiter.ts:L60-L65'
+  - symbol: getAvailableTokens
+    kind: method
+    at: 'src/core/rate-limiter.ts:L70-L73'
+  - symbol: startRefill
+    kind: method
+    at: 'src/core/rate-limiter.ts:L78-L84'
+  - symbol: stopRefill
+    kind: method
+    at: 'src/core/rate-limiter.ts:L89-L94'
+  - symbol: refill
+    kind: method
+    at: 'src/core/rate-limiter.ts:L99-L108'
+  - symbol: RateLimiter
+    kind: class
+    at: 'src/core/rate-limiter.ts:L119-L160'
+  - symbol: constructor
+    kind: method
+    at: 'src/core/rate-limiter.ts:L122-L124'
+  - symbol: wrap
+    kind: method
+    at: 'src/core/rate-limiter.ts:L130-L143'
+  - symbol: limited
+    kind: function
+    at: 'src/core/rate-limiter.ts:L135-L140'
+  - symbol: wrapWithWait
+    kind: method
+    at: 'src/core/rate-limiter.ts:L148-L159'
+  - symbol: limited
+    kind: function
+    at: 'src/core/rate-limiter.ts:L153-L156'
+  - symbol: RetryPolicy
+    kind: interface
+    at: 'src/core/retry.ts:L24-L30'
+  - symbol: calculateDelay
+    kind: function
+    at: 'src/core/retry.ts:L53-L63'
+  - symbol: isRetryable
+    kind: function
+    at: 'src/core/retry.ts:L69-L77'
+  - symbol: withRetry
+    kind: function
+    at: 'src/core/retry.ts:L91-L117'
 ---
 <!-- context:generated:start -->
 ## Summary

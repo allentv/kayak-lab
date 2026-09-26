@@ -19,6 +19,49 @@ links:
     description: Provides aggregated state data to dashboard components for rendering.
 generator:
   version: 1
+covers:
+  - symbol: AggregatedSession
+    kind: interface
+    at: 'web/lib/aggregation.ts:L12-L18'
+  - symbol: AggregatedEvent
+    kind: interface
+    at: 'web/lib/aggregation.ts:L20-L26'
+  - symbol: AggregatedCapability
+    kind: interface
+    at: 'web/lib/aggregation.ts:L28-L33'
+  - symbol: AggregatedState
+    kind: interface
+    at: 'web/lib/aggregation.ts:L35-L40'
+  - symbol: HarnessStatus
+    kind: interface
+    at: 'web/lib/aggregation.ts:L42-L47'
+  - symbol: querySql
+    kind: function
+    at: 'web/lib/aggregation.ts:L64-L71'
+  - symbol: onHarnessEvent
+    kind: function
+    at: 'web/lib/aggregation.ts:L81-L83'
+  - symbol: updateCapabilities
+    kind: function
+    at: 'web/lib/aggregation.ts:L89-L91'
+  - symbol: updateHarnessStatus
+    kind: function
+    at: 'web/lib/aggregation.ts:L96-L108'
+  - symbol: getAggregatedState
+    kind: function
+    at: 'web/lib/aggregation.ts:L113-L178'
+  - symbol: onStateChange
+    kind: function
+    at: 'web/lib/aggregation.ts:L183-L190'
+  - symbol: notifyListeners
+    kind: function
+    at: 'web/lib/aggregation.ts:L195-L201'
+  - symbol: GET
+    kind: method
+    at: 'web/routes/api/health.ts:L12-L27'
+  - symbol: GET
+    kind: method
+    at: 'web/routes/api/sessions.ts:L11-L14'
 ---
 <!-- context:generated:start -->
 ## Summary

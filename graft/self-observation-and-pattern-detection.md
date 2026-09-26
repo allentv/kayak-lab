@@ -18,6 +18,82 @@ links:
       DynamicToolRegistry and for writing L2 scenarios.
 generator:
   version: 1
+covers:
+  - symbol: createTestEvent
+    kind: function
+    at: 'src/runtime/__tests__/self-observation.test.ts:L11-L27'
+  - symbol: TrendDirection
+    kind: type
+    at: 'src/runtime/pattern-analyzer.ts:L16-L16'
+  - symbol: ToolTrend
+    kind: interface
+    at: 'src/runtime/pattern-analyzer.ts:L19-L25'
+  - symbol: SessionEfficiency
+    kind: interface
+    at: 'src/runtime/pattern-analyzer.ts:L28-L34'
+  - symbol: ModelUsage
+    kind: interface
+    at: 'src/runtime/pattern-analyzer.ts:L37-L42'
+  - symbol: ErrorCluster
+    kind: interface
+    at: 'src/runtime/pattern-analyzer.ts:L45-L50'
+  - symbol: AnalysisReport
+    kind: interface
+    at: 'src/runtime/pattern-analyzer.ts:L53-L59'
+  - symbol: IPatternAnalyzer
+    kind: interface
+    at: 'src/runtime/pattern-analyzer.ts:L65-L71'
+  - symbol: PatternAnalyzerOptions
+    kind: interface
+    at: 'src/runtime/pattern-analyzer.ts:L77-L82'
+  - symbol: PatternAnalyzer
+    kind: class
+    at: 'src/runtime/pattern-analyzer.ts:L84-L259'
+  - symbol: constructor
+    kind: method
+    at: 'src/runtime/pattern-analyzer.ts:L88-L94'
+  - symbol: analyzeToolTrends
+    kind: method
+    at: 'src/runtime/pattern-analyzer.ts:L96-L124'
+  - symbol: analyzeSessionEfficiency
+    kind: method
+    at: 'src/runtime/pattern-analyzer.ts:L126-L148'
+  - symbol: analyzeModelUsage
+    kind: method
+    at: 'src/runtime/pattern-analyzer.ts:L150-L173'
+  - symbol: clusterErrors
+    kind: method
+    at: 'src/runtime/pattern-analyzer.ts:L175-L185'
+  - symbol: generateReport
+    kind: method
+    at: 'src/runtime/pattern-analyzer.ts:L187-L202'
+  - symbol: writePatternScenarios
+    kind: method
+    at: 'src/runtime/pattern-analyzer.ts:L207-L258'
+  - symbol: ObservationContext
+    kind: interface
+    at: 'src/runtime/self-observation.ts:L16-L25'
+  - symbol: ISelfObservation
+    kind: interface
+    at: 'src/runtime/self-observation.ts:L28-L35'
+  - symbol: PatternDetection
+    kind: interface
+    at: 'src/runtime/self-observation.ts:L38-L43'
+  - symbol: SelfObservation
+    kind: class
+    at: 'src/runtime/self-observation.ts:L49-L134'
+  - symbol: constructor
+    kind: method
+    at: 'src/runtime/self-observation.ts:L50-L53'
+  - symbol: preTurn
+    kind: method
+    at: 'src/runtime/self-observation.ts:L55-L66'
+  - symbol: postTurn
+    kind: method
+    at: 'src/runtime/self-observation.ts:L68-L101'
+  - symbol: detectPatterns
+    kind: method
+    at: 'src/runtime/self-observation.ts:L103-L133'
 ---
 <!-- context:generated:start -->
 ## Summary

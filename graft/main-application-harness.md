@@ -18,6 +18,52 @@ links:
     description: Integrates MCP clients and servers to expose and consume external tools.
 generator:
   version: 1
+covers:
+  - symbol: CliArgs
+    kind: interface
+    at: 'src/main.ts:L26-L30'
+  - symbol: parseArgs
+    kind: function
+    at: 'src/main.ts:L32-L52'
+  - symbol: HarnessComponents
+    kind: interface
+    at: 'src/main.ts:L58-L65'
+  - symbol: initializeHarness
+    kind: function
+    at: 'src/main.ts:L67-L102'
+  - symbol: createRouter
+    kind: function
+    at: 'src/main.ts:L108-L166'
+  - symbol: handleGetSessions
+    kind: function
+    at: 'src/main.ts:L172-L183'
+  - symbol: handleGetSession
+    kind: function
+    at: 'src/main.ts:L185-L200'
+  - symbol: handleGetSessionEvents
+    kind: function
+    at: 'src/main.ts:L202-L222'
+  - symbol: handleCreateSession
+    kind: function
+    at: 'src/main.ts:L224-L241'
+  - symbol: handlePatchSession
+    kind: function
+    at: 'src/main.ts:L243-L293'
+  - symbol: handleGetCapabilities
+    kind: function
+    at: 'src/main.ts:L295-L306'
+  - symbol: handleGetHealth
+    kind: function
+    at: 'src/main.ts:L308-L318'
+  - symbol: WebSocketClient
+    kind: interface
+    at: 'src/main.ts:L324-L332'
+  - symbol: handleWebSocketUpgrade
+    kind: function
+    at: 'src/main.ts:L337-L458'
+  - symbol: main
+    kind: function
+    at: 'src/main.ts:L486-L556'
 ---
 <!-- context:generated:start -->
 ## Summary

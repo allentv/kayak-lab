@@ -26,6 +26,46 @@ links:
     description: Loads and runs external tool wrappers via registry
 generator:
   version: 1
+covers:
+  - symbol: parseArgs
+    kind: function
+    at: 'review/cli.ts:L11-L31'
+  - symbol: preflight
+    kind: function
+    at: 'review/cli.ts:L33-L64'
+  - symbol: main
+    kind: function
+    at: 'review/cli.ts:L66-L111'
+  - symbol: buildContext
+    kind: function
+    at: 'review/context.ts:L5-L65'
+  - symbol: extractExports
+    kind: function
+    at: 'review/context.ts:L68-L95'
+  - symbol: extractImports
+    kind: function
+    at: 'review/context.ts:L98-L107'
+  - symbol: formatFindings
+    kind: function
+    at: 'review/formatter.ts:L15-L77'
+  - symbol: loadChecks
+    kind: function
+    at: 'review/registry.ts:L7-L23'
+  - symbol: loadDelegates
+    kind: function
+    at: 'review/registry.ts:L29-L45'
+  - symbol: Finding
+    kind: interface
+    at: 'review/types.ts:L2-L10'
+  - symbol: ReviewCheck
+    kind: interface
+    at: 'review/types.ts:L13-L17'
+  - symbol: FileEntry
+    kind: interface
+    at: 'review/types.ts:L20-L26'
+  - symbol: ReviewContext
+    kind: interface
+    at: 'review/types.ts:L29-L35'
 ---
 <!-- context:generated:start -->
 ## Summary

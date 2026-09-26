@@ -21,6 +21,37 @@ links:
     description: Setup scripts install and verify gVisor runtime for sandboxed execution
 generator:
   version: 1
+covers:
+  - symbol: DuckDBDatabase
+    kind: interface
+    at: 'scripts/migrate-jsonl-to-duckdb.ts:L24-L27'
+  - symbol: DuckDBConnection
+    kind: interface
+    at: 'scripts/migrate-jsonl-to-duckdb.ts:L29-L34'
+  - symbol: DuckDBStatement
+    kind: interface
+    at: 'scripts/migrate-jsonl-to-duckdb.ts:L36-L39'
+  - symbol: DuckDBRow
+    kind: type
+    at: 'scripts/migrate-jsonl-to-duckdb.ts:L41-L41'
+  - symbol: getJsonlFiles
+    kind: function
+    at: 'scripts/migrate-jsonl-to-duckdb.ts:L47-L55'
+  - symbol: parseJsonlFile
+    kind: function
+    at: 'scripts/migrate-jsonl-to-duckdb.ts:L57-L61'
+  - symbol: createSchema
+    kind: function
+    at: 'scripts/migrate-jsonl-to-duckdb.ts:L63-L90'
+  - symbol: insertEventsBatch
+    kind: function
+    at: 'scripts/migrate-jsonl-to-duckdb.ts:L92-L120'
+  - symbol: verifyMigration
+    kind: function
+    at: 'scripts/migrate-jsonl-to-duckdb.ts:L122-L144'
+  - symbol: migrate
+    kind: function
+    at: 'scripts/migrate-jsonl-to-duckdb.ts:L150-L197'
 ---
 <!-- context:generated:start -->
 ## Summary

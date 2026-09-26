@@ -15,6 +15,19 @@ links:
     description: Uses same SQLite database backend for query execution.
 generator:
   version: 1
+covers:
+  - symbol: isDestructiveSql
+    kind: function
+    at: 'web/routes/api/query.ts:L25-L28'
+  - symbol: getDatabase
+    kind: function
+    at: 'web/routes/api/query.ts:L30-L32'
+  - symbol: GET
+    kind: method
+    at: 'web/routes/api/query.ts:L39-L60'
+  - symbol: POST
+    kind: method
+    at: 'web/routes/api/query.ts:L62-L89'
 ---
 <!-- context:generated:start -->
 ## Summary

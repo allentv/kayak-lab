@@ -17,6 +17,40 @@ links:
     description: Provides connection status and event streams to dashboard components.
 generator:
   version: 1
+covers:
+  - symbol: HarnessConnection
+    kind: interface
+    at: 'web/lib/harness-connection.ts:L8-L14'
+  - symbol: HarnessState
+    kind: interface
+    at: 'web/lib/harness-connection.ts:L16-L19'
+  - symbol: connectToHarness
+    kind: function
+    at: 'web/lib/harness-connection.ts:L29-L46'
+  - symbol: connectWebSocket
+    kind: function
+    at: 'web/lib/harness-connection.ts:L51-L102'
+  - symbol: scheduleReconnect
+    kind: function
+    at: 'web/lib/harness-connection.ts:L107-L118'
+  - symbol: handleHarnessEvent
+    kind: function
+    at: 'web/lib/harness-connection.ts:L123-L128'
+  - symbol: onHarnessStateChange
+    kind: function
+    at: 'web/lib/harness-connection.ts:L133-L140'
+  - symbol: notifyListeners
+    kind: function
+    at: 'web/lib/harness-connection.ts:L145-L149'
+  - symbol: getHarnessConnections
+    kind: function
+    at: 'web/lib/harness-connection.ts:L154-L156'
+  - symbol: connectFromEnv
+    kind: function
+    at: 'web/lib/harness-connection.ts:L161-L171'
+  - symbol: GET
+    kind: method
+    at: 'web/routes/api/harnesses.ts:L11-L19'
 ---
 <!-- context:generated:start -->
 ## Summary

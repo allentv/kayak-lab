@@ -17,6 +17,22 @@ links:
     description: Registry discovers checks from review/checks/ directory
 generator:
   version: 1
+covers:
+  - symbol: parseArgs
+    kind: function
+    at: 'review/cli.ts:L11-L31'
+  - symbol: preflight
+    kind: function
+    at: 'review/cli.ts:L33-L64'
+  - symbol: main
+    kind: function
+    at: 'review/cli.ts:L66-L111'
+  - symbol: loadChecks
+    kind: function
+    at: 'review/registry.ts:L7-L23'
+  - symbol: loadDelegates
+    kind: function
+    at: 'review/registry.ts:L29-L45'
 ---
 <!-- context:generated:start -->
 ## Summary

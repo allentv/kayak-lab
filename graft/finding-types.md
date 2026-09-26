@@ -12,6 +12,19 @@ links:
     description: Defines the data structures that flow through the entire review pipeline
 generator:
   version: 1
+covers:
+  - symbol: Finding
+    kind: interface
+    at: 'review/types.ts:L2-L10'
+  - symbol: ReviewCheck
+    kind: interface
+    at: 'review/types.ts:L13-L17'
+  - symbol: FileEntry
+    kind: interface
+    at: 'review/types.ts:L20-L26'
+  - symbol: ReviewContext
+    kind: interface
+    at: 'review/types.ts:L29-L35'
 ---
 <!-- context:generated:start -->
 ## Summary

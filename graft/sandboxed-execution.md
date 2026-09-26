@@ -25,6 +25,97 @@ links:
       implement
 generator:
   version: 1
+covers:
+  - symbol: DockerRuntimeConfig
+    kind: interface
+    at: 'src/capabilities/sandbox/docker-runtime.ts:L34-L41'
+  - symbol: DockerRuntime
+    kind: class
+    at: 'src/capabilities/sandbox/docker-runtime.ts:L46-L374'
+  - symbol: constructor
+    kind: method
+    at: 'src/capabilities/sandbox/docker-runtime.ts:L50-L53'
+  - symbol: execute
+    kind: method
+    at: 'src/capabilities/sandbox/docker-runtime.ts:L55-L130'
+  - symbol: healthCheck
+    kind: method
+    at: 'src/capabilities/sandbox/docker-runtime.ts:L132-L271'
+  - symbol: setup
+    kind: method
+    at: 'src/capabilities/sandbox/docker-runtime.ts:L273-L282'
+  - symbol: buildDockerArgs
+    kind: method
+    at: 'src/capabilities/sandbox/docker-runtime.ts:L287-L348'
+  - symbol: extractOutput
+    kind: method
+    at: 'src/capabilities/sandbox/docker-runtime.ts:L353-L373'
+  - symbol: GVisorRuntimeConfig
+    kind: interface
+    at: 'src/capabilities/sandbox/gvisor-runtime.ts:L11-L16'
+  - symbol: GVisorRuntime
+    kind: class
+    at: 'src/capabilities/sandbox/gvisor-runtime.ts:L21-L72'
+  - symbol: constructor
+    kind: method
+    at: 'src/capabilities/sandbox/gvisor-runtime.ts:L22-L27'
+  - symbol: healthCheck
+    kind: method
+    at: 'src/capabilities/sandbox/gvisor-runtime.ts:L29-L71'
+  - symbol: SandboxResourceLimits
+    kind: interface
+    at: 'src/capabilities/sandbox/types.ts:L13-L22'
+  - symbol: SandboxMount
+    kind: interface
+    at: 'src/capabilities/sandbox/types.ts:L25-L32'
+  - symbol: SandboxExecConfig
+    kind: interface
+    at: 'src/capabilities/sandbox/types.ts:L35-L54'
+  - symbol: SandboxExecResult
+    kind: interface
+    at: 'src/capabilities/sandbox/types.ts:L61-L74'
+  - symbol: HealthCheckResult
+    kind: interface
+    at: 'src/capabilities/sandbox/types.ts:L81-L88'
+  - symbol: HealthStatus
+    kind: interface
+    at: 'src/capabilities/sandbox/types.ts:L91-L96'
+  - symbol: ISandboxRuntime
+    kind: interface
+    at: 'src/capabilities/sandbox/types.ts:L108-L120'
+  - symbol: SandboxedShellExecOptions
+    kind: interface
+    at: 'src/capabilities/sandboxed-shell.ts:L29-L38'
+  - symbol: SandboxedShellCapability
+    kind: class
+    at: 'src/capabilities/sandboxed-shell.ts:L51-L202'
+  - symbol: constructor
+    kind: method
+    at: 'src/capabilities/sandboxed-shell.ts:L62-L64'
+  - symbol: initialize
+    kind: method
+    at: 'src/capabilities/sandboxed-shell.ts:L66-L69'
+  - symbol: dispose
+    kind: method
+    at: 'src/capabilities/sandboxed-shell.ts:L71-L74'
+  - symbol: exec
+    kind: method
+    at: 'src/capabilities/sandboxed-shell.ts:L76-L135'
+  - symbol: getEnvironment
+    kind: method
+    at: 'src/capabilities/sandboxed-shell.ts:L137-L148'
+  - symbol: commandExists
+    kind: method
+    at: 'src/capabilities/sandboxed-shell.ts:L150-L156'
+  - symbol: getWorkingDirectory
+    kind: method
+    at: 'src/capabilities/sandboxed-shell.ts:L158-L163'
+  - symbol: setWorkingDirectory
+    kind: method
+    at: 'src/capabilities/sandboxed-shell.ts:L165-L170'
+  - symbol: injectDenoPermissions
+    kind: method
+    at: 'src/capabilities/sandboxed-shell.ts:L178-L201'
 ---
 <!-- context:generated:start -->
 ## Summary
