@@ -9,7 +9,7 @@ import * as path from "node:path";
 import type { BaseEvent } from "../../types/events.ts";
 
 const FIXTURES_DIR = path.join(
-  path.fromFileUrl(new URL(".", import.meta.url)),
+  path.dirname(new URL(import.meta.url).pathname),
   "sessions",
 );
 
